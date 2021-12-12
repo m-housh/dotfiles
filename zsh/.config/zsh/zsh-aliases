@@ -1,0 +1,9 @@
+# configure aliases
+#alias zshconfig="vim ~/.zshrc"
+#alias reloadzsh="source ~/.zshrc"
+alias mkcd() { mkdir $1 && cd $1 }
+alias l() { ls -lah "$@" }
+
+# editor
+alias vim() { nvim "$@" }
+
