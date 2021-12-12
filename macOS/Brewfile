@@ -1,0 +1,13 @@
+tap "homebrew/cask"
+
+# formula
+brew "stow"
+brew "fd"
+brew "ripgrep"
+brew "zsh"
+brew "neovim"
+
+# casks
+cask "docker"
+cask "google-chrome"
+cask "iterm2"
