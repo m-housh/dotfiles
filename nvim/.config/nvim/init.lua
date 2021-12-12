@@ -2,7 +2,7 @@
 require('plugins')
 
 -- Key maps
-require('keymaps')
+require('mappings')
 
 -- Common settings
 require('settings')

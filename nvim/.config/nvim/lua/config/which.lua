@@ -1,4 +1,4 @@
--- disable v
+--isable v
 -- local presets = require("which-key.plugins.presets")
 -- presets.operators["v"] = nil
 require("which-key").setup {
@@ -63,8 +63,8 @@ require("which-key").setup {
         i = {"j", "k"},
         v = {"j", "k"}
     }
-}
 
+}
 local wk = require("which-key")
 default_options = {noremap = true, silent = true}
 
@@ -72,8 +72,17 @@ default_options = {noremap = true, silent = true}
 --wk.register({ga = {"<Plug>(EasyAlign)", "Align", mode = "x"}})
 
 -- Register all leader based mappings
+local wk = require("which-key")
+-- As an example, we will create the following mappings:
+--  * <leader>ff find files
+--  * <leader>fr show recent files
+--  * <leader>fb Foobar
+-- we'll document:
+--  * <leader>fn new file
+--  * <leader>fe edit file
+-- and hide <leader>1
 wk.register({
-    ["<Tab>"] = {"<cmd>e#<cr>", "Switch to previously opened buffer"},
+  ["<leader>"] = {
     b = {
         name = "Buffers",
         b = {
@@ -82,40 +91,15 @@ wk.register({
         }
      },
     f = {
-        name = "Files",
-        s = {"<cmd>w<cr>", "Save Buffer"},
-        f = {
-            "<cmd>lua require'telescope.builtin'.find_files({ find_command = {'fd', '--hidden', '--type', 'file', '--follow'}})<cr>",
-            "Find File"
-        },
-        l = {"<cmd>Lf<cr>", "Open LF"},
-        p = {"<cmd>NvimTreeToggle<cr>", "Toogle Tree"},
-        r = {"<cmd>Telescope oldfiles<cr>", "Open Recent File"},
-        T = {"<cmd>NvimTreeFindFile<CR>", "Find in Tree"}
+      name = "File",
+      f = { "<cmd>Telescope find_files<cr>", "Find File" },
+      r = { "<cmd>Telescope oldfiles<cr>", "Open Recent File" },
+      n = { "<cmd>enew<cr>", "New File" },
     },
-    s = {
-        name = "Search",
-        c = {"<cmd>Telescope colorscheme<cr>", "Colorscheme"},
-        h = {"<cmd>Telescope help_tags<cr>", "Find Help"},
-        M = {"<cmd>Telescope man_pages<cr>", "Man Pages"},
-        R = {"<cmd>Telescope registers<cr>", "Registers"},
-        t = {"<cmd>Telescope live_grep<cr>", "Text"},
-        s = {"<cmd>Telescope grep_string<cr>", "Text under cursor"},
-        k = {"<cmd>Telescope keymaps<cr>", "Keymaps"},
-        C = {"<cmd>Telescope commands<cr>", "Commands"},
-        p = {"<cmd>Telescope projects<cr>", "Projects"},
-        P = {
-            "<cmd>lua require('telescope.builtin.internal').colorscheme({enable_preview = true})<cr>",
-            "Colorscheme with Preview"
-        }
-    },
-    w = {
-        name = "Window",
-        q = {"<cmd>:q<cr>", "Close"},
-        s = {"<cmd>:split<cr>", "Horizontal Split"},
-        t = {"<c-w>t", "Move to new tab"},
-        ["="] = {"<c-w>=", "Equally size"},
-        v = {"<cmd>:vsplit<cr>", "Verstical Split"},
-        w = {"<c-w>x", "Swap"}
-    },
-}, {prefix = "<leader>", mode = "n", default_options})
+  },
+  s = {
+    name = "Search",
+    c = {"<cmd>Telescope colorscheme<cr>", "Colorscheme" }
+  }
+
+})
