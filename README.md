@@ -67,9 +67,17 @@ On a fresh system run the following command from the dotfiles root.
 make bootstrap
 ```
 
-This start by installing homebrew, then install the required homebrew formulas and casks.  Next it will use `gnu-stow` to symlink configuration files to the appropriate locations.  And finally, it will download applications from the `App Store`.
+This start by installing homebrew, then install the required homebrew formulas and casks.  Next it will use
+`gnu-stow` to symlink configuration files to the appropriate locations.  And finally, it will download
+applications from the `App Store`.  When the bootstrap command is done it will open up the `~/Downloads` folder
+for the few applications that get downloaded from the internet, so that you can finish the installation of those applications.
 
-After everything has finished up, you will be able to open `iTerm2` and load the profile which should now be symlinked to `~/.config/macOS/iterm/profile.json`
+## Post Installation
+
+After everything has finished up, you will be able to open `iTerm2` and load the profile which should now be symlinked
+to `~/.config/macOS/iterm/profile.json`
+
+You will also want to open `neovim` and run `:PackerSync` or `:PackerInstall` to download all the `neovim` plugins.
 
 ## Make commands
 
