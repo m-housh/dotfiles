@@ -32,3 +32,4 @@ stow:
 
 # Order matters, need to install home-brew first then formula
 bootstrap: bootstrap-homebrew bootstrap-brews stow bootstrap-logitech bootstrap-amazon-workdocs bootstrap-app-store
+	open ~/Downloads
