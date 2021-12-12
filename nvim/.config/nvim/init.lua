@@ -12,4 +12,3 @@ require('autocmd')
 
 -- Theme
 require('theme')
-
