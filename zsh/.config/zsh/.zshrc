@@ -1,16 +1,12 @@
 
 # configure keeping history of commands
 
-HISTSIZE=200
 
 # TODO: move to $ZDOTDIR/.zsh_history
-HISTFILE=~/.zsh_history
 setopt appendhistory
 setopt sharehistory
 setopt incappendhistory
 
-# Allow useful scripts in ~/.bin to be in the search path.
-export PATH=~/.bin:$PATH
 
 autoload -Uz compinit
 zstyle ':completion:*' menu select
@@ -30,6 +26,7 @@ autoload -Uz colors && colors
 source "$ZDOTDIR/zsh-functions"
 
 zsh_add_file "zsh-aliases"
+zsh_add_file "zsh-exports"
 
 # Plugins
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
@@ -40,8 +37,5 @@ zsh_add_plugin "sindresorhus/pure"
 fpath+="$ZDOTDIR/plugins/pure"
 autoload -U promptinit; promptinit
 prompt pure
-
-export EDITOR="nvim"
-
 
 cat < "$ZDOTDIR/banner"

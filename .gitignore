@@ -3,3 +3,6 @@
 **/plugins
 **/.zcompdump*
 **/.zcompdump
+**/.zcompcache
+zsh/.config/zsh/history
+**/.zsh_history
