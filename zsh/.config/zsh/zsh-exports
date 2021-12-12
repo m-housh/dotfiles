@@ -1,0 +1,17 @@
+#!/bin/sh
+
+HISTSIZE=200
+HISTFILE=$ZDOTDIR/history
+
+# Allow useful scripts in ~/.bin to be in the search path.
+export PATH=~/.bin:$PATH
+
+# zsh-completions installed by homebrew
+if type brew &>/dev/null; then
+ FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
+
+ autoload -Uz compinit
+ compinit
+fi
+
+export EDITOR="nvim"

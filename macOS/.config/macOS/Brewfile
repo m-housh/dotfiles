@@ -15,6 +15,7 @@ brew "ripgrep"
 brew "stow"
 brew "swift-format"
 brew "zsh"
+brew "zsh-completions"
 
 # casks
 cask "docker"
