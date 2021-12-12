@@ -1,3 +1,6 @@
+[core]
+  excludesfile = ~/.config/git/gitignore
+
 [user]
 	name = Michael Housh
 	email = mhoush@houshhomeenergy.com
