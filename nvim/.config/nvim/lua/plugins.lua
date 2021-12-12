@@ -54,7 +54,48 @@ use {
 
 use "nvim-treesitter/nvim-treesitter-textobjects"
 
+use {
+    "hrsh7th/nvim-cmp",
+    requires = {
+        {"hrsh7th/cmp-nvim-lsp"}, {"hrsh7th/cmp-buffer"}, {"hrsh7th/cmp-path"},
+        {"hrsh7th/cmp-cmdline"}, {"hrsh7th/cmp-vsnip"},
+        {"f3fora/cmp-spell", {"hrsh7th/cmp-calc"}, {"hrsh7th/cmp-emoji"}}
+    },
+    config = get_config("cmp")
+}
+
+use {"onsails/lspkind-nvim", requires = {{"famiu/bufdelete.nvim"}}}
+
+-- LSP
+use {"ray-x/lsp_signature.nvim", requires = {{"neovim/nvim-lspconfig"}}}
+
+use {
+  "neovim/nvim-lspconfig",
+  config = get_config("lsp")
+}
+use {
+  "williamboman/nvim-lsp-installer",
+  config = get_config("lsp-installer")
+}
+
 use {"folke/which-key.nvim", event = "VimEnter", config = get_config("which")}
+
+-- requirement for Neogit
+use {
+    "sindrets/diffview.nvim",
+    cmd = {
+        "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles",
+        "DiffviewFocusFiles"
+    },
+    config = get_config("diffview")
+}
+
+use {
+    "TimUntersberger/neogit",
+    requires = {"nvim-lua/plenary.nvim"},
+    cmd = "Neogit",
+    config = get_config("neogit")
+}
 
 -- Theme
 use {

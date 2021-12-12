@@ -1,16 +1,33 @@
-install-brew:
+bootstrap-homebrew:
+	xcode-select --install | true
 	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-install-brew-recipes:
-	@brew install stow \
-		httpie \
-		zsh
+bootsrap-brews:
+	@brew bundle \
+		--no-lock \
+		--cleanup \
+		--debug \
+		--file "$(PWD)/macOS/.config/macOS/Brewfile"
 
-install-brew-casks:
-	@brew install --cask docker \
-		google-chrome
+bootstrap-logitech:
+	@curl \
+		--output ~/Downloads/logi-options.zip \
+		https://download01.logi.com/web/ftp/pub/techsupport/options/options_installer.zip
+
+bootstrap-amazon-workdocs:
+	@curl \
+		--output ~/Downloads/AmazonWorkDocsDrive.pkg \
+	  https://d3f2hupz96ggz3.cloudfront.net/mac/AmazonWorkDocsDrive.pkg
+
+bootstrap-app-store:
+	@brew bundle \
+		--no-lock \
+		--cleanup \
+		--debug \
+		--file "$(PWD)/macOS/.config/macOS/AppStore.Brewfile"
 
 stow:
 	@stow --stow --verbose --target ~ */
 
-fresh-install: install-brew install-brew-recipes install-brew-casks stow
+# Order matters, need to install home-brew first then formula
+bootstrap: bootstrap-homebrew bootstrap-brews stow bootstrap-logitech bootstrap-amazon-workdocs bootstrap-app-store

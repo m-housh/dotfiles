@@ -1,9 +1,15 @@
 # configure aliases
-#alias zshconfig="vim ~/.zshrc"
-#alias reloadzsh="source ~/.zshrc"
+#alias zshconfig="$ZDOTDIR"
+
 alias mkcd() { mkdir $1 && cd $1 }
 alias l() { ls -lah "$@" }
 
 # editor
 alias vim() { nvim "$@" }
+
+# git
+alias g() { git "$@" }
+alias ga() { git add . }
+alias gma() { git add . && git commit -m "$1" }
+alias gs() { git status }
 

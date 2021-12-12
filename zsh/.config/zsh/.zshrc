@@ -19,3 +19,5 @@ zsh_add_file "zsh-aliases"
 zsh_add_file "zsh-zinit"
 
 export EDITOR="nvim"
+
+cat < "$ZDOTDIR/banner"
