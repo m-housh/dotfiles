@@ -90,6 +90,11 @@ wk.register({
             "Find buffer"
         }
      },
+    g = {
+      name = "Git",
+      c = { "<cmd>Neogit Commit<cr>", "Git Commit" },
+      g = { "<cmd>Neogit<cr>", "Open NeoGit" }
+    },
     f = {
       name = "File",
       f = { "<cmd>Telescope find_files<cr>", "Find File" },
