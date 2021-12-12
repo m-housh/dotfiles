@@ -6,10 +6,11 @@ tap "homebrew/cask-fonts"
 cask_args appdir: "~/Applications", require_sha: true
 
 # formula
-brew "fd"
+brew "fd"               # required for some neovim plugins
 brew "git"
 brew "mas"
 brew "neovim"
+brew "node"             # required for some LSP servers in neovim
 brew "ripgrep"
 brew "stow"
 brew "swift-format"

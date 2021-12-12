@@ -54,6 +54,17 @@ use {
 
 use "nvim-treesitter/nvim-treesitter-textobjects"
 
+-- LSP
+use {
+  "neovim/nvim-lspconfig",
+  config = get_config("lsp")
+}
+use {
+  "williamboman/nvim-lsp-installer",
+  config = get_config("lsp-installer")
+}
+
+
 use {"folke/which-key.nvim", event = "VimEnter", config = get_config("which")}
 
 -- Theme
