@@ -1,13 +1,21 @@
 tap "homebrew/cask"
 
+# TODO: Make the application directory a global variable ??
+# set arguments for all 'brew install --cask' commands
+cask_args appdir: "~/Applications", require_sha: true
+
 # formula
-brew "stow"
 brew "fd"
-brew "ripgrep"
-brew "zsh"
+brew "git"
+brew "mas"
 brew "neovim"
+brew "ripgrep"
+brew "stow"
+brew "zsh"
 
 # casks
 cask "docker"
 cask "google-chrome"
 cask "iterm2"
+cask "paw"
+#cask "sketchup-pro"
