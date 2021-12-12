@@ -7,3 +7,8 @@ alias l() { ls -lah "$@" }
 # editor
 alias vim() { nvim "$@" }
 
+# git
+alias g() { git "$@" }
+alias ga() { git add . }
+alias gcm() { git commit -m "$1" }
+
