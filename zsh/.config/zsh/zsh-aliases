@@ -1,5 +1,5 @@
 # configure aliases
-alias zshconfig="$ZDOTDIR"
+#alias zshconfig="$ZDOTDIR"
 
 alias mkcd() { mkdir $1 && cd $1 }
 alias l() { ls -lah "$@" }
@@ -11,4 +11,5 @@ alias vim() { nvim "$@" }
 alias g() { git "$@" }
 alias ga() { git add . }
 alias gma() { git add . && git commit -m "$1" }
+alias gs() { git status }
 
