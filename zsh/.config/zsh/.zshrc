@@ -30,13 +30,18 @@ autoload -Uz colors && colors
 source "$ZDOTDIR/zsh-functions"
 
 zsh_add_file "zsh-aliases"
-zsh_add_file "zsh-prompt"
-#zsh_add_file "zsh-zinit"
 
 # Plugins
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
+zsh_add_plugin "sindresorhus/pure"
+
+# Prompt
+fpath+="$ZDOTDIR/plugins/pure"
+autoload -U promptinit; promptinit
+prompt pure
 
 export EDITOR="nvim"
+
 
 cat < "$ZDOTDIR/banner"
