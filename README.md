@@ -14,7 +14,7 @@ ripgrep
 stow
 swift-format
 zsh
-
+zsh-completions
 ```
 
 It will also install the following homebrew casks in the `~/Applications` directory.
