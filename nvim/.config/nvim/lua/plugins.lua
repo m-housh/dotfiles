@@ -97,6 +97,8 @@ use {
     config = get_config("neogit")
 }
 
+use {"hrsh7th/vim-vsnip", config = get_config("vsnip")}
+
 -- Theme
 use {
   'EdenEast/nightfox.nvim',
