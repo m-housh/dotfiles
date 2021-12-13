@@ -1,8 +1,10 @@
 **/.DS_Store
 **/Brewfile.lock.json
 **/plugins
+**/plugin
 **/.zcompdump*
 **/.zcompdump
 **/.zcompcache
 zsh/.config/zsh/history
 **/.zsh_history
+**/.zsh_sessions

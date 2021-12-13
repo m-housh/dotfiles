@@ -17,14 +17,5 @@ brew "swift-format"
 brew "zsh"
 brew "zsh-completions"
 
-# casks
-cask "docker"
-cask "google-chrome"
-cask "iterm2"
-cask "microsoft-teams"
-cask "obs"
-cask "paw"
-cask "sketchup-pro"
-
 # fonts
 cask "font-inconsolata-nerd-font"

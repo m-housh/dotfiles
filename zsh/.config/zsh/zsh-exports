@@ -5,6 +5,8 @@ HISTFILE=$ZDOTDIR/history
 
 # Allow useful scripts in ~/.bin to be in the search path.
 export PATH=~/.bin:$PATH
+export PATH=/opt/homebrew/bin:$PATH
+export PATH=/opt/homebrew/sbin:$PATH
 
 # zsh-completions installed by homebrew
 if type brew &>/dev/null; then

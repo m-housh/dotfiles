@@ -1,14 +1,21 @@
 bootstrap-homebrew:
 	xcode-select --install | true
 	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-	chmod -R go-w $(brew --prefix)/share
+	chmod -R go-w $(brew --prefix)
 
-bootsrap-brews:
+bootstrap-brews:
 	@brew bundle \
 		--no-lock \
 		--cleanup \
 		--debug \
 		--file "$(PWD)/macOS/.config/macOS/Brewfile"
+
+bootstrap-casks:
+	@brew bundle \
+		--no-lock \
+		--cleanup \
+		--debug \
+		--file "$(PWD)/macOS/.config/macOS/Casks.Brewfile"
 
 bootstrap-logitech:
 	@curl \

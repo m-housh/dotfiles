@@ -3,6 +3,7 @@
 alias zdots() { nvim "$ZDOTDIR" }
 alias dots() { nvim ~/.dotfiles }
 alias reload() { source "$ZDOTDIR/.zshrc" }
+alias banner() { clear && cat < "$ZDOTDIR/banner" }
 
 alias mkcd() { mkdir $1 && cd $1 }
 alias l() { ls -lah "$@" }
