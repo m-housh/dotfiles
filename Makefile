@@ -34,9 +34,11 @@ bootstrap-app-store:
 		--debug \
 		--file "$(PWD)/macOS/.config/macOS/AppStore.Brewfile"
 
+bootstrap-non-brews: bootstrap-logitech bootstrap-amazon-workdocs
+
 stow:
 	@stow --stow --verbose --target ~ */
 
 # Order matters, need to install home-brew first then formula
-bootstrap: bootstrap-homebrew bootstrap-brews stow bootstrap-logitech bootstrap-amazon-workdocs bootstrap-app-store
+bootstrap: bootstrap-homebrew bootstrap-brews bootstrap-casks stow bootstrap-non-brews bootstrap-app-store
 	open ~/Downloads

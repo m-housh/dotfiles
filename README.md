@@ -87,10 +87,16 @@ It is also possible to not do the full bootstrapping.  If you would only like to
 make bootstrap-homebrew
 ```
 
-Once homebrew is installed, if you'd like to install the homebrew formula and casks (located in `macOS/.config/macOS/Brewfile`) then you can run the following command.
+Once homebrew is installed, if you'd like to install the homebrew formula (located in `macOS/.config/macOS/Brewfile`) then you can run the following command.
 
 ```
 make bootstrap-brews
+```
+
+To install homebrew casks (located in `macOS/.config/macOS/Casks.Brewfile`) then you can run the following command.
+
+```
+make bootstrap-casks
 ```
 
 To symlink the configuration files only then you can run.
@@ -103,6 +109,12 @@ To download the logitech options application and place in your `~/Downloads` fol
 
 ```
 make bootstrap-logitech
+```
+
+To download the amazon workdocs drive installer and place in your `~/Downloads` folder, you can run.
+
+```
+make bootstrap-amazon-workdocs
 ```
 
 And finally to download the app store applications run.
