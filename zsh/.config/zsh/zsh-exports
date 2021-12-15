@@ -3,6 +3,9 @@
 HISTSIZE=200
 HISTFILE=$ZDOTDIR/history
 
+# shell
+export SHELL="$(which zsh)"
+
 # Allow useful scripts in ~/.bin to be in the search path.
 export PATH=~/.bin:$PATH
 
