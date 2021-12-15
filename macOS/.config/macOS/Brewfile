@@ -23,6 +23,7 @@ cask "google-chrome"
 cask "iterm2"
 cask "microsoft-teams"
 cask "obs"
+cask "rectangle"
 cask "paw"
 cask "sketchup-pro"
 
