@@ -4,6 +4,7 @@ alias cdots() { cd "$HOME/.dotfiles" }
 alias zdots() { nvim "$ZDOTDIR" }
 alias dots() { nvim ~/.dotfiles }
 alias reload() { source "$ZDOTDIR/.zshrc" }
+alias banner() { clear && cat < "$ZDOTDIR/banner" }
 
 alias mkcd() { mkdir $1 && cd $1 }
 alias l() { ls -lah "$@" }
@@ -18,4 +19,7 @@ alias gcb() { git checkout -b "$@" }
 alias gco() { git checkout "$@" }
 alias gma() { git add . && git commit -m "$1" }
 alias gs() { git status }
+
+# move back to old cwd
+alias bk() { cd "$OLDPWD" }
 

@@ -1,8 +1,4 @@
 
-# configure keeping history of commands
-
-
-# TODO: move to $ZDOTDIR/.zsh_history
 setopt appendhistory
 setopt sharehistory
 setopt incappendhistory

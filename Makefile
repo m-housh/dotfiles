@@ -1,14 +1,21 @@
 bootstrap-homebrew:
 	xcode-select --install | true
 	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-	chmod -R go-w $(brew --prefix)/share
+	chmod -R go-w $(brew --prefix)
 
-bootsrap-brews:
+bootstrap-brews:
 	@brew bundle \
 		--no-lock \
 		--cleanup \
 		--debug \
 		--file "$(PWD)/macOS/.config/macOS/Brewfile"
+
+bootstrap-casks:
+	@brew bundle \
+		--no-lock \
+		--cleanup \
+		--debug \
+		--file "$(PWD)/macOS/.config/macOS/Casks.Brewfile"
 
 bootstrap-logitech:
 	@curl \
@@ -27,9 +34,11 @@ bootstrap-app-store:
 		--debug \
 		--file "$(PWD)/macOS/.config/macOS/AppStore.Brewfile"
 
+bootstrap-non-brews: bootstrap-logitech bootstrap-amazon-workdocs
+
 stow:
 	@stow --stow --verbose --target ~ */
 
 # Order matters, need to install home-brew first then formula
-bootstrap: bootstrap-homebrew bootstrap-brews stow bootstrap-logitech bootstrap-amazon-workdocs bootstrap-app-store
+bootstrap: bootstrap-homebrew bootstrap-brews bootstrap-casks stow bootstrap-non-brews bootstrap-app-store
 	open ~/Downloads
