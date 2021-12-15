@@ -1,5 +1,6 @@
 # configure aliases
 #alias zshconfig="$ZDOTDIR"
+alias cdots() { cd "$HOME/.dotfiles" }
 alias zdots() { nvim "$ZDOTDIR" }
 alias dots() { nvim ~/.dotfiles }
 alias reload() { source "$ZDOTDIR/.zshrc" }

@@ -2,6 +2,7 @@ local actions = require('telescope.actions')
 local telescope = require('telescope')
 
 --telescope.load_extension('projects')
+telescope.load_extension('fzf')
 
 telescope.setup{
   defaults = {
