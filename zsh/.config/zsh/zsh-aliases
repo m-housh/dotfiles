@@ -19,3 +19,6 @@ alias gco() { git checkout "$@" }
 alias gma() { git add . && git commit -m "$1" }
 alias gs() { git status }
 
+# move back to old cwd
+alias bk() { cd "$OLDPWD" }
+
