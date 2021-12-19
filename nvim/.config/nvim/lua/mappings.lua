@@ -1,6 +1,6 @@
 local keymap = vim.api.nvim_set_keymap
-default_options = {noremap = true, silent = true}
-expr_options = {noremap = true, expr = true, silent = true}
+local default_options = {noremap = true, silent = true}
+-- local expr_options = {noremap = true, expr = true, silent = true}
 
 -- map the leader key
 keymap('n', '<Space>', '<NOP>', default_options)
@@ -16,7 +16,6 @@ keymap('i', '<c-s>', '<ESC>:w<CR>a', default_options)
 keymap("v", "p", "\"_dP", default_options)
 
 -- buffer focus
-local opts = { noremap = true }
 keymap('n', '<c-j>', '<c-w>j', default_options)
 keymap('n', '<c-h>', '<c-w>h', default_options)
 keymap('n', '<c-k>', '<c-w>k', default_options)
