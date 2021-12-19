@@ -9,6 +9,9 @@ export SHELL="$(which zsh)"
 # Allow useful scripts in ~/.bin to be in the search path.
 export PATH=~/.bin:$PATH
 
+# Allow git to work on mounted volumes
+export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+
 # Add homebrew to the path
 if [ -d /opt/homebrew ]; then
   export PATH=/opt/homebrew/bin:$PATH

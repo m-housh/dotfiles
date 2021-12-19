@@ -50,7 +50,7 @@ capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
 
 local servers = {
     "gopls", "bashls", "jedi_language_server", "dockerls", "terraformls",
-    "tsserver", "texlab", "yamlls", "jsonls"
+    "tsserver", "texlab", "yamlls", "jsonls", "clangd", "sourcekit"
 }
 for _, lsp in ipairs(servers) do
     nvim_lsp[lsp].setup {
@@ -176,6 +176,8 @@ require"lspconfig".sumneko_lua.setup {
         }
     }
 }
+
+
 -- alternative to formatter but yamlfix is not working and I need this for respecting yamllint config
 -- but yamlfix is messing up ansible files ... 😠
 -- require('lspconfig')['efm'].setup{
