@@ -93,7 +93,8 @@ wk.register({
     g = {
       name = "Git",
       c = { "<cmd>Neogit Commit<cr>", "Git Commit" },
-      g = { "<cmd>Neogit<cr>", "Open NeoGit" }
+      g = { "<cmd>Neogit<cr>", "Open NeoGit" },
+      p = { "<cmd> Neogit Push<cr>" }
     },
     f = {
       name = "File",
