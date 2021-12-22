@@ -3,8 +3,8 @@ setopt appendhistory
 setopt sharehistory
 setopt incappendhistory
 
-
-autoload -Uz compinit
+fpath=("$ZDOTDIR/completions" $fpath)
+autoload -Uz compinit; compinit
 zstyle ':completion:*' menu select
 zmodload zsh/complist
 # compinit
