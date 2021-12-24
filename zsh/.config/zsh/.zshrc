@@ -32,10 +32,10 @@ zsh_add_file "zsh-exports"
 # Plugins
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
-zsh_add_plugin "sindresorhus/pure"
+#zsh_add_plugin "sindresorhus/pure"
 
-# Prompt
-fpath+="$ZDOTDIR/plugins/pure"
+# Prompt / managed by brew. (`brew install pure`)
+#fpath+="$ZDOTDIR/plugins/pure"
 autoload -U promptinit; promptinit
 prompt pure
 

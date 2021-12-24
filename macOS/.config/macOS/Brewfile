@@ -11,9 +11,11 @@ brew "git"
 brew "mas"
 brew "neovim"
 brew "node"             # required for some LSP servers in neovim
+brew "pure"
 brew "ripgrep"
 brew "stow"
 brew "swift-format"
+brew "tmux"
 brew "zsh"
 brew "zsh-completions"
 

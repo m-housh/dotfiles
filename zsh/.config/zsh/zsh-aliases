@@ -8,7 +8,13 @@
 
 
 # clear the terminal
-alias cl() { clear }
+alias cl() {
+  if [[ "$TMUX_PANE" ]]; then
+    tmux send-keys -R\; clear-history
+  else
+    clear
+  fi
+}
 
 # move into the ~/.dotfiles directory
 alias cdots() { cd "$HOME/.dotfiles" }
@@ -52,3 +58,5 @@ if [ $(hostname -s) = "Michaels-Mac-mini" ]; then
   alias projects() { cd "/Volumes/M1 Mac-Mini External Drive/Projects" }
 fi
 
+# tmux
+#alias ta() { tmux -f ~/.config/tmux/tmux.config attach "$@" }
