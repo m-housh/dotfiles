@@ -18,6 +18,11 @@ zle -N down-line-or-beginning-search
 # Colors
 autoload -Uz colors && colors
 
+# Homebrew
+if [ "$(which brew)" ]; then
+  eval "$(brew shellenv)"
+fi
+
 # Load Useful Functions
 source "$ZDOTDIR/zsh-functions"
 
