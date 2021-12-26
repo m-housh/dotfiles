@@ -8,6 +8,7 @@ export SHELL="$(which zsh)"
 
 # Allow useful scripts in ~/.bin to be in the search path.
 export PATH=~/.bin:$PATH
+export PATH=~/.local/scripts:$PATH
 
 # Allow git to work on mounted volumes
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
