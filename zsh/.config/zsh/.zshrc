@@ -14,8 +14,8 @@ autoload -Uz colors && colors
 # Load Useful Functions
 source "$ZDOTDIR/zsh-functions"
 
-zsh_add_file "zsh-aliases"
 zsh_add_file "zsh-exports"
+zsh_add_file "zsh-aliases"
 
 # Plugins
 zsh_add_plugin "zsh-users/zsh-autosuggestions"

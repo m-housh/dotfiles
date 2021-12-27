@@ -60,3 +60,4 @@ fi
 
 # tmux
 #alias ta() { tmux -f ~/.config/tmux/tmux.config attach "$@" }
+
