@@ -39,4 +39,7 @@ zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 autoload -U promptinit; promptinit
 prompt pure
 
+# Enable vi mode
+bindkey -v
+
 cat < "$ZDOTDIR/banner"
