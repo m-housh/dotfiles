@@ -7,9 +7,10 @@ tap "federico-terzi/espanso"
 cask_args appdir: "~/Applications", require_sha: true
 
 # formula
-brew "espanso"
+brew "espanso"          # Espanso: Text expander
 brew "fd"               # required for some neovim plugins
 brew "figlet"
+brew "gh"               # Github CLI
 brew "git"
 brew "mas"
 brew "neovim"
