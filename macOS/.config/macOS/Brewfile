@@ -1,11 +1,13 @@
 tap "homebrew/cask"
 tap "homebrew/cask-fonts"
+tap "federico-terzi/espanso"
 
 # TODO: Make the application directory a global variable ??
 # set arguments for all 'brew install --cask' commands
 cask_args appdir: "~/Applications", require_sha: true
 
 # formula
+brew "espanso"
 brew "fd"               # required for some neovim plugins
 brew "git"
 brew "mas"

@@ -34,7 +34,10 @@ bootstrap-app-store:
 		--debug \
 		--file "$(PWD)/macOS/.config/macOS/AppStore.Brewfile"
 
-bootstrap-non-brews: bootstrap-logitech bootstrap-amazon-workdocs
+bootstrap-espanso:
+	@scripts/install-espanso-packages
+
+bootstrap-non-brews: bootstrap-logitech bootstrap-amazon-workdocs bootstrap-espanso
 
 stow:
 	@stow --stow --verbose --target ~ */
