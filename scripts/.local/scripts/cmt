@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# adapted from...
+# https://github.com/rwxrob/dot/blob/main/scripts/cmt
+
+while IFS= read -r line; do
+  echo "${1:-#} $line"
+done

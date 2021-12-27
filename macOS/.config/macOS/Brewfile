@@ -9,6 +9,7 @@ cask_args appdir: "~/Applications", require_sha: true
 # formula
 brew "espanso"
 brew "fd"               # required for some neovim plugins
+brew "figlet"
 brew "git"
 brew "mas"
 brew "neovim"

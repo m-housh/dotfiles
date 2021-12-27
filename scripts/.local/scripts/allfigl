@@ -1,0 +1,8 @@
+#!/bin/sh
+
+for font in /opt/homebrew/share/figlet/fonts/*.flf; do
+  clear
+  echo "FONT: $font"
+  figlet -f "${font}" hello
+  read line
+done
