@@ -1,7 +1,18 @@
+#!/usr/bin/env zsh
 
-setopt appendhistory
-setopt sharehistory
-setopt incappendhistory
+#------------------------------ exports ------------------------------
+export ZDOTDIR="$HOME/.config/zsh"
+export SHELL="$(which zsh)"
+export DOCUMENTS="$HOME/Documents"
+export DOWNLOADS="$HOME/Downloads"
+export DOTFILES="$HOME/.dotfiles"
+export DESKTOP="$HOME/Desktop"
+export SCRIPTS="$HOME/.local/scripts"
+export TERM=xterm-256color
+export EDITOR=vi
+export VISUAL=vi
+export EDITOR_PREFIX=vi
+export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
 autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
@@ -14,33 +25,110 @@ autoload -Uz colors && colors
 # Load Useful Functions
 source "$ZDOTDIR/zsh-functions"
 
-zsh_add_file "zsh-exports"
+#------------------------------ path ------------------------------
+
+path_append() {
+  declare arg
+  for arg in "$@"; do
+    test -d "$arg" || continue
+    PATH=${PATH//":$arg:"/:}
+    PATH=${PATH/#"$arg:"/}
+    PATH=${PATH/%":$arg"/}
+    export PATH="${PATH:+"$PATH:"}$arg"
+  done
+} && export path_append
+
+path_prepend() {
+  declare arg
+  for arg in "$@"; do
+    test -d "$arg" || continue
+    PATH=${PATH//:"$arg:"/:}
+    PATH=${PATH/#"$arg:"/}
+    PATH=${PATH/%":$arg"/}
+    export PATH="$arg${PATH:+":$PATH"}"
+  done
+} && export path_prepend
+
+fpath_prepend() {
+  declare arg
+  for arg in "$@"; do
+    test -d "$arg" || continue
+    FPATH=${FPATH//:"$arg:"/:}
+    FPATH=${FPATH/#"$arg:"/}
+    FPATH=${FPATH/%":$arg"/}
+    export FPATH="$arg${FPATH:+":$FPATH"}"
+  done
+} && export fpath_prepend
+
+
+# last arg will be first in path
+path_prepend \
+  "$(brew --prefix)/sbin" \
+  "$(brew --prefix)/bin" \
+  "$HOME/.local/bin" \
+  "$SCRIPTS"
+
+fpath_prepend \
+  "$(brew --prefix)/share/zsh/site-functions" \
+  "$(brew --prefix)/share/zsh-completions" \
+  "$ZDOTDIR/completions"
+
+
+#------------------------------ history ------------------------------
+setopt appendhistory            # append to history
+setopt sharehistory             # share history across multiple sessions
+setopt incappendhistory         # adds commands as typed, not at shell exit
+setopt hist_expire_dups_first   # expire duplicates first
+setopt hist_ignore_dups         # do not store duplicates
+setopt hist_find_no_dups        # ignore duplicates when searching
+setopt hist_reduce_blanks       # do not store blank lines.
+
+export HISTSIZE=5000
+export HISTFILESIZE=10000
+export HISTFILE=$ZDOTDIR/history
+
+#set -o vi
+
+#------------------------------ cdpath ------------------------------
+setopt autocd
+export CDPATH=".:$DOTFILES:$HOME"
+
+#------------------------------ options ------------------------------
+#                         (see `man zshoptions`)
+setopt chaselinks
+setopt extended_glob
+setopt glob_dots
+setopt glob_star_short
+setopt clobber
+setopt interactive_comments
+setopt aliases
+
+# Enable vi mode
+bindkey -v
+
+#zsh_add_file "zsh-exports"
 zsh_add_file "zsh-aliases"
 
 # Plugins
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 
-# Homebrew
-if [ "$(which brew)" ]; then
-  eval "$(brew shellenv)"
-fi
+#------------------------------ completions ------------------------------
+# case insensitive path-completion 
+zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 
 
-# compinit
-fpath=("$ZDOTDIR/completions" $fpath)
-autoload -Uz compinit; compinit
+# partial completion suggestions
+zstyle ':completion:*' list-suffixes zstyle ':completion:*' expand prefix suffix 
+
 zstyle ':completion:*' menu select
+autoload -Uz compinit; compinit         # zstyle(s) should be added before this.
 zmodload zsh/complist
-_comp_options+=(globdots)		# Include hidden files.
-
+_comp_options+=(globdots)		            # Include hidden files.
 
 
 # Prompt / managed by brew. (`brew install pure`)
-#fpath+="$ZDOTDIR/plugins/pure"
 autoload -Uz promptinit; promptinit
 prompt pure
 
-# Enable vi mode
-#bindkey -v
 
 cat < "$ZDOTDIR/banner"
