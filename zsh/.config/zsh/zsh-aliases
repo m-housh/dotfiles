@@ -39,6 +39,7 @@ alias l() { ls -lah "$@" }
 
 # editor
 alias vim() { nvim "$@" }
+alias vi() { nvim "$@" }
 
 # git
 alias g() { git "$@" }
@@ -57,6 +58,9 @@ alias bk() { cd "$OLDPWD" }
 if [ $(hostname -s) = "Michaels-Mac-mini" ]; then
   alias projects() { cd "/Volumes/M1 Mac-Mini External Drive/Projects" }
 fi
+
+# change file to be executable
+alias chmox() { chmod +x "$@" }
 
 # tmux
 #alias ta() { tmux -f ~/.config/tmux/tmux.config attach "$@" }

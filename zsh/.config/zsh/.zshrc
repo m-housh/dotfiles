@@ -63,6 +63,8 @@ fpath_prepend() {
 
 # last arg will be first in path
 path_prepend \
+  "/opt/homebrew/bin" \
+  "/opt/homebrew/sbin" \
   "$(brew --prefix)/sbin" \
   "$(brew --prefix)/bin" \
   "$HOME/.local/bin" \
