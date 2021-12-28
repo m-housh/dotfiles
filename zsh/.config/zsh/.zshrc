@@ -12,6 +12,7 @@ export TERM=xterm-256color
 export EDITOR=vi
 export VISUAL=vi
 export EDITOR_PREFIX=vi
+export GITUSER="m-housh"
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
 autoload -U up-line-or-beginning-search
