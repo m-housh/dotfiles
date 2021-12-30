@@ -10,3 +10,4 @@ zsh/.config/zsh/history
 **/.zsh_sessions
 **/completions/*
 **/.netrwhist
+**/.zshrc-local

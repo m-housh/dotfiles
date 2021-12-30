@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Creates an encrypted disk image from a folder
+
+from="$1"
+to="$2"
+
+if [ -z "$1" ] || [ -z "$2" ]; then
+  echo "Usage: dmg <fromdir> <todir>"
+  echo ""
+  exit 1
+fi
+
+name="$(isosec).dmg"
+hdiutil create -encryption AES-256 -srcfolder "$from" "$to/$name"
