@@ -1,0 +1,6 @@
+#!/bin/sh
+
+for file in "$SCREENSHOTS"/*; do
+  echo "Removing file: $file" >&2
+  rm "$file"
+done

@@ -72,6 +72,12 @@ This start by installing homebrew, then install the required homebrew formulas a
 applications from the `App Store`.  When the bootstrap command is done it will open up the `~/Downloads` folder
 for the few applications that get downloaded from the internet, so that you can finish the installation of those applications.
 
+## To set macOS settings
+
+```bash
+source macOS/setup_defaults
+```
+
 ## Post Installation
 
 After everything has finished up, you will be able to open `iTerm2` and load the profile which should now be symlinked
