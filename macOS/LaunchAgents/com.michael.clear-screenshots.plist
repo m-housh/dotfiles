@@ -25,5 +25,9 @@
 	<string>michael</string>
   <key>RunAtLoad</key>
   <true/>
+  <key>StandardOutPath</key>
+  <string>/var/log/com.michael.clear-screenshots.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/var/log/com.michael.clear-screenshots.error.log</string>
 </dict>
 </plist>

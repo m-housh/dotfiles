@@ -2,6 +2,7 @@
 ^/Brewfile*
 ^/README.*
 ^/LICENSE.*
+^/LaunchAgents*
 
 \.git
 \.gitignore

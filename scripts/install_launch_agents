@@ -2,19 +2,19 @@
 
 set -e
 
-# Installs launchd agents for appropriately.
+# Installs launchd agents.
 
-agent="$HOME/Library/LaunchAgents"
+agent_dir="${HOME}/Library/LaunchAgents"
 uid="$(id -u "$(whoami)")"
 
-test -d "$agent"
+mkdir -p "$agent_dir"
 
-for file in "$DOTFILES"/macOS/LaunchAgents/*.plist; do
-  filename="$(basename $file)"
-  path="$agent/$filename"
-  if ! test -e "$path"; then
-    echo "Installing Agent: $filename"
-    cp "$file" "$path"
-    launchctl enable "user/$uid/$filename"
+for file in "${DOTFILES}"/macOS/LaunchAgents/*.plist; do
+  filename=$(basename "${file}")
+  path="${agent_dir}/${filename}"
+  if ! test -e "${path}"; then
+    echo "Installing Agent: ${filename}"
+    cp "${file}" "${path}"
+    launchctl enable "user/${uid}/${filename}"
   fi
 done
