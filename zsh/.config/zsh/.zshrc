@@ -19,6 +19,7 @@ export SCREENSHOTS="$BUCKET/Pictures/Screenshots"
 export DOTFILES="$HOME/.dotfiles"
 export DESKTOP="$HOME/Desktop"
 export SCRIPTS="$HOME/.local/scripts"
+export WORK="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work"
 export TERM=xterm-256color
 export EDITOR=vi
 export VISUAL=vi
