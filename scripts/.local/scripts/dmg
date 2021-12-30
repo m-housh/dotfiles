@@ -2,6 +2,8 @@
 
 # Creates an encrypted disk image from a folder
 
+set -e
+
 from="$1"
 to="$2"
 

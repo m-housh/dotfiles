@@ -55,9 +55,9 @@ alias gs() { git status }
 alias bk() { cd "$OLDPWD" }
 
 # My mac-mini specific aliases
-if [ $(hostname -s) = "Michaels-Mac-mini" ]; then
-  alias projects() { cd "/Volumes/M1 Mac-Mini External Drive/Projects" }
-fi
+# if [ $(hostname -s) = "Michaels-Mac-mini" ]; then
+#  alias projects() { cd "/Volumes/M1 Mac-Mini External Drive/Projects" }
+# fi
 
 # change file to be executable
 #alias chmox() { chmod +x "$@" }
