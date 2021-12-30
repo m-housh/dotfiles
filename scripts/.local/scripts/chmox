@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# makes files executable
+test -f "$1" && chmod +x "$1"

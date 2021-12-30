@@ -60,7 +60,7 @@ if [ $(hostname -s) = "Michaels-Mac-mini" ]; then
 fi
 
 # change file to be executable
-alias chmox() { chmod +x "$@" }
+#alias chmox() { chmod +x "$@" }
 
 # tmux
 #alias ta() { tmux -f ~/.config/tmux/tmux.config attach "$@" }
