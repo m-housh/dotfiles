@@ -75,7 +75,7 @@ for the few applications that get downloaded from the internet, so that you can 
 ## To set macOS settings
 
 ```bash
-source macOS/setup_defaults
+source scripts/setup_defaults
 ```
 
 ## Post Installation
