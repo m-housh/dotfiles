@@ -161,6 +161,7 @@ alias g='git'
 alias ga='git add'
 alias gcb='git checkout -b'
 alias gco='git checkout'
+alias gcm='git commit -m'
 #alias gma() { git add . && git commit -m "$1" }
 #alias gp() { git push }
 alias gs='git status'

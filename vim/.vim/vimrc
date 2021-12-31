@@ -3,43 +3,43 @@
 set autoindent
 set autowrite                       " automatically write files when changing
 set background=dark
+set backspace=indent,eol,start
+set belloff=all
+" set colorcolumn=120
+set expandtab                       " replace tabs with spaces automatically
+set exrc
+set foldmethod=manual
+set hidden
+set history=100                     " command history
+set icon
+set incsearch
+set nobackup
+set nocompatible
+set nofixendofline
+set nohlsearch
+set noswapfile
+set nowrap
+set number
+set relativenumber
 set ruler                           " turns on col and row in lower right
 " used with `set ruler`
 set ruf=%30(%=%#LineNr#%.50F\ [%{strlen(&ft)?&ft:'none'}]\ %l:%c\ %p%%%)
-set showmode                        " show command and insert mode
-set tabstop=2
-set softtabstop=2
+set scrolloff=8
 set shiftwidth=2
-set expandtab                       " replace tabs with spaces automatically
-set textwidth=72
+set showmode                        " show command and insert mode
+set signcolumn=no
 set smartindent
 set smarttab
-set nofixendofline
-set foldmethod=manual
-set exrc
-set relativenumber
-set nohlsearch
-set hidden
-set nocompatible
-set nu
-set nowrap
-set noswapfile
-set nobackup
+set softtabstop=2
+set tabstop=2
+set termguicolors
+set textwidth=200
+set ttyfast                         " faster scrolling
 set undodir=~/.vim/undodir
 set undofile
-set icon
-set incsearch
-set termguicolors
-set scrolloff=8
-set signcolumn=yes
-set colorcolumn=80
-set noerrorbells
-set number
-set wildmenu
-set ttyfast                         " faster scrolling
 set viminfo='20,<1000,s1000         " prevents truncated yanks, deletes, etc.
-set hidden
-set history=100                     " command history
+set wildmenu
+
 syntax enable
 filetype plugin on                  " sense the filesystem
 let mapleader = " "
@@ -68,9 +68,15 @@ colorscheme gruvbox
 " highlight Normal guibg=none
 
 " ----------------------- utilities ----------------------------------
-" Edit/Reload vimr configuration file
-nnoremap confe :e $HOME/.vimrc<CR>
-nnoremap confr :source $HOME/.vimrc<CR>
+
+" fuzzy finder
+let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
+
+" opens fuzzy finder under the current directory
+nmap <leader>ff :call fzf#run(fzf#wrap({ 'source': 'find "$PWD" -type f' }))<CR>
+" opens fuzzy finder for files under a git version control
+nmap <leader>fg :call fzf#run(fzf#wrap({ 'source': 'git ls-files' }))<CR>
+
 
 fun! TrimWhiteSpace()
     let l:save = winsaveview()
