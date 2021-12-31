@@ -1,0 +1,1067 @@
+compaudi
+chmod -R go-w '$(brew --prefix)/share/zsh'
+chmod -R go-w '$(brew --prefix)/share'
+chmod -R go-w $(brew --prefix)/share/zsh
+chmod -R go-w $(brew --prefix)/share
+compaudit
+git --help
+git rm --help
+git rm zsh/.config/zsh/.zcompdump
+git rm -f zsh/.config/zsh/.zcompdump
+git rm -f zsh/.config/zsh/.zcompcache
+git rm -f -r zsh/.config/zsh/.zcompcache
+gma "More zsh stuff"
+g merge --squash develop
+gma "Merged develop"
+gco master && g merge develop
+gma "Fixed formula list"
+gma "Have bootstrap command open downloads folder when complete"
+vim README.md
+open ~/Downloads
+which pandoc
+brew search pandoc
+brew install pandoc
+pandoc -s -o /tmp/README.pdf README.md
+pandoc -s -o README.pdf README.md
+which pdflatex
+brew search pdflatex
+brew search tex
+brew install basictex
+  eval "$(/usr/libexec/path_helper)"
+pandoc -o /tmp/README.pdf README.md
+pandoc -o /tmp/README.pdf --toc -N README.md
+pandoc -o /tmp/README.pdf --toc -N -V margin-left=3 -V margin-right=3 -V papersize=letter -s README.md
+pandoc -o /tmp/README.pdf --toc -N -V margin-left=3 -V margin-right=3 -V margin-top=3 -V margin-bottom=3 -V papersize=letter -s README.md
+pandoc -o /tmp/README.pdf --toc -N -V margin-left=3 -V margin-right=3 -V margin-top=3 -V margin-bottom=3 README.md
+pandoc -o /tmp/README.pdf --toc -N -V geometry:margin=1in README.md
+open /tmp/README.pdf
+g diff
+gma "Updated readme"
+cd ~/LocalProjects
+mkcd ComfortConsultReport
+touch footer.md
+touch report.md
+touch Makefile
+mkdir images
+pandoc -D latex | less
+make report && open Report.pdf
+open Report.pdf
+pandoc --help
+pandoc -D pdf
+pandoc -D latex
+brew search beamer
+brew search latex-beamer
+vim report.md
+touch summary.md
+touch links.md
+mkdir docs
+mv report.md docs
+mv links.md docs
+mv summary.md docs
+mv footer.md docs
+vim Makefile
+touch docs/intro.md
+touch docs/goals.md
+touch docs/observations.md
+touch docs/loads.md
+l docs
+vim docs
+make pdf
+brew install pandoc-plot
+brew search matplotlib
+pip install matplotlib
+vim graph.md
+pandoc --filter pandoc-plot graph.md --output output.html
+pip3 install --update pip
+pip3 update
+pip3 help
+pip3 install matplotlib
+which matplotlib
+which python
+python -m pip install -U pip
+python -m pip install -U pip\
+
+pip3 install -U pip
+brew install graphviz
+pandoc-plot toolkits
+which pandoc-plot
+vim $(which pandoc-plot)
+man pandoc-plot
+pandoc-plot --help
+vim ~/.ssh
+ssh 192.168.1.238
+l /Volumes
+cp -r /Volumes/M1\ Mac-Mini\ External\ Drive/LocalProjects/stencil-test .
+cd stencil-test
+make run
+\
+
+git rm -f nvim/.config/nvim/plugin/packer_compiled.lua
+vim .gitignore
+gma "Added fzf to nvim and a few zsh aliases"
+g merge develop
+g push
+gco master
+gco develop
+g merge master
+mas search homeassistant
+gma "Added home assistant to app-store apps"
+brew search homeassistant
+ping 192.168.30.5
+ssh 192.168.30.5
+ssh pi@192.168.30.5
+ssh franken-mini.local
+ssh  homeassistant@192.168.30.5
+ping 192.168.40.5
+ping homeassistant.lan
+mkcd Examples
+mkcd SimplePlugin
+touch template.md
+vim template.md
+touch defaults.json
+vim defaults.json
+touch config.json
+vim config.json
+cd ../../
+rm -rf .build
+swift run stencil-plugin render
+brew search stencil-cli
+brew search alephao/formulae/stencil
+brew tap alephae/formulae
+brew install alephao/formulae/stencil
+which stencil-cli
+xcrun --toolkit swift --find sourcekit-lsp
+xcrun --toolchain swift --find sourcekit-lsp
+nvim
+xcrun --toolchain swift sourcekit-lsp
+which source-kit-lsp
+brew search sourcekit-lsp
+dots .
+export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+gma "Added swift language server"
+dots 
+git stage --help
+git init
+brew search proxmox
+cd ~/
+brew search rectangle
+brew install --cask rectangle
+cd /Volumes/M1\ Mac-Mini\ External\ Drive/Projects/Swift/swift-stencil-plugin
+swift build
+swift run stencil-cli render --template Examples/Hello/templates/hello.md --context Examples/Hello/context.json --output output
+swift run stencil-cli render --template Examples/Hello/templates/hello.md --context Examples/Hello/context.json --output output --dry-run
+swift run stencil-cli --help
+ls Examples
+ls Examples/MyTemplate
+ls Examples/MyTemplate/templates
+xed .
+swift run stencil-cli template --help
+swift run stencil-cli template --path Examples
+vim Examples
+rm -rf Examples/MyTemplate
+vim 
+stow --delete nvim --simulate
+stow --delete nvim --simulate --target ~/ */
+stow --help
+l ~/.config
+gma "Added homebrew eval to zsh"
+vim tutor
+vim vimtutor
+brew install tmux
+tmux kill
+cp /usr/local/opt/tmuxh/share/tmux /tmp/tmux
+cp /usr/local/opt/tmux/share/tmux/example_tmux.conf /tmp/tmux
+vim /tmp/tmuxh
+mkdir -p tmux/.config/tmux
+cp /tmp/tmux tmux/.config/tmux/tmux.config
+make stow
+vim .stow-local-ignore
+stow tmux
+tmux list-windows
+t list-windows
+tmux splitw
+t splitw
+t neww
+tmux
+tmux list-sessions
+dots
+tmux kill-window
+t
+t kill-pane
+t kill-window
+dots
+man tmux splitw
+t .
+t
+tmux neww 'eval ~/.config/zsh/.zshrc'
+tmux kill-window --help
+tmux kill-window -t 2
+tmux neww 'eval $(source ~/.config/zsh/.zshrc)'
+tmux kill-window -t 2
+which zsh
+dots
+tmux killall
+tmux kill-all
+t kill-window
+exit
+dots
+reload
+tmux -f ~/.config/tmux/tmux.config
+stow -D --target ~/ tmux
+cd ~/.dotfiles
+stow -D --target ~/ tmux
+stow -d ~/.dotfiles -D --target ~/ tmux
+brew update stow
+brew upgrade stow
+rm -rf ~/.config/tmux
+l
+man tmux
+mv tmux/.config/tmux/tmux.config tmux/.tmux.conf
+rm -rf tmux/.config
+l tmux
+stow --target ~/ tmux
+tmux
+dots
+reload
+exit
+reload
+cl
+tmux
+dots
+reload
+cl
+clear
+reload
+cl
+tmux kill-window
+cl
+reload
+cl
+man tmux
+dots
+tmux
+tmux kill-window
+dots
+tmux
+tmux kill-window
+dots
+tmux
+tmux bind-key R source-file ~/.tmux.conf\; \display-message "source-file done.'\
+"
+dots
+tmux kill-window
+tmux
+dots
+tmux kill-window
+tmux neww; attach
+tmux neww
+tmux attach
+tmux kill-window -t 0
+unknown command: run-help=man\
+
+tmux kill-window
+tmux kill-window
+cogx
+dots
+tmux
+exit
+dots
+tmux 
+which prompt_pure_setup
+dots
+cd ~/.dotfiles/zsh
+l
+l ~/.config/zsh/plugins
+l
+vim .
+brew search pure
+brew home pure
+cd ~/.config/zsh/plugins/pure
+git pull
+vim .
+dots
+brew install pure
+dots
+reload
+tmux kill-window
+tmux
+cl
+ga .
+cd ~/.dotfiles
+ls
+gs
+cl
+dots
+env
+env
+dots
+tmux
+env
+reload
+cl
+tmux clear-history
+tmux send-keys -R\; clear-history
+dots
+reload
+cl
+tmux kill-window
+cl
+tmux
+dots
+gs
+cdots
+l
+gs
+ga .
+gma "Added tmux and moved pure to brew"
+gp
+tmux split --help
+man tmux
+exit
+tmux list-panes
+tmux kill-pane -t 2
+tmux kill-pane -t 1
+tmux neww
+man tmux
+dots
+tmux kill-pane
+gs
+cdots
+gs
+dots
+gs
+dots
+gma "Set base index of windows to start at 1 in tmux"
+gp
+tmux kill-window
+tmux kill-window
+tmux kill-window
+tmux kill-window
+tmux
+exit
+cl
+cd /Volumes/M1\ Mac-Mini\ External\ Drive/Projects/Swift
+l
+cd swift-stencil-plugin
+tmux
+vim .
+which bc
+bc --help
+isosec
+which date
+man date
+date -u %Y%m%d%H%M%S
+date -y %y%m%d%H%M%S
+date -u %y%m%d%H%M%S
+date -u "%y%m%d%H%M%S"
+date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"\
+
+date "%Y%m%d"
+date -f "%Y%m%d"
+date -u "%Y %m %d"
+date -u "+%Y %m %d"
+date -u "+%Y%m%d%H%M%S"
+tmux neww
+cd ~/.dotfiles
+l
+dots
+l ~/
+mkdir scripts
+l
+mkdir -p scripts/.local/scripts
+touch scripts/.local/scripts/isosec
+chmod +x scripts/.local/scripts/isosec
+dots
+stow --target ~/ scripts
+reload
+isosec
+dots
+isosec
+cl
+gma "Added scripts folder"
+gp
+dots
+isosec
+which isosec
+cl
+brew search fish
+brew home fish
+brew home jellyfish
+which tmux
+tmux neww
+tmux ls
+tmux attach -t 0
+cd ~/.dotfiles
+dots
+dots
+docker pull rwxrob/workspace
+docker run -it --rm rwxrob/workspace
+docker run -it --rm rwxrob/workspace
+cl
+docker run -it --rm rwxrob/workspace
+brew search fishies
+brew search vimari
+docker run -it --rm rwxrob/workspace
+brew search github
+cd ~/.dotfiles
+g pull
+reload
+cl
+brew search github
+brew home github
+brew search gh
+brew install gh
+dots
+brew stow ~/ espanso
+stow -t ~/ espanso
+brew install espanso
+gh auth login
+dots
+dots
+brew tap federico-terzi/espanso
+brew install espanso
+gs
+g pull
+gma "Added comments in brewfile"
+g pull
+git pull --rebase
+dots
+gs
+gma "Fixed merge conflicts"
+g ps
+gs
+g rebase --continue
+gp
+which cal
+cal
+which lolcat
+brew search lolcat
+brew search posix
+man zsh
+reload
+cdots
+tmux
+man zsh
+l
+brew install espanso
+espanso start
+espanso help
+espanso register
+espanso start
+stow -t ~/ espanso
+espanso detect
+cl
+jobs
+which d
+which gh
+which jq
+brew search jq
+brew home jq
+git pull
+reload
+cl
+cdots
+cl
+dots
+cl
+gs
+newx chmox
+reload
+which chmox
+eval $SHELL -l
+which chmox
+l
+chmox scripts/install-espanso-packages
+vim $SCRIPTS
+exit
+tmux kill-pane -t 2
+tmux kill-pane -t 1
+vim $SCRIPTS
+man test
+l scripts/install-espanso-packages
+which lolcat
+brew search lolcat
+brew home lolcat
+which swift
+l /usr/bin
+ls /usr/bin |grep swift
+l /usr/bin |grep swift
+brew search shellcheck
+brew install shellcheck
+for i in (ls -f .); do echo "$i"; done
+man ls
+for i in (ls .); do echo "$i"; done
+for i in $(ls .); do echo "$i"; done
+export APP_DIR=/Volumes/M1\ Mac-Mini\ External\ Drive/Applications
+for i in `ls $APP_DIR`; do echo "$i"; done
+IFS=".app"
+for i in `ls $APP_DIR`; do echo "$i"; done
+reload
+gs
+git pull
+IFS=" "
+for i in `ls $APP_DIR`; do echo "$i"; done
+reload
+cl
+man IFS
+man zsh
+duck change shell IFS
+IFS='.app'
+for i in `ls $APP_DIR`; do echo "$i"; done
+IFS='\n'
+for i in `ls $APP_DIR`; do echo "$i"; done
+IFS='<newline>'
+for i in `ls $APP_DIR`; do echo "$i"; done
+IFS=" "
+reload
+cl
+cat -etv <<<"$IFS"
+IFS='\n'; while read -r `ls $APP_DIR` app; do echo "$app"; done
+IFS=" "
+IFS='\n'; while read -r app; do echo "$app"; done < `ls $APP_DIR`
+IFS=''; while read -r app; do echo "$app"; done < `ls $APP_DIR`
+IFS=; while read -r app; do echo "$app"; done < `ls $APP_DIR`
+IFS=' '; while read -r app; do echo "$app"; done < `ls "$APP_DIR"`
+IFS='.'; while read -r app; do echo "$app"; done < `ls "$APP_DIR"`
+IFS='.'; for i in `ls "$APP_DIR"`; do echo "$i"; done
+IFS=\\n; for i in `ls "$APP_DIR"`; do echo "$i"; done
+IFS=$'\n'; for i in `ls "$APP_DIR"`; do echo "$i"; done
+IFS=""
+reload
+IFS=" "
+reload
+cl
+man read
+IFS=$'\n'; while read -r app; do echo "$app"; done < `ls "$APP_DIR"`
+newx link_apps
+link_apps
+vic link_apps
+man test
+link_apps
+vic link_apps
+link_apps
+vic link_apps
+link_apps
+vic link_apps
+link_apps
+echo "$?"
+link_apps
+link_apps
+link_apps
+shellcheck link_apps
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+link_apps
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+link_apps
+link_apps
+shellcheck $(command -v link_apps)
+man basename
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+link_apps
+link_apps /tmp
+link_apps /tmp
+shellcheck $(command -v link_apps)
+link_apps /tmp
+env
+link_apps 
+link_apps 
+shellcheck $(command -v link_apps)
+link_apps /tmp 
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+shellcheck $(command -v link_apps)
+link_apps /tmp 
+link_apps /tmp 
+link_apps /tmp 
+link_apps /tmp 
+link_apps /tmp 
+shellcheck $(command -v link_apps)
+link_apps /tmp 
+shellcheck $(command -v link_apps)
+link_apps /tmp 
+link_apps /Volumes/M1\ Mac-Mini\ External\ Drive/Applications /tmp
+man ln
+shellcheck $(command -v link_apps)
+link_apps /tmp 
+gs
+ga .
+gma "Working on link_apps script"
+gp
+g pull
+reload
+cl
+scripts/setup_defaults
+m-housh
+cd m-housh
+env
+macOs
+cd ../
+dots
+reload
+m-housh
+env
+gma "Fixed type in .zshrc"
+gp
+for i in /Volumes/Archive/Projects/*.build; do echo "$i"; done
+for i in /Volumes/Archive/Projects/**/.build; do echo "$i"; done
+find $ARCHIVE/Projects -name '.build'
+man find
+find $ARCHIVE/Projects -name '.build' -depth 2
+find $ARCHIVE/Projects/Swift -name '.build' -depth 1
+find $ARCHIVE/Projects/Swift -name '.build' -depth 1 |tail -1
+find $ARCHIVE/Projects/Swift -type d -name '.build' -depth 1 |tail -1
+find $ARCHIVE/Projects/Swift -type d -name '.build'
+find $ARCHIVE/Projects/Swift -type d -name '.build' -depth 1
+tmux ls
+git pull
+reload
+cl
+launchctl bootstrap --help
+man launchctl
+scripts/install_launch_agents
+l macOS/LaunchAgents
+launchctl print user/501/~/Library/LaunchAgents/com.michael.clear-screenshots.plist
+launchctl print user/501//Users/michael/Library/LaunchAgents/com.michael.clear-screenshots.plist
+export SPLIST=/Users/michael/Library/LaunchAgents/com.michael.clear-screenshots.plist
+launchctl enable user/501/"$SPLIST"
+launchctl enable user/501/com.michael.clear-screenshots.plist
+launchctl print user/501//Users/michael/Library/LaunchAgents/com.michael.clear-screenshots.plist
+cl
+dots
+shellcheck scripts/install_launch_agents
+dots
+shellcheck scripts/install_launch_agents
+man launchctl
+man launchd
+man launchd.plist
+gs
+gma "Cleaned up launch agent install script"
+gp
+dots
+shellcheck scripts/install_launch_agents
+scripts/install_launch_agents
+envv
+env
+cp -r ~/Documents/Proposals "$WORK"
+mv ~/Documents/ACCA "$WORK"
+mv ~/Documents/Company\ Policies\ and\ Procedures "$WORK"
+mv ~/Documents/CompanyDocuments "$WORK"
+cdots
+dots
+gs
+gma "Cleaned up some scripts"
+gp
+which check
+brew update
+brew upgrade
+brew uninstall openoffice
+brew prune
+man brew
+brew cleanup --prune=all
+man brew
+brew upgrade
+brew list
+man brew
+\.vim
+\vim
+\vi
+l
+cl
+which vi
+which \vi
+unalias vi
+unalias vim
+vim
+type vi
+cdots
+dots
+env
+env |grep DOTFILES
+newx mkcd
+vic newx
+shellcheck scripts/newx
+shellcheck $SCRIPTS/newx
+newx mkcd
+man test
+man mkdir
+shellcheck $SCRIPTS/mkcd
+newx mkcd
+dots
+shellcheck $SCRIPTS/mkcd
+dots
+man read
+newx mkcd
+dots
+newx mkcd
+dots
+newx mkcd
+dots
+newx mkcd
+dots
+gs
+ga .
+gma "Added mkcd"
+gp
+reset
+reload
+cl
+dots
+newx l
+man ls
+shellcheck $SCRIPTS/l
+dots
+reload
+l
+which l
+l .
+ls -lah --color=always
+man ls
+l
+which l
+l
+shellcheck $SCRIPTS/l
+l
+vic l
+l
+shellcheck $SCRIPTS/l
+rm $SCRIPTS/l
+which l
+reload
+l
+which l
+type l
+dots
+l
+which l
+dots
+l
+which l
+dots
+newx l
+l
+which l
+figl zshrc
+which figlet
+brew install figlet
+figl
+man figlet
+figlet zshrc
+dots
+l
+dots
+cl
+which l
+which cl
+gs
+dots
+l
+cl
+c
+newx dots
+dots
+vic dots
+shellcheck $SCRIPTS/dots
+dots
+DOTFILES
+cl
+env
+reload
+cdots
+reloa
+reload
+cdots
+.dotfiles
+gh status
+gh actions
+gh
+gh api --help
+which figl
+figl < m-housh
+figl < "m-housh"
+figl < echo "m-housh"
+echo "m-housh"
+echo "m-housh" > figl
+echo "m-housh" | figl
+man figlet
+figlet -f lean | tr ' _/' ' ()'
+echo "m-housh" | figlet -f lean
+allfigl
+which figlet
+l /usr/local/bin/figlet
+vic allfigl
+shellcheck $SCRIPTS/allfigl
+vic allfigl
+shellcheck $SCRIPTS/allfigl
+allfigl
+echo "m-housh" | figlet -f big
+echo "m-housh" | figlet -f doom
+echo "m-housh" | figlet -f doom -c
+echo "m-housh" | figlet -c -f bubble
+echo "m-housh" | figlet -c -f cricket
+echo "m-housh" | figlet -c -f epic
+echo "m-housh" | figlet -c -f nvscript
+echo "m-housh" | figlet -c -f puffy
+echo "m-housh" | figlet -c -f speed
+vic allfigl
+allfigl
+vic allfigl
+echo "m-housh" | figlet -c -f speed
+echo "m-housh" | figlet -c -f puffy
+echo "m-housh" | figlet -c -t -f puffy
+vic banner
+/usr/bin/banner
+which banner
+dots
+man banner
+vic banner
+touch $SCRIPTS/banner
+chmox $SCRIPTS/banner
+nvim $SCRIPTS/banner
+banner
+env
+env |grep PATH
+which banner
+l $SCRIPTS
+type banner
+l $SCRIPTS |grep banner
+l $SCRIPTS
+cdots
+.dotfiles
+which banner
+l scripts/.local/scripts
+$SCRIPTS/banner
+PATH="${PATH}:${SCRIPTS}"
+which banner
+dots
+reload
+. $ZDOTDIR/.zshrc
+l
+type banner
+env |grep PATH
+type banner
+which banner
+vim .
+. $ZDOTDIR/.zshrc
+vim .
+. $ZDOTDIR/.zshrc
+cl
+clear
+which banner
+banner
+vim .
+. $ZDOTDIR/.zshrc
+.dotfiles
+vim .
+. $ZDOTDIR/.zshrc
+cl
+. $ZDOTDIR/.zshrc
+banner
+nvim .
+echo "$?"
+man test
+cl
+banner
+rm -rf zsh/.config/zsh/banner
+gs
+ga .
+gs
+gma "Working on cleaning up zshrc and aliases"
+gp
+nvim .
+c
+cl
+type cl
+reload
+reset
+cdots
+reset
+cdots
+env
+cdots
+bk
+prompt -h
+prompt -c
+prompt -l
+prompt -p
+prompt -h
+prompt -h pure
+cdots
+l
+cdots
+nvim .
+vim .
+which vim
+vim --version
+vim .
+cdots
+vim .
+vim --version
+brew search vim
+brew home vim
+brew install vim
+cl
+which vim
+vim --version
+dots
+vim .
+dots
+vim
+l
+rm figl
+l
+rm 2
+l
+vim
+dots
+vim .
+cdots
+l
+cdots
+vim .
+vim .
+env
+vim .
+dots
+cdots
+vim .
+l
+touch vim/setup
+chmox vim/setup
+vim vim/setup
+man test
+dots
+mv vim/.vimrc vim/.vim/vimrc
+l
+l ~/
+vim .
+reload
+cdots
+vim .
+l ~/.vim
+nvim .
+cd vim
+setup
+l
+./setup
+which vim
+vim .
+nvim .
+./setup
+l
+l ~/.vim
+nvim .
+./setup
+vim .
+cd ../
+l ~/
+rm -f ~/.vimrc
+l
+l ~
+vim .
+rm -rf vim/.vim/plugins
+gs
+vim .
+cdots
+dots
+gs
+cdots
+gs
+cdots
+dots
+brew open fzf
+brew home fzf
+brew install fzf
+/usr/local/opt/fzf/install
+reset
+exit
+find * -type f | fzf > selected
+export FZF_DEFAULT_COMMAND='vim $(fzf)'
+fzf
+fzf .
+. > fzf
+man fzf
+find . | fzf > selected; echo "$selected"
+l
+vim .
+rm fzf
+rm selected
+find . | fzf | echo "$1"
+l
+vim .
+brew uninstall fzf
+exit
+brew install fzf
+exit
+: 1640976636:0;cdots
+: 1640976638:0;dots
+: 1640976961:0;man fzf
+: 1640977022:0;dots
+: 1640977368:0;jobs
+: 1640977398:0;git ls-files
+: 1640977401:0;cdots
+: 1640977404:0;git ls-files
+: 1640977431:0;gs
+: 1640977436:0;ga .
+: 1640977448:0;gma "Working on vim settings"
+: 1640977463:0;git commit -m "Working on vim settings"
+: 1640977470:0;git push
+: 1640977528:0;dots
+: 1640979218:0;vim .
+: 1640979827:0;man ls
+: 1640982939:0;dots
+: 1640983106:0;gs
+: 1640983132:0;dots
+: 1640983188:0;reset
+: 1640983191:0;gs
+: 1640983205:0;ga .
+: 1640983213:0;gcm "Updates to vimrc"
+: 1640983223:0;dots
+: 1640983256:0;source $ZDOTDIR/.zshrc
+: 1640983264:0;which gcm
+: 1640983269:0;gs
+: 1640983293:0;gcm "Updates to vimrc"
+: 1640983296:0;gp
+: 1640983301:0;g push
+: 1640983412:0;l scripts/.local/scripts
+: 1640983421:0;vic dots
+: 1640983523:0;man vim
+: 1640983792:0;dots
+: 1640983806:0;man text
+: 1640983819:0;man test
+: 1640983868:0;dots
+: 1640984038:0;vic dots
+: 1640984051:0;dots
+: 1640984131:0;shellcheck $SCRIPTS/dots
+: 1640984453:0;cdots
+: 1640984455:0;l
+: 1640984463:0;dots
+: 1640984726:0;touch zsh/setup
+: 1640984732:0;chmox zsh/setup
+: 1640984735:0;dots
+: 1640984924:0;l ~
+: 1640984931:0;l ~/.config
+: 1640984990:0;mv zsh/.config/zsh zsh/
+: 1640984992:0;l
+: 1640984996:0;l zsh
+: 1640985005:0;l zsh/.config
+: 1640985014:0;rm zsh/.config
+: 1640985021:0;rm -r zsh/.config
+: 1640985024:0;cd zsh
+: 1640985026:0;l
+: 1640985031:0;./setup
+: 1640985045:0;l ~
+: 1640985051:0;l ~/.config
+: 1640985077:0;cd ..
+: 1640985078:0;gs
+: 1640985081:0;ga .

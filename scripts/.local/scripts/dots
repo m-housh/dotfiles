@@ -1,7 +1,10 @@
 #!/bin/sh
 
-set -e
-
 # Open dotfiles.
 
-cd "$DOTFILES" && vim .
+set -e
+
+test -d "${DOTFILES}" || \
+  (echo "Dotfiles path not a directory or doesn't exist" && exit 1)
+
+cd "${DOTFILES}" && vi .

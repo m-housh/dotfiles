@@ -164,7 +164,9 @@ alias gco='git checkout'
 alias gcm='git commit -m'
 #alias gma() { git add . && git commit -m "$1" }
 #alias gp() { git push }
+alias gp='git push'
 alias gs='git status'
+alias vi='vim'
 
 #------------------------------ local configs ------------------------------
 _source_if "$ZDOTDIR/.zshrc-local"

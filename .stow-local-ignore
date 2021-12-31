@@ -6,5 +6,6 @@
 
 \.git
 \.gitignore
+\setup*
 
 /scripts/install-espanso-packages
