@@ -1121,3 +1121,27 @@ exit
 : 1640986970:0;./install
 : 1640986984:0;gs
 : 1640986996:0;ga .
+: 1640987017:0;g commit -m "Working on install script(s)"
+: 1640987018:0;gp
+: 1640987021:0;g push
+: 1640987027:0;l ~/
+: 1640987033:0;l ~/.config
+: 1640987041:0;l ~/.local
+: 1640987255:0;l tmux
+: 1640987273:0;echo '#!/bin/sh' > tmux/setup
+: 1640987278:0;chmox tmux/setup
+: 1640987283:0;vim tmux/setup
+: 1640987334:0;vim install
+: 1640987391:0;./install
+: 1640987400:0;vim .
+: 1640987435:0;l ~/.config
+: 1640987442:0;l ~
+: 1640987540:0;brew list
+: 1640988491:0;l
+: 1640988632:0;dots
+: 1640988686:0;brew search virtualbox
+: 1640988713:0;brew doctor
+: 1640988756:0;brew cleanup --prune=all
+: 1640988789:0;brew doctor
+: 1640988837:0;gs
+: 1640988844:0;ga .

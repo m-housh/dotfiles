@@ -8,3 +8,4 @@ cd "${dir}/zsh" && ./setup
 cd "${dir}/scripts" && ./setup
 cd "${dir}/vim" && ./setup
 cd "${dir}/git" && ./setup
+cd "${dir}/tmux" && ./setup

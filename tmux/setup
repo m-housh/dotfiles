@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ln -sfv "${PWD}/.tmux.conf" "${HOME}"
