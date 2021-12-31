@@ -36,6 +36,8 @@ export EDITOR=vi
 export VISUAL=vi
 export EDITOR_PREFIX=vi
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+export VIMINIT='source $MYVIMRC'
+export MYVIMRC="$HOME/.vim/vimrc"
 
 autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
@@ -127,9 +129,6 @@ setopt aliases
 # Enable vi mode
 bindkey -v
 
-#zsh_add_file "zsh-exports"
-#zsh_add_file "zsh-aliases"
-
 # Plugins
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
@@ -146,12 +145,28 @@ autoload -Uz compinit; compinit         # zstyle(s) should be added before this.
 zmodload zsh/complist
 _comp_options+=(globdots)		            # Include hidden files.
 
+#------------------------------ prompt ------------------------------
 
 # Prompt / managed by brew. (`brew install pure`)
 autoload -Uz promptinit; promptinit
 prompt pure
 
+#------------------------------ aliases ------------------------------
+
+alias bk='cd "${OLDPWD}"'
+alias cdots='cd "${DOTFILES}"'
+alias cl='printf "\e[H\e[2J"'
+alias clear='printf "\e[H\e[2J"'
+alias g='git'
+alias ga='git add'
+alias gcb='git checkout -b'
+alias gco='git checkout'
+#alias gma() { git add . && git commit -m "$1" }
+#alias gp() { git push }
+alias gs='git status'
 
 #------------------------------ local configs ------------------------------
 _source_if "$ZDOTDIR/.zshrc-local"
 
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

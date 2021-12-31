@@ -1,0 +1,87 @@
+
+" ----------------------- settings ----------------------------------
+set autoindent
+set autowrite                       " automatically write files when changing
+set background=dark
+set ruler                           " turns on col and row in lower right
+" used with `set ruler`
+set ruf=%30(%=%#LineNr#%.50F\ [%{strlen(&ft)?&ft:'none'}]\ %l:%c\ %p%%%)
+set showmode                        " show command and insert mode
+set tabstop=2
+set softtabstop=2
+set shiftwidth=2
+set expandtab                       " replace tabs with spaces automatically
+set textwidth=72
+set smartindent
+set smarttab
+set nofixendofline
+set foldmethod=manual
+set exrc
+set relativenumber
+set nohlsearch
+set hidden
+set nocompatible
+set nu
+set nowrap
+set noswapfile
+set nobackup
+set undodir=~/.vim/undodir
+set undofile
+set icon
+set incsearch
+set termguicolors
+set scrolloff=8
+set signcolumn=yes
+set colorcolumn=80
+set noerrorbells
+set number
+set wildmenu
+set ttyfast                         " faster scrolling
+set viminfo='20,<1000,s1000         " prevents truncated yanks, deletes, etc.
+set hidden
+set history=100                     " command history
+syntax enable
+filetype plugin on                  " sense the filesystem
+let mapleader = " "
+
+" ----------------------- plugins ----------------------------------
+
+" Install vim-plug if not found
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+endif
+
+" Run PlugInstall if there are missing plugins
+autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+  \| PlugInstall --sync | source $MYVIMRC
+\| endif
+
+call plug#begin('~/.vim/plugged')
+ Plug 'junegunn/fzf'
+ Plug 'vim-pandoc/vim-pandoc'
+ Plug 'rwxrob/vim-pandoc-syntax-simple'
+ Plug 'morhetz/gruvbox'
+call plug#end()
+
+colorscheme gruvbox
+" highlight Normal guibg=none
+
+" ----------------------- utilities ----------------------------------
+" Edit/Reload vimr configuration file
+nnoremap confe :e $HOME/.vimrc<CR>
+nnoremap confr :source $HOME/.vimrc<CR>
+
+fun! TrimWhiteSpace()
+    let l:save = winsaveview()
+    keeppatterns %s/\s\+$//e
+    call winrestview(l:save)
+endfun
+
+augroup MICHAEL
+    autocmd!
+    autocmd BufWritePre * :call TrimWhiteSpace()
+    autocmd Filetype yaml setlocal ts=2 sts=2 sw=2 expandtab
+augroup END
+
+

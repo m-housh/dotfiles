@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+if test -z "$(type vim)"; then
+  echo "Does not look like you have vim installed."
+  exit 1
+fi
+
+mkdir "${HOME}/.vim" |true
+ln -sfv "${PWD}/.vim/vimrc" "${HOME}/.vim/vimrc"
+
+
+
+

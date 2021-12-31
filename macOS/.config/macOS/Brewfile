@@ -21,6 +21,7 @@ brew "ripgrep"
 brew "stow"                 # for dotfile linking / placement.
 brew "swift-format"         # for formatting swift files
 brew "tmux"                 # terminal multi-plexer
+brew "vim"
 brew "zsh"
 brew "zsh-completions"
 
