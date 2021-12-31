@@ -1,6 +1,6 @@
 #!/bin/sh
 
-mkdir "${HOME}/.config" | true
+mkdir "${HOME}/.config" >/dev/null 2>&1
 
 ln -sfv "${PWD}/.zshenv" "${HOME}"
 ln -sfv "${PWD}/zsh" "${HOME}/.config/zsh"

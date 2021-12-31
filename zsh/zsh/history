@@ -1065,3 +1065,59 @@ exit
 : 1640985077:0;cd ..
 : 1640985078:0;gs
 : 1640985081:0;ga .
+: 1640985093:0;gma "Making install scripts instead of stow"
+: 1640985111:0;gcm "Making install scripts instead of stow"
+: 1640985117:0;gp
+: 1640985121:0;g push
+: 1640985158:0;dots
+: 1640985373:0;shellcheck zsh/setup
+: 1640985396:0;dots
+: 1640985429:0;shellcheck zsh/setup
+: 1640985442:0;cd zsh && ./setup
+: 1640985562:0;dots
+: 1640985594:0;man mkdir
+: 1640985639:0;mkdir zsh >/dev/null
+: 1640985707:0;mkdir zsh 2>&1
+: 1640985754:0;mkdir zsh >/dev/null 2>&1
+: 1640985771:0;dots
+: 1640985789:0;shellcheck zsh/setup
+: 1640985855:0;l
+: 1640985894:0;l macOS
+: 1640986090:0;l scripts
+: 1640986124:0;touch scripts/setup
+: 1640986132:0;chmox scripts/setup
+: 1640986162:0;echo "# > scripts/setup
+: 1640986182:0;echo '#!/bin/sh' > scripts/setup
+: 1640986188:0;vim scripts/setup
+: 1640986307:0;mv scripts/.local/scripts scripts/
+: 1640986317:0;rm -r scripts/.local
+: 1640986322:0;cd scripts
+: 1640986327:0;./setup
+: 1640986339:0;vim .
+: 1640986375:0;shellcheck ./setup
+: 1640986378:0;./setup
+: 1640986388:0;vim .
+: 1640986411:0;./setup
+: 1640986442:0;cd $SCRIPTS
+: 1640986446:0;cd ../../
+: 1640986455:0;dots
+: 1640986548:0;touch install
+: 1640986554:0;chmox install
+: 1640986561:0;vim .
+: 1640986568:0;cd ../
+: 1640986573:0;mv scripts/install .
+: 1640986575:0;vim .
+: 1640986807:0;mv git/.config/git git/
+: 1640986814:0;rm -r git/.config
+: 1640986820:0;chmox git/setup
+: 1640986822:0;vim install
+: 1640986841:0;install
+: 1640986846:0;./install
+: 1640986876:0;vim install
+: 1640986915:0;./install
+: 1640986922:0;vim .
+: 1640986954:0;shellcheck vim/setup
+: 1640986960:0;shellcheck git/setup
+: 1640986970:0;./install
+: 1640986984:0;gs
+: 1640986996:0;ga .

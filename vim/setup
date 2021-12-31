@@ -7,7 +7,7 @@ if test -z "$(type vim)"; then
   exit 1
 fi
 
-mkdir "${HOME}/.vim" |true
+mkdir "${HOME}/.vim" >/dev/null 2>&1
 ln -sfv "${PWD}/.vim/vimrc" "${HOME}/.vim/vimrc"
 
 
