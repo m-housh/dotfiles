@@ -18,7 +18,7 @@ alias cl() {
 }
 
 # move into the ~/.dotfiles directory
-alias cdots="cd ${HOME}/.dotfiles"
+alias cdots() { cd "${HOME}/.dotfiles" }
 
 # move into zsh config files
 alias zdots="vi ${ZDOTDIR}"
@@ -33,7 +33,7 @@ alias dots="vi $DOTFILES"
 #alias mkcd() { mkdir $1 && cd $1 }
 
 # list files and directories, including hidden files
-alias l() { ls -lah "$@" }
+#alias l() { ls -lah --color "$@" }
 
 # editor
 alias vim() { nvim "$@" }
@@ -50,7 +50,7 @@ alias gp() { git push }
 alias gs() { git status }
 
 # move back to old cwd
-alias bk() { cd "$OLDPWD" }
+alias bk="cd $OLDPWD"
 
 # My mac-mini specific aliases
 # if [ $(hostname -s) = "Michaels-Mac-mini" ]; then

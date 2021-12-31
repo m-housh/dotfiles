@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Lists files and directories, including hidden files.
+
+ls -lah --color "$@"

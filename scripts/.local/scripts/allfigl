@@ -1,8 +1,12 @@
 #!/bin/sh
 
-for font in /opt/homebrew/share/figlet/fonts/*.flf; do
+set -e
+
+font_dir="$(brew --prefix)/share/figlet/fonts"
+
+for font in "${font_dir}"/*.flf; do
   clear
   echo "FONT: $font"
   figlet -f "${font}" hello
-  read line
+  read -r line
 done

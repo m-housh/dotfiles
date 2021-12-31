@@ -1,7 +1,18 @@
 #!/usr/bin/env zsh
 
+#              _
+#      _______| |__  _ __ ___
+#     |_  / __| '_ \| '__/ __|
+#     / /\__ \ | | | | | (__
+#    /___|___/_| |_|_|  \___|
+#
+#
 #------------------------------ utilites ------------------------------
-_source_if() { [[ -r "$1" ]] && source "$1" }
+
+_source_if() { test -r "$1" && source "$1" || return 0 }
+
+# Load Useful Functions
+_source_if "$ZDOTDIR/zsh-functions"
 
 #------------------------------ exports ------------------------------
 export ZDOTDIR="$HOME/.config/zsh"
@@ -33,9 +44,6 @@ zle -N down-line-or-beginning-search
 
 # Colors
 autoload -Uz colors && colors
-
-# Load Useful Functions
-_source_if "$ZDOTDIR/zsh-functions"
 
 #------------------------------ path ------------------------------
 
@@ -120,7 +128,7 @@ setopt aliases
 bindkey -v
 
 #zsh_add_file "zsh-exports"
-zsh_add_file "zsh-aliases"
+#zsh_add_file "zsh-aliases"
 
 # Plugins
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
@@ -147,4 +155,3 @@ prompt pure
 #------------------------------ local configs ------------------------------
 _source_if "$ZDOTDIR/.zshrc-local"
 
-cat < "$ZDOTDIR/banner"
