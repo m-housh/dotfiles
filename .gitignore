@@ -5,7 +5,7 @@
 **/.zcompdump*
 **/.zcompdump
 **/.zcompcache
-zsh/.config/zsh/history
+zsh/zsh/history
 **/.zsh_history
 **/.zsh_sessions
 **/completions/*
