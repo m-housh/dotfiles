@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Createsa directory then `cd`'s into the directory
+
+set -e
+
+dir="$1"
+
+test -n "${dir}" || echo "usage: mkcd <dir>" && exit 1
+
+mkdir "${dir}"
+cd "${dir}"

@@ -8,21 +8,19 @@ test ! -n "${SCRIPTS}" && echo "SCRIPTS not set" && exit 1;
 # fallback to check if the name arg ${1} exists, if not show usage text.
 test ! -n "${1}" && \
   echo "usage: newscript <name> <optional: shell>" && \
-  echo "shell defaults to `sh` if not supplied" && \
+  echo "shell defaults to sh if not supplied" && \
   exit 1;
 
 path="${SCRIPTS}/${1}"
 shell="${2:-sh}"
 
 if [ -e "${path}" ]; then
-  read -p "${1} already exists. Edit? " yes
-  case "${yes}" in
-    y|yes|yep|yeppers|yeah|ok|okay) exec vim "${path}"
-  esac
-  exit 0
+  echo "Already exists try:"
+  echo "vi ${path}"
+  exit 1
 fi
 
-printf "#!/bin/${shell}"\n\n" > "${path}"
+printf "#!/bin/%s\n\n" "${shell}" > "${path}"
 chmod +x "${path}"
 exec vim +2 "${path}"
 

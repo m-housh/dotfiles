@@ -1,3 +1,4 @@
+#!/bin/zsh
 # configure aliases
 #               _                     _
 #              ( )                   (_ )  _
@@ -17,22 +18,19 @@ alias cl() {
 }
 
 # move into the ~/.dotfiles directory
-alias cdots() { cd "$HOME/.dotfiles" }
+alias cdots="cd ${HOME}/.dotfiles"
 
 # move into zsh config files
-alias zdots() { nvim "$ZDOTDIR" }
+alias zdots="vi ${ZDOTDIR}"
 
 # open dotfiles in nvim editor
-alias dots() { nvim ~/.dotfiles }
-
-# reload the zsh shell
-alias reload() { source "$ZDOTDIR/.zshrc" }
+alias dots="vi $DOTFILES"
 
 # print the banner
-alias banner() { clear && cat < "$ZDOTDIR/banner" }
+#alias banner() { clear && cat < "$ZDOTDIR/banner" }
 
 # create a directory and move into it.
-alias mkcd() { mkdir $1 && cd $1 }
+#alias mkcd() { mkdir $1 && cd $1 }
 
 # list files and directories, including hidden files
 alias l() { ls -lah "$@" }
