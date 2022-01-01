@@ -19,7 +19,7 @@ _usage() {
   printf "\t-c | --copy      : Copy the configuration files, instead of creating symlinks.\n" >&2
   printf "\t-h | --help      : Print usage information.\n" >&2
   printf "\t-l | --link      : Create symlinks to the configuration files (Default).\n" >&2
-  printf "\t-r | --remove    : Removes the entire ~/.vim directory.\n" >&2
+  printf "\t-r | --remove    : Removes the configuration files.\n" >&2
   printf "\t-u | --uninstall : Uninstalls configuration files.\n" >&2
   printf "\n" >&2
   printf "If called without the uninstall option then it will install the configuration files.\n" >&2
