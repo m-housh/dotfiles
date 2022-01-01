@@ -11,9 +11,6 @@
 
 _source_if() { test -r "$1" && source "$1" || return 0 }
 
-# Load Useful Functions
-_source_if "$ZDOTDIR/zsh-functions"
-
 #------------------------------ exports ------------------------------
 export ZDOTDIR="$HOME/.config/zsh"
 export SHELL="$(which zsh)"
@@ -128,6 +125,10 @@ setopt aliases
 
 # Enable vi mode
 bindkey -v
+
+# Load Useful Functions
+_source_if "${ZDOTDIR}/zsh-functions"
+
 
 # Plugins
 zsh_add_plugin "zsh-users/zsh-autosuggestions"

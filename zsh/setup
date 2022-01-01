@@ -1,6 +1,21 @@
 #!/bin/sh
 
-mkdir "${HOME}/.config" >/dev/null 2>&1
+config="${HOME}/.config"
+local_rc="${PWD}/config/.zshrc"
+local_env="${PWD}/config/.zshenv"
+local_funcs="${PWD}/config/zsh-functions"
 
-ln -sfv "${PWD}/.zshenv" "${HOME}"
-ln -sfv "${PWD}/zsh" "${HOME}/.config/zsh"
+_make_dirs() {
+ mkdir "${config}"
+ mkdir "${config}/zsh"
+}
+
+_make_links() {
+  ln -sfv "${local_env}" "${HOME}"
+  ln -sfv "${local_rc}" "${config}/zsh"
+  ln -sfv "${local_funcs}" "${config}/zsh"
+}
+
+# -------------- main -------------------
+_make_dirs
+_make_links
