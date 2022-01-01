@@ -1,3 +1,12 @@
 #!/bin/sh
 
-ln -sfv "${PWD}/.tmux.conf" "${HOME}"
+_remove_tmux() {
+  rm "${HOME}/.tmux.conf"
+}
+
+_link_tmux() {
+  ln -sfv "${PWD}/.tmux.conf" "${HOME}"
+}
+
+#------------------------------- main -------------------------------
+_link_tmux

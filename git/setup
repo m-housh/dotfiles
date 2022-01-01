@@ -1,4 +1,18 @@
 #!/bin/sh
 
-mkdir "${HOME}/.config" >/dev/null 2>&1
-ln -sfv "${PWD}/git" "${HOME}/.config"
+config="${HOME}/.config"
+
+_make_dirs() {
+  test ! -d "${config}" && mkdir "${config}"
+}
+
+_remove_git() {
+  test -d "${config}/git" && rm "${config}/git"
+}
+
+_link_git() {
+  ln -sfv "${PWD}/git" "${config}"
+}
+
+#------------------------------- main -------------------------------
+_make_dirs && _link_git

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+config="${HOME}/.config"
+
+_make_dirs() {
+  test ! -d "${config}" && mkdir "${config}"
+  test ! -d "${config}/nvim" && mkdir "${config}/nvim"
+}
+
+_remove_nvim() {
+  test -d "${config}/nvim" && rm -r "${config}/nvim"
+}
+
+_link_nvim() {
+  ln -sfv "${PWD}/init.lua" "${config}/nvim"
+  ln -sfv "${PWD}/lua" "${config}/nvim"
+}
+
+#------------------------------- main ------------------------------ 
+_make_dirs && _link_nvim
