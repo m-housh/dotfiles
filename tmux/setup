@@ -1,12 +1,99 @@
 #!/bin/sh
 
-_remove_tmux() {
-  rm "${HOME}/.tmux.conf"
+set -e
+
+tmux_conf="${HOME}/.tmux.conf"
+uninstall=1
+remove=1
+copy=1
+link=0
+
+
+_usage() {
+  printf "\n" >&2
+  printf "Usage: setup [OPTIONS]\n" >&2
+  printf "\n" >&2
+  printf "Installs or Uninstalls tmux configuration files.\n" >&2
+  printf "\n" >&2
+  printf "Options:\n" >&2
+  printf "\t-c | --copy      : Copy the configuration files, instead of creating symlinks.\n" >&2
+  printf "\t-h | --help      : Print usage information.\n" >&2
+  printf "\t-l | --link      : Create symlinks to the configuration files (Default).\n" >&2
+  printf "\t-r | --remove    : Removes the entire ~/.vim directory.\n" >&2
+  printf "\t-u | --uninstall : Uninstalls configuration files.\n" >&2
+  printf "\n" >&2
+  printf "If called without the uninstall option then it will install the configuration files.\n" >&2
+  printf "The copy and link options are ignored if called with the uninstall or remove option.\n" >&2
+  printf "\n" >&2
+}
+
+_parse_options() {
+  arg=
+  while ! test -z "$1"; do
+    arg="$1"
+    case $arg in
+      -c | --copy)
+        copy=0
+        link=1
+        shift;;
+      -h | --help)
+        _usage
+        exit;;
+      -l | --link)
+        copy=1
+        link=0
+        shift;;
+     -r | --remove)
+        remove=0
+        shift;;
+      -u | --uninstall)
+        uninstall=0
+        shift;;
+      *)
+        echo "Unknown option $arg" >&2
+        shift;;
+    esac
+  done
+}
+
+_uninstall_tmux() {
+  echo "Uninstalling tmux..." >&2
+  test -e "${tmux_conf}" && rm "${tmux_conf}"
 }
 
 _link_tmux() {
+  echo "Symlinking tmux configuration files..." >&2
   ln -sfv "${PWD}/.tmux.conf" "${HOME}"
 }
 
+_copy_tmux() {
+  echo "Copying tmux configuration files..." >&2
+  cp "${PWD}/.tmux.conf" "${HOME}"
+}
+
+_install_tmux() {
+  # check if in copy mode & copy configuration
+  test "$copy" -eq 0 && _copy_tmux && return 0
+  # else check if in link mode & link configuration
+  test "$link" -eq 0 && _link_tmux && return 0
+  # we don't know what to do w/o link or copy so error
+  echo "Must supply the link or copy option, use --help for usage" >&2
+  exit 1
+}
+
 #------------------------------- main -------------------------------
-_link_tmux
+
+main() {
+  _parse_options "$@"
+
+  # check if remove is called first
+  test $remove -eq 0 && _uninstall_tmux && exit "$?"
+
+  # then check if uninstall was called
+  test $uninstall -eq 0 && _uninstall_tmux && exit "$?"
+
+  # else install the configuration files
+  _install_tmux
+}
+
+main "$@"
