@@ -94,7 +94,7 @@ _install_nvim() {
   # link if in link mode
   test "$link" -eq 0 && _link_nvim && exit "$?"
   # else we don't know what to do
-  echo "Neither link or copy options were set. Use the --help option" >&2
+  echo "Neither link or copy options were set. Use the --help option for usage." >&2
   exit 1
 }
 
@@ -104,14 +104,14 @@ main() {
   _parse_options "$@"
 
   # check if remove is called first
-  test $remove -eq 0 && _remove_nvim && exit "$?"
+  test "$remove" -eq 0 && _remove_nvim && exit "$?"
 
   # then check if uninstall was called
-  test $uninstall -eq 0 && _uninstall_nvim && exit "$?"
+  test "$uninstall" -eq 0 && _uninstall_nvim && exit "$?"
 
   # else install the configuration files
   _install_nvim
-  echo "Nvim will need to be started for vim plugins to download."
+  echo "Nvim will need to be started and call :PackerSync for plugins to be downloaded." >&2
 }
 
 main "$@"

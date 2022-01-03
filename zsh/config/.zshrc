@@ -44,6 +44,16 @@ zle -N down-line-or-beginning-search
 # Colors
 autoload -Uz colors && colors
 
+
+#------------------------------ pager ------------------------------
+export LESS_TERMCAP_mb="[35m" # magenta
+export LESS_TERMCAP_md="[33m" # yellow
+export LESS_TERMCAP_me=""
+export LESS_TERMCAP_se=""
+export LESS_TERMCAP_so="[34m" # blue
+export LESS_TERMCAP_ue=""
+export LESS_TERMCAP_so="[4m" # underline
+
 #------------------------------ path ------------------------------
 
 path_append() {
@@ -168,6 +178,7 @@ alias gcm='git commit -m'
 alias gp='git push'
 alias gs='git status'
 alias vi='vim'
+alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
 
 #------------------------------ local configs ------------------------------
 _source_if "$ZDOTDIR/.zshrc-local"
