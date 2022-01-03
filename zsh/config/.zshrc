@@ -35,6 +35,7 @@ export EDITOR_PREFIX=vi
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 export VIMINIT='source $MYVIMRC'
 export MYVIMRC="$HOME/.vim/vimrc"
+export MYZSHRC="$ZDOTDIR/.zshrc"
 
 autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
@@ -177,6 +178,7 @@ alias gcm='git commit -m'
 #alias gp() { git push }
 alias gp='git push'
 alias gs='git status'
+alias l='ls -lah --color=auto'
 alias vi='vim'
 alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
 
@@ -184,4 +186,4 @@ alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
 _source_if "$ZDOTDIR/.zshrc-local"
 
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
