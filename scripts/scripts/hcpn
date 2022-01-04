@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Creates a new `zet` inside the House Call Pro `Zettlekasten` directory.
+
+dirname="$(isosec)"
+mkdir "${HCP_NOTES}/${dirname}"
+readme="${HCP_NOTES}/${dirname}/README.md"
+title="$*"
+printf "# %s\n\n" "${title}" > "${readme}"
+vi "${readme}"
