@@ -101,6 +101,8 @@ _copy_espanso() {
 
 _link_espanso() {
   echo "Linking espanso configuration..."
+  # linking the espanso directory is not permitted, so we can only
+  # link the configuration inside of the preferences directory.
   ln -sfv "$PWD/espanso/default.yml" "$prefs/espanso"
   ln -sfv "$PWD/espanso/user" "$prefs/espanso"
 }
@@ -121,6 +123,9 @@ _install() {
   # We have espanso, so install configuration files
   _make_dirs
 
+  # must copy / link configuration before installing packages,
+  # else the default configuration get's installed and causes this
+  # script to fail
   if test $copy -eq 0 ; then
     _copy_espanso
   elif test $link -eq 0; then
