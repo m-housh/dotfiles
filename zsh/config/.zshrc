@@ -178,10 +178,11 @@ alias gcb='git checkout -b'
 alias gco='git checkout'
 alias gcm='git commit -m'
 #alias gma() { git add . && git commit -m "$1" }
-#alias gp() { git push }
 alias gp='git push'
 alias gs='git status'
 alias l='ls -lah --color=auto'
+alias reload='exec zsh -l'
+alias temp='cd $(mktemp -d)'
 alias vi='vim'
 alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
 
