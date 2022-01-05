@@ -30,7 +30,7 @@ matches:
           cmd: "echo Hello from your shell"
 
   # Email
-  - trigger: ":@"
+  - trigger: ":@m"
     replace: "mhoush@houshhomeenergy.com"
   - trigger: ":@h"
     replace: "@houshhomeenergy.com"
