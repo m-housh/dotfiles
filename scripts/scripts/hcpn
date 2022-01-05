@@ -4,7 +4,15 @@
 
 dirname="$(isosec)"
 mkdir "${HCP_NOTES}/${dirname}"
-readme="${HCP_NOTES}/${dirname}/README.md"
+dir="$HCP_NOTES/$dirname"
+readme="$dir/README.md"
 title="$*"
 printf "# %s\n\n" "${title}" > "${readme}"
+message="${title:-"Autocommit message"}"
+cd "$dir"
+git pull -q
+git add -A "$dir"
+git commit -m "$message"
+git push
+cd -
 vi "${readme}"
