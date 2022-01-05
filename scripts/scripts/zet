@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Creates a new `zet` inside the public `Zettlekasten` directory.
+
+dirname="$(isosec)"
+mkdir "$ZETDIR/$dirname"
+dir="$ZETDIR/$dirname"
+readme="$dir/README.md"
+title="$*"
+printf "# %s\n\n" "${title}" > "${readme}"
+message="${title:-"Autocommit message"}"
+cd "$dir"
+git pull -q
+git add -A "$dir"
+git commit -m "$message"
+git push
+cd -
+vi "${readme}"
