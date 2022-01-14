@@ -2,29 +2,23 @@
 
 set -e
 
-# Creates a new `zet` inside the House Call Pro `Zettlekasten` directory.
+# Creates a new `zet` inside the House Call Pro `Zettlekasten`
 
-_create() {
-  # Complete
-  echo "Create..."
+_main() {
+  config="$HOME/.config/zet/hcp-config.json"
+  cmd="${1}"
+  shift
+
+  case "$cmd" in
+    config)
+      zet config "$config" "$*";;
+    *)
+      break;;
+  esac
+  if [ "$#" -eq 0 ]; then
+    zet "$cmd" --config "$config" && exit "$?";
+  fi
+  zet "$cmd" --config "$config" "$*"
 }
 
-_commit() {
-
-  echo "Commit..."
-}
-
-dirname="$(isosec)"
-mkdir "${HCP_NOTES}/${dirname}"
-dir="$HCP_NOTES/$dirname"
-readme="$dir/README.md"
-title="$*"
-printf "# %s\n\n" "${title}" > "${readme}"
-message="${title:-"Autocommit message"}"
-cd "$dir"
-git pull -q
-git add -A "$dir"
-git commit -m "$message"
-git push
-cd -
-vi "${readme}"
+_main "$@"
