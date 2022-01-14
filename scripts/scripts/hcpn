@@ -1,6 +1,18 @@
 #!/bin/sh
 
+set -e
+
 # Creates a new `zet` inside the House Call Pro `Zettlekasten` directory.
+
+_create() {
+  # Complete
+  echo "Create..."
+}
+
+_commit() {
+
+  echo "Commit..."
+}
 
 dirname="$(isosec)"
 mkdir "${HCP_NOTES}/${dirname}"

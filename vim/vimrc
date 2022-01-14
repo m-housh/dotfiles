@@ -5,7 +5,7 @@ set autowrite                       " automatically write files when changing
 set background=dark
 set backspace=indent,eol,start
 set belloff=all
-set colorcolumn=120
+set colorcolumn=80
 set expandtab                       " replace tabs with spaces automatically
 set exrc
 set foldmethod=manual
@@ -18,7 +18,7 @@ set nocompatible
 set nofixendofline
 set nohlsearch
 set noswapfile
-set nowrap
+"set nowrap
 set number
 set relativenumber
 set ruler                           " turns on col and row in lower right
@@ -39,6 +39,7 @@ set undodir=~/.vim/undodir
 set undofile
 set viminfo='20,<1000,s1000         " prevents truncated yanks, deletes, etc.
 set wildmenu
+set wrap
 
 syntax enable
 filetype plugin on                  " sense the filesystem

@@ -136,9 +136,12 @@ setopt glob_star_short
 setopt clobber
 setopt interactive_comments
 setopt aliases
+setopt auto_pushd                 # Push the current directory on the stack.
+setopt pushd_ignore_dups          # Ignore duplicates in stack
+setopt pushd_silent               # Do not print stack after pushd or popd.
 
-# Enable vi mode
-bindkey -v
+bindkey -v                        # Enable vi mode
+export KEYTIMEOUT=1               # Switch between vim mode quicker.
 
 # Load Useful Functions
 _source_if "${ZDOTDIR}/zsh-functions"
@@ -172,6 +175,7 @@ alias bk='cd "${OLDPWD}"'
 alias cdots='cd "${DOTFILES}"'
 alias cl='printf "\e[H\e[2J"'
 alias clear='printf "\e[H\e[2J"'
+alias dv='dirs -v'
 alias g='git'
 alias ga='git add'
 alias gcb='git checkout -b'
@@ -185,6 +189,12 @@ alias reload='exec zsh -l'
 alias temp='cd $(mktemp -d)'
 alias vi='vim'
 alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
+
+#------------------------------ functions ------------------------------
+mkcd() {
+  local dir="$1"
+  mkdir -p "$dir" && cd "$dir"
+} && export mkcd
 
 #------------------------------ local configs ------------------------------
 _source_if "$ZDOTDIR/.zshrc-local"

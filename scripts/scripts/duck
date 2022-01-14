@@ -2,4 +2,4 @@
 
 url="https://lite.duckduckgo.com/lite?kd=1&kp=1&q=$(urlencode "$*")"
 
-exec lynx "$url"
+exec lynx -vikeys "$url"
