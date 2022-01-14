@@ -1,6 +1,7 @@
 tap "homebrew/cask"
 tap "homebrew/cask-fonts"
 tap "federico-terzi/espanso"
+tap "m-housh/formulae"
 
 # TODO: Make the application directory a global variable ??
 # set arguments for all 'brew install --cask' commands
@@ -20,6 +21,7 @@ brew "pure"                 # for cli prompt
 brew "ripgrep"
 brew "stow"                 # for dotfile linking / placement.
 brew "swift-format"         # for formatting swift files
+brew "swift-zet"            # for managing zettelkasten notes
 brew "tmux"                 # terminal multi-plexer
 brew "vim"
 brew "zsh"
