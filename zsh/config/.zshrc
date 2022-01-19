@@ -125,7 +125,7 @@ export HISTFILE=$ZDOTDIR/history
 
 #------------------------------ cdpath ------------------------------
 setopt autocd
-export CDPATH=".:$GHREPOS:$DOTFILES:$REPOS:$LOCAL_REPOS:$HOME"
+export CDPATH=".:$GHREPOS:$DOTFILES:$REPOS/github.com:$LOCAL_REPOS:$HOME"
 
 #------------------------------ options ------------------------------
 #                         (see `man zshoptions`)
