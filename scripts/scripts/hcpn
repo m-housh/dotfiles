@@ -1,24 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
 # Creates a new `zet` inside the House Call Pro `Zettlekasten`
 
 _main() {
-  config="$HOME/.config/zet/hcp-config.json"
-  cmd="${1}"
-  shift
-
-  case "$cmd" in
-    config)
-      zet config "$config" "$*";;
-    *)
-      break;;
-  esac
-  if [ "$#" -eq 0 ]; then
-    zet "$cmd" --config "$config" && exit "$?";
-  fi
-  zet "$cmd" --config "$config" "$*"
+  (ZETDIR="$HCP_NOTES" eval zet "$@")
 }
 
 _main "$@"

@@ -21,7 +21,7 @@ brew "pure"                 # for cli prompt
 brew "ripgrep"
 brew "stow"                 # for dotfile linking / placement.
 brew "swift-format"         # for formatting swift files
-brew "swift-zet"            # for managing zettelkasten notes
+brew "m-housh/formulae/swift-zet"            # for managing zettelkasten notes
 brew "tmux"                 # terminal multi-plexer
 brew "vim"
 brew "zsh"
