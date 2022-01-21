@@ -23,6 +23,7 @@ export HHEREPOS="$BUCKET/Repos/github.com/hhe-dev"
 export LOCAL_REPOS="$REPOS/local"
 export HCP_NOTES="$HHEREPOS/hcp-notes"
 export ZETDIR="$GHREPOS/zets"
+export HXZET="$BUCKET/Repos/github.com/hvac-hx/hx-zets"
 export DOCUMENTS="$HOME/Documents"
 export DOWNLOADS="$HOME/Downloads"
 export PDFS="$HOME/Library/Mobile Documents/com~apple~Preview/Documents"
@@ -125,7 +126,7 @@ export HISTFILE=$ZDOTDIR/history
 
 #------------------------------ cdpath ------------------------------
 setopt autocd
-export CDPATH=".:$GHREPOS:$DOTFILES:$REPOS/github.com:$LOCAL_REPOS:$HOME"
+export CDPATH=".:$GHREPOS:$DOTFILES:$LOCAL_REPOS:$HOME"
 
 #------------------------------ options ------------------------------
 #                         (see `man zshoptions`)
