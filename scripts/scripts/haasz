@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+# Uses the `zet` command setting the directory to the
+# Housh As A System zet repository.
+
+main() {
+  (ZETDIR="$HAASZET" eval zet "$@")
+}
+
+main "$@"

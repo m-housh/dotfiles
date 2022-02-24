@@ -192,7 +192,6 @@ alias reload='exec zsh -l'
 alias temp='cd $(mktemp -d)'
 alias vi='vim'
 alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
-
 #------------------------------ functions ------------------------------
 mkcd() {
   local dir="$1"
