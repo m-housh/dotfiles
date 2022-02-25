@@ -89,7 +89,7 @@ augroup MICHAEL
     autocmd!
     autocmd BufWritePre * :call TrimWhiteSpace()
     autocmd Filetype yaml setlocal ts=2 sts=2 sw=2 expandtab
-    autocmd Filetype makrdown setlocal tw=79 fo+=t
+    autocmd Filetype markdown setlocal tw=79 fo+=t
 augroup END
 
 
