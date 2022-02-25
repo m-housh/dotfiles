@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+# Creates a new `zet` inside the $HAAS/documents repository
+
+_main() {
+  (ZETDIR="$HAAS/documents" eval zet "$@")
+}
+
+_main "$@"
