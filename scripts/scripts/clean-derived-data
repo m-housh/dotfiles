@@ -1,0 +1,8 @@
+#!/bin/sh
+
+path=~/Library/Developer/Xcode/DerivedData
+
+if [ -d "${path}" ]; then
+  echo "Removing derived data folders"
+  rm -rf "$path"/*
+fi
