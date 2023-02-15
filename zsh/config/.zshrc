@@ -99,8 +99,6 @@ fpath_prepend() {
 
 # last arg will be first in path
 path_prepend \
-  "/usr/local/sbin" \
-  "/usr/local/bin" \
   "/opt/homebrew/bin" \
   "/opt/homebrew/sbin" \
   "$HOME/.local/bin" \

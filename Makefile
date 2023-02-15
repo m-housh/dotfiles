@@ -45,3 +45,11 @@ stow:
 # Order matters, need to install home-brew first then formula
 bootstrap: bootstrap-homebrew bootstrap-brews bootstrap-casks stow bootstrap-non-brews bootstrap-app-store
 	open ~/Downloads
+
+# make a local zsh configuration file, to extend
+# the normal .zshrc for configuration that is only
+# relevant on the local machine.
+zshrc-local:
+	touch "$(PWD)/zsh/config/.zshrc-local"
+	vim "$(PWD)/zsh/config/.zshrc-local"
+

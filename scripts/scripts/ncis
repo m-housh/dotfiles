@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+# Creates a new `zet` inside the House Call Pro `Zettlekasten`
+
+_main() {
+  (ZETDIR="$HOME/Documents/NCISummit" eval zet "$@")
+}
+
+_main "$@"
