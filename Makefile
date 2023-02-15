@@ -50,6 +50,12 @@ bootstrap: bootstrap-homebrew bootstrap-brews bootstrap-casks stow bootstrap-non
 # the normal .zshrc for configuration that is only
 # relevant on the local machine.
 zshrc-local:
-	touch "$(PWD)/zsh/config/.zshrc-local"
+	# check if a file already exists or not and create it if not.
+	test  -f "$(PWD)/zsh/config/.zshrc-local" \
+		|| echo "#!/usr/bin/env zsh" > "$(PWD)/zsh/config/.zshrc-local"
+	# add symlink to appropriate location if doesn't exist.
+	test -L "$(HOME)/.config/zsh/.zshrc-local" \
+		|| ln -sfv "$(PWD)/zsh/config/.zshrc-local" "$(HOME)/.config/zsh/"
+	# open the file to edit.
 	vim "$(PWD)/zsh/config/.zshrc-local"
 
