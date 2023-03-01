@@ -91,6 +91,9 @@ augroup MICHAEL
     autocmd Filetype yaml setlocal ts=2 sts=2 sw=2 expandtab
     autocmd Filetype markdown setlocal tw=79 fo+=t
     autocmd Filetype pandoc setlocal tw=79 fo+=t
+    " format json when writing a buffer.
+    autocmd BufWritePre *.json :silent %!jq
 augroup END
+
 
 
