@@ -107,7 +107,8 @@ path_prepend \
 fpath_prepend \
   "$(brew --prefix)/share/zsh/site-functions" \
   "$(brew --prefix)/share/zsh-completions" \
-  "$ZDOTDIR/completions"
+  "$ZDOTDIR/completions" \
+  "$HOME/.local/completions"
 
 #------------------------------ history ------------------------------
 setopt appendhistory            # append to history
@@ -176,6 +177,7 @@ alias bk='cd "${OLDPWD}"'
 alias cdots='cd "${DOTFILES}"'
 alias cl='printf "\e[H\e[2J"'
 alias clear='printf "\e[H\e[2J"'
+alias czets='cd "${ZETDIR}"'
 alias dv='dirs -v'
 alias g='git'
 alias ga='git add'
