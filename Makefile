@@ -1,6 +1,7 @@
+# This does not work inside of a make command.
 bootstrap-homebrew:
-	xcode-select --install | true
-	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	xcode-select --install || true
+	$(shell "$(PWD)/install-brew.sh")
 	chmod -R go-w $(brew --prefix)
 
 bootstrap-brews:
