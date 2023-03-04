@@ -51,8 +51,10 @@ stow:
 bootstrap: bootstrap-homebrew bootstrap-brews bootstrap-casks stow bootstrap-non-brews bootstrap-app-store
 	open ~/Downloads
 
-bootstrap-minimal: bootstrap-homebrew bootstrap-brews
+bootstrap-minimal:
+	test -f "$(BREW)" || echo "You should first run `source scripts/install-brew.sh`" && exit 1
 	$(shell "$(PWD)/install")
+	$(MAKE) bootstrap-brews
 	"$(BREW)" install --cask iterm2
 
 # make a local zsh configuration file, to extend
