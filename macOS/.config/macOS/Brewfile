@@ -14,6 +14,7 @@ brew "fd"                   # required for some neovim plugins
 brew "figlet"               # for ascii art / text
 brew "gh"                   # Github CLI
 brew "git"
+brew "httpie"               # better curl / api's from command line.
 brew "jq"                   # json utilities
 brew "mas"                  # Mac AppStore apps from cli
 #brew "neovim"
