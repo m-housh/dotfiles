@@ -1,3 +1,6 @@
+BREWPATH ?= /opt/homebrew/bin
+BREW = $(BREWPATH)/brew
+
 # This does not work inside of a make command.
 bootstrap-homebrew:
 	xcode-select --install || true
@@ -5,14 +8,14 @@ bootstrap-homebrew:
 	chmod -R go-w $(brew --prefix)
 
 bootstrap-brews:
-	@brew bundle \
+	"$(BREW)" bundle \
 		--no-lock \
 		--cleanup \
 		--debug \
 		--file "$(PWD)/macOS/.config/macOS/Brewfile"
 
 bootstrap-casks:
-	@brew bundle \
+	"$(BREW)" bundle \
 		--no-lock \
 		--cleanup \
 		--debug \
@@ -29,7 +32,7 @@ bootstrap-amazon-workdocs:
 	  https://d3f2hupz96ggz3.cloudfront.net/mac/AmazonWorkDocsDrive.pkg
 
 bootstrap-app-store:
-	@brew bundle \
+	"$(BREW)" bundle \
 		--no-lock \
 		--cleanup \
 		--debug \
@@ -50,7 +53,7 @@ bootstrap: bootstrap-homebrew bootstrap-brews bootstrap-casks stow bootstrap-non
 
 bootstrap-minimal: bootstrap-homebrew bootstrap-brews
 	$(shell "$(PWD)/install")
-	brew install --cask iterm2
+	"$(BREW)" install --cask iterm2
 
 # make a local zsh configuration file, to extend
 # the normal .zshrc for configuration that is only
