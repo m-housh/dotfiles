@@ -4,7 +4,7 @@ BREW = $(BREWPATH)/brew
 # This does not work inside of a make command.
 bootstrap-homebrew:
 	xcode-select --install || true
-	$(shell sudo source "$(PWD)/scripts/install-brew.sh")
+	$(shell source "$(PWD)/scripts/install-brew.sh")
 	chmod -R go-w $(brew --prefix)
 
 bootstrap-brews:
@@ -51,8 +51,11 @@ stow:
 bootstrap: bootstrap-homebrew bootstrap-brews bootstrap-casks stow bootstrap-non-brews bootstrap-app-store
 	open ~/Downloads
 
+bail:
+	echo "You should first run 'source scripts/install-brew.sh'" && exit 1
+
 bootstrap-minimal:
-	test -f "$(BREW)" || echo "You should first run `source scripts/install-brew.sh`" && exit 1
+	test -f "$(BREW)" || $(MAKE) bail
 	$(shell "$(PWD)/install")
 	$(MAKE) bootstrap-brews
 	"$(BREW)" install --cask iterm2
