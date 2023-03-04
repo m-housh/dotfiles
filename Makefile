@@ -40,12 +40,17 @@ bootstrap-espanso:
 
 bootstrap-non-brews: bootstrap-logitech bootstrap-amazon-workdocs bootstrap-espanso
 
+# TODO: Remove stow in favor of customized scripts.
 stow:
 	@stow --stow --verbose --target ~ */
 
 # Order matters, need to install home-brew first then formula
 bootstrap: bootstrap-homebrew bootstrap-brews bootstrap-casks stow bootstrap-non-brews bootstrap-app-store
 	open ~/Downloads
+
+bootstrap-minimal: bootstrap-homebrew bootstrap-brews
+	$(shell "$(PWD)/install")
+	brew install --cask iterm2
 
 # make a local zsh configuration file, to extend
 # the normal .zshrc for configuration that is only

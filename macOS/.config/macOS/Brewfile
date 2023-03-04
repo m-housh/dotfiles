@@ -14,12 +14,13 @@ brew "fd"                   # required for some neovim plugins
 brew "figlet"               # for ascii art / text
 brew "gh"                   # Github CLI
 brew "git"
+brew "jq"                   # json utilities
 brew "mas"                  # Mac AppStore apps from cli
 #brew "neovim"
 #brew "node"                 # required for some LSP servers in neovim
 brew "pure"                 # for cli prompt
 brew "ripgrep"
-brew "stow"                 # for dotfile linking / placement.
+#brew "stow"                 # for dotfile linking / placement.
 brew "swift-format"         # for formatting swift files
 brew "m-housh/formulae/swift-zet"            # for managing zettelkasten notes
 brew "tmux"                 # terminal multi-plexer
