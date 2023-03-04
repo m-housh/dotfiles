@@ -4,7 +4,7 @@ BREW = $(BREWPATH)/brew
 # This does not work inside of a make command.
 bootstrap-homebrew:
 	xcode-select --install || true
-	$(shell source "$(PWD)/scripts/install-brew.sh")
+	$(shell sudo source "$(PWD)/scripts/install-brew.sh")
 	chmod -R go-w $(brew --prefix)
 
 bootstrap-brews:
