@@ -96,7 +96,7 @@ main() {
   _parse_options "$@"
   test "$remove" -eq 0 && _remove_scripts && exit "$?"
   test "$uninstall" -eq 0 && _remove_scripts && exit "$?"
-  _install && exit "$?"
+  _install
 }
 
 main "$@"
