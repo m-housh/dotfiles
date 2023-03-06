@@ -14,7 +14,7 @@ install-dots:
 bootstrap-minimal: bootstrap-homebrew install-dots
 	"$(DOTS)" install --minimal
 
-bootstrap: bootstrap-homebrew
+bootstrap: bootstrap-homebrew install-dots
 	"$(DOTS)" install --full
 
 # make a local zsh configuration file, to extend
