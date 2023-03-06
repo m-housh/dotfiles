@@ -1,17 +1,21 @@
 BREWPATH ?= /opt/homebrew/bin
 BREW = $(BREWPATH)/brew
+DOTS = $(BREWPATH)/dots
 
 # This does not work inside of a make command.
 bootstrap-homebrew:
 	xcode-select --install || true
 	source "$(PWD)/scripts/install-brew.sh"
-	chmod -R go-w $(brew --prefix)
 
-bootstrap-minimal: bootstrap-homebrew
-	echo "Fix me"
+install-dots:
+	"$(BREW)" tap m-housh/formula
+	"$(BREW)" install dots
 
-bootstrap:
-	echo "fix me"
+bootstrap-minimal: bootstrap-homebrew install-dots
+	"$(DOTS)" install --minimal
+
+bootstrap: bootstrap-homebrew
+	"$(DOTS)" install --full
 
 # make a local zsh configuration file, to extend
 # the normal .zshrc for configuration that is only
