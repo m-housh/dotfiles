@@ -12,14 +12,25 @@ generate an issue if you find a problem.
 
 It currently will install homebrew and the following homebrew formula.
 
+Most of the functionality is contained in the
+[dots](https://github.com/m-housh/dots) project, that is a companion to manage
+the dotfiles, which expects the dotfiles directory to be at `~/.dotfiles`.
+
 ```
 fd
+figlet
+gh
 git
+httpie
+jq
 mas
+pure
 node
 ripgrep
-stow
 swift-format
+swift-zet
+tmux
+vim
 zsh
 zsh-completions
 ```
@@ -28,12 +39,12 @@ It will also install the following homebrew casks in the `~/Applications` direct
 
 ```
 docker
+espanso
 google-chrome
 iterm2
-microsoft-teams
-obs
+onyx
 rapid-api
-sketchup-pro
+rectangle
 ```
 
 And the following fonts.
@@ -46,15 +57,10 @@ font-inconsolata-nerd-font
 The following applications will be installed from the macOS app store.
 
 ```
+Developer
+Home Assistant
 pwSafe
 Xcode
-```
-
-The following non-app-store applications will be downloaded for later installation / setup.  These will be placed in `~/Downloads`
-
-```
-Logi Options      # logitech mouse / keyboard settings
-AmazonWorkDocsDrive
 ```
 
 ## Installation
@@ -65,9 +71,6 @@ Clone the repository.
 git clone https://m-housh/dotfiles.git ~/.dotfiles && \
   cd ~/.dotfiles
 ```
-
-The Makefile includes commands to install dependencies and link the
-configuration using `gnu-stow`.
 
 On a fresh system run the following command from the dotfiles root.
 
@@ -82,8 +85,8 @@ for the few applications that get downloaded from the internet, so that you can 
 
 ### Minimal Setup
 
-If you would like to just setup minimal stuff, link dotfiles, and install brews
-(no casks except for Iterm2).  Then you can run the following command.
+If you would like to just setup minimal stuff, link dotfiles, and install brews.
+Then you can run the following command.
 
 ```bash
 make bootstrap-minimal
@@ -108,49 +111,6 @@ command.
 
 ```
 make bootstrap-homebrew
-```
-
-Once homebrew is installed, if you'd like to install the homebrew
-formula (located in `macOS/.config/macOS/Brewfile`) then you can run the
-following command.
-
-```
-make bootstrap-brews
-```
-
-To install homebrew casks (located in `macOS/.config/macOS/Casks.Brewfile`) then you
-can run the following command.
-
-```
-make bootstrap-casks
-```
-
-To symlink the configuration files only then you can run. (Note this will
-likely be removed in the future, as most of the installation is done by
-custom scripts currently).
-
-```
-make stow
-```
-
-To download the logitech options application and place in your `~/Downloads` folder, you can run.
-
-```
-make bootstrap-logitech
-```
-
-To download the amazon workdocs drive installer and place in your `~/Downloads`
-folder, you can run. (Note the Amazon workdocs app does not work on newer M1
-macOS architectures, and will likely be removed in the future).
-
-```
-make bootstrap-amazon-workdocs
-```
-
-And finally to download the app store applications run.
-
-```
-make bootstrap-app-store
 ```
 
 ## Other Make Commands
