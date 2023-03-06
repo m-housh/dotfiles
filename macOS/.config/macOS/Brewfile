@@ -5,10 +5,10 @@ tap "m-housh/formulae"
 
 # TODO: Make the application directory a global variable ??
 # set arguments for all 'brew install --cask' commands
-cask_args appdir: "~/Applications", require_sha: true
+#cask_args appdir: "~/Applications", require_sha: true
 
 # formula
-brew "docker-completion"    # Docker cli completions
+#brew "docker-completion"    # Docker cli completions
 brew "espanso"              # Espanso: Text expander
 brew "fd"                   # required for some neovim plugins
 brew "figlet"               # for ascii art / text

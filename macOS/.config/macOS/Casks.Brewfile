@@ -9,5 +9,5 @@ cask "iterm2"             # terminal application
 cask "onyx"               # macOS utilities
 cask "rapidapi"           # API utility
 cask "rectangle"          # Window management
-cask "sketchup-pro"       # 3D modeling
+#cask "sketchup-pro"       # 3D modeling
 
