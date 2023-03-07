@@ -14,10 +14,10 @@ install-dots:
 	"$(BREW)" install dots
 
 bootstrap-minimal: bootstrap-homebrew install-dots
-	"$(DOTS)" install --minimal --app-dir "$(APPDIR)"
+	"$(DOTS)" install --minimal "$(APPDIR)"
 
 bootstrap: bootstrap-homebrew install-dots
-	"$(DOTS)" install --full --app-dir "$(APPDIR)"
+	"$(DOTS)" install --full "$(APPDIR)"
 
 # make a local zsh configuration file, to extend
 # the normal .zshrc for configuration that is only
