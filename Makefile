@@ -31,3 +31,4 @@ zshrc-local:
 	# open the file to edit.
 	vim "$(PWD)/zsh/config/.zshrc-local"
 
+default: bootstrap
