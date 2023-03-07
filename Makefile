@@ -7,6 +7,7 @@ bootstrap-homebrew:
 	xcode-select --install || true
 	source "$(PWD)/scripts/install-brew.sh"
 
+# Install the dots application manager.
 install-dots:
 	"$(BREW)" tap m-housh/formula
 	"$(BREW)" install dots
