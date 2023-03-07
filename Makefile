@@ -1,6 +1,7 @@
 BREWPATH ?= /opt/homebrew/bin
 BREW = $(BREWPATH)/brew
 DOTS = $(BREWPATH)/dots
+APPDIR ?= /Applications
 
 # This does not work inside of a make command.
 bootstrap-homebrew:
@@ -13,10 +14,10 @@ install-dots:
 	"$(BREW)" install dots
 
 bootstrap-minimal: bootstrap-homebrew install-dots
-	"$(DOTS)" install --minimal
+	"$(DOTS)" install --minimal --app-dir "$(APPDIR)"
 
 bootstrap: bootstrap-homebrew install-dots
-	"$(DOTS)" install --full
+	"$(DOTS)" install --full --app-dir "$(APPDIR)"
 
 # make a local zsh configuration file, to extend
 # the normal .zshrc for configuration that is only
