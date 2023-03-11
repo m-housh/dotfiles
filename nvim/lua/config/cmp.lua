@@ -14,6 +14,10 @@ local feedkey = function(key, mode)
                           mode, true)
 end
 
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+require'lspconfig'.sourcekit.setup {}
+
 lspkind.init({
     symbol_map = {
         Text = "",
