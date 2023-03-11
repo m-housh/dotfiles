@@ -1,6 +1,7 @@
 -- Setup nvim-cmp.
 local cmp = require "cmp"
 local lspkind = require("lspkind")
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 local has_words_before = function()
     local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -14,9 +15,10 @@ local feedkey = function(key, mode)
                           mode, true)
 end
 
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-require'lspconfig'.sourcekit.setup {}
+require'lspconfig'.sourcekit.setup {
+  capabilities = capabilities
+}
 
 lspkind.init({
     symbol_map = {
