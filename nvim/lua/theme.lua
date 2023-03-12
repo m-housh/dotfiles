@@ -1,3 +1,5 @@
 -- Nightfox
-require('nightfox').load('nordfox')
+require('nightfox').load('terafox')
+--require('nightfox').load('terafox')
+--vim.cmd("colorscheme nightfox")
 

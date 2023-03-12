@@ -13,3 +13,4 @@ vim.api.nvim_exec([[
     au FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
   augroup END
   ]], false)
+

@@ -2,14 +2,17 @@ local o = vim.opt
 local wo = vim.wo
 local fn = vim.fn
 
-vim.cmd "filetype indent plugin on"
-vim.cmd "set inccommand=split"
+-- vim.cmd.filetype('on')
+-- vim.cmd.filetype.plugin('on')
+-- vim.cmd.filetype.indent('on')
+-- vim.cmd.filetype('indent plugin on')
+vim.cmd.set('inccommand=split')
 -- o.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50" -- block in normal and beam cursor in insert mode
 o.updatetime = 300 -- faster completion
 o.timeoutlen = 400 -- time to wait for a mapped sequence to complete (in milliseconds)
 o.ttimeoutlen = 0 -- Time in milliseconds to wait for a key code sequence to complete
 o.backup = false -- creates a backup file
-o.swapfile = true -- enable/disable swap file creation
+o.swapfile = false -- enable/disable swap file creation
 o.dir = fn.stdpath("data") .. "/swp" -- swap file directory
 o.undofile = true -- enable/disable undo file creation
 o.undodir = fn.stdpath("data") .. "/undodir" -- set undo directory
@@ -28,7 +31,9 @@ o.smartcase = true -- smart case
 o.smartindent = true -- make indenting smarter again
 o.splitbelow = true -- force all horizontal splits to go below current window
 o.splitright = true -- force all vertical splits to go to the right of current window
+o.autoindent = true -- turn on auto indent.
 o.expandtab = true -- convert tabs to spaces
+o.smarttab = true -- turn on smart tab
 o.shiftwidth = 2 -- the number of spaces inserted for each indentation
 o.tabstop = 2 -- how many columns a tab counts for
 o.termguicolors = true -- set term gui colors (most terminals support this)

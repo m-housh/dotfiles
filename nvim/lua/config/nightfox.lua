@@ -3,7 +3,7 @@ local nightfox = require('nightfox')
 -- This function set the configuration of nightfox. If a value is not passed in the setup function
 -- it will be taken from the default configuration above
 nightfox.setup({
-  fox = "nordfox", -- change the colorscheme to use nordfox
+  fox = "terafox", -- change the colorscheme to use terafox
   styles = {
     comments = "italic", -- change style of comments to be italic
     keywords = "bold", -- change style of keywords to be bold
@@ -13,8 +13,8 @@ nightfox.setup({
     match_paren = true, -- inverse the highlighting of match_parens
   },
   colors = {
-    red = "#FF000", -- Override the red color for MAX POWER
-    bg_alt = "#000000",
+    --red = "#FF000", -- Override the red color for MAX POWER
+    --bg_alt = "#000000",
   },
   hlgroups = {
     TSPunctDelimiter = { fg = "${red}" }, -- Override a highlight group with the color red
@@ -24,3 +24,4 @@ nightfox.setup({
 
 -- Load the configuration set above and apply the colorscheme
 nightfox.load()
+vim.cmd("colorscheme terafox")

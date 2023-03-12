@@ -30,3 +30,6 @@ keymap("n", "<Down>", ":resize +1<CR>", default_options)
 -- Move selected line / block of text in visual mode
 keymap("x", "K", ":move '<-2<CR>gv-gv", default_options)
 keymap("x", "J", ":move '>+1<CR>gv-gv", default_options)
+
+-- Toggle nvim-tree open or closed
+keymap("n", "<c-n>", "<CMD>NvimTreeToggle<CR>", default_options)
