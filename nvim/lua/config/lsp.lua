@@ -144,7 +144,7 @@ for _, lsp in ipairs(servers) do
 end
 
 -- Test source-kit
---require'lspconfig'.sourcekit.setup{}
+require'lspconfig'.sourcekit.setup{}
 
 
 -- local sumneko_root_path = os.getenv("HOME") .. ".cache/lua-language-server"
