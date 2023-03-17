@@ -1,0 +1,19 @@
+matches:
+  # Print the current date
+  - trigger: ":date"
+    replace: "{{mydate}}"
+    vars:
+      - name: mydate
+        type: date
+        params:
+          format: "%m/%d/%Y"
+
+  # Iso-seconds
+  - trigger: ":isosec"
+    replace:  "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "isosec"
+

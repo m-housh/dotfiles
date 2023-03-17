@@ -1,0 +1,11 @@
+# Email configuration.
+
+matches:
+  # Email Addresses
+  - trigger: ":@hhe"
+    replace: "mhoush@houshhomeenergy.com"
+  - trigger: ":@service"
+    replace: "service@houshhomeenergy.com"
+  - trigger: ":@me"
+    replace: "michael@mhoush.com"
+

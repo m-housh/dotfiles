@@ -1,0 +1,12 @@
+# Commonly used in house call pro.
+matches:
+  # House Call Pro
+  - trigger: ":cc"
+    replace: "Client Concern"
+  - trigger: ":diag"
+    replace: "Diagnostic"
+  - trigger: ":wd"
+    replace: "Work Description"
+  - trigger: ":wp" # I often mistype for this.
+    replace: "Work Description"
+
