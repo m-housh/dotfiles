@@ -13,7 +13,7 @@ nightfox.setup({
     match_paren = true, -- inverse the highlighting of match_parens
   },
   colors = {
-    --red = "#FF000", -- Override the red color for MAX POWER
+    red = "#FF000", -- Override the red color for MAX POWER
     --bg_alt = "#000000",
   },
   hlgroups = {

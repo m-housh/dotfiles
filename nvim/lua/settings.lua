@@ -2,19 +2,14 @@ local o = vim.opt
 local wo = vim.wo
 local fn = vim.fn
 
--- vim.cmd.filetype('on')
--- vim.cmd.filetype.plugin('on')
--- vim.cmd.filetype.indent('on')
--- vim.cmd.filetype('indent plugin on')
 vim.cmd.set('inccommand=split')
--- o.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50" -- block in normal and beam cursor in insert mode
 o.updatetime = 300 -- faster completion
 o.timeoutlen = 400 -- time to wait for a mapped sequence to complete (in milliseconds)
 o.ttimeoutlen = 0 -- Time in milliseconds to wait for a key code sequence to complete
 o.backup = false -- creates a backup file
 o.swapfile = false -- enable/disable swap file creation
 o.dir = fn.stdpath("data") .. "/swp" -- swap file directory
-o.undofile = true -- enable/disable undo file creation
+o.undofile = false -- enable/disable undo file creation
 o.undodir = fn.stdpath("data") .. "/undodir" -- set undo directory
 o.history = 500 -- Use the 'history' option to set the number of lines from command mode that are remembered.
 o.hidden = true -- required to keep multiple buffers and open multiple buffers

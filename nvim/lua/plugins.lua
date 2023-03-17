@@ -71,6 +71,8 @@ use {"onsails/lspkind-nvim", requires = {{"famiu/bufdelete.nvim"}}}
 -- LSP
 use {"ray-x/lsp_signature.nvim", requires = {{"neovim/nvim-lspconfig"}}}
 
+use { "williamboman/mason.nvim" }
+use { "williamboman/mason-lspconfig.nvim" }
 use {
   "neovim/nvim-lspconfig",
   config = get_config("lsp")
