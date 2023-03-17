@@ -40,6 +40,8 @@ matches:
     replace: "Diagnostic"
   - trigger: ":wd"
     replace: "Work Description"
+  - trigger: ":wp" # I often mistype for this.
+    replace: "Work Description"
 
   # Iso-seconds
   - trigger: ":isosec"
