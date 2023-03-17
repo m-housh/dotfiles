@@ -145,3 +145,6 @@ for _, lsp in ipairs(servers) do
     })
 end
 
+-- Test source-kit
+require'lspconfig'.sourcekit.setup{}
+
