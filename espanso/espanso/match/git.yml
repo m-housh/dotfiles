@@ -1,0 +1,4 @@
+matches:
+  - trigger: ":gcl"
+    replace: "git clone"
+

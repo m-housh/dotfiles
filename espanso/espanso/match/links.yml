@@ -1,6 +1,10 @@
 # This file includes common url's / links.
 matches:
-  # Github
+    # Github
+  - trigger: ":gh"
+    replace: "https://github.com"
+
+  # Personal Github
   - trigger: ":git"
     replace: "https://github.com/m-housh"
 
