@@ -1,0 +1,5 @@
+# Xcode specific configuration.
+
+filter_exec: "Xcode"
+extra_includes:
+  - "../match/_xcode_snippets.yml"

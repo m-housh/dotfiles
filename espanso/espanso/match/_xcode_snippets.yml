@@ -1,0 +1,13 @@
+# These are Xcode specific matches.
+matches:
+  - trigger: ":struct"
+    replace: |
+      struct $|$ {
+
+      }
+
+  - trigger: ":pstruct"
+    replace: |
+      public struct $|$ {
+
+      }
