@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Createsa directory then `cd`'s into the directory
+# Creates a directory then `cd`'s into the directory
 
 set -e
 
