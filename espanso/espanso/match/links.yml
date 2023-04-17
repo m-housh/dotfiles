@@ -11,6 +11,9 @@ matches:
   - trigger: ":pf"
     replace: "https://pointfree.co"
 
+  - trigger: ":tca"
+    replace: "https://github.com/pointfreeco/swift-composable-architecture"
+
   # Youtube
   - trigger: ":yt"
     replace: "https://www.youtube.com/channel/UCb58SeURd5bObfTiL0KoliA"

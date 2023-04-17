@@ -204,3 +204,5 @@ _source_if "$ZDOTDIR/.zshrc-local"
 
 
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+test -d "$HOME/.tea" && source <("$HOME/.tea/tea.xyz/v*/bin/tea" --magic=zsh --silent)
