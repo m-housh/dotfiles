@@ -11,6 +11,9 @@ matches:
   - trigger: ":pf"
     replace: "https://pointfree.co"
 
+  - triggeer: ":gpf"
+    replace: "https://github.com/pointfreeco"
+
   - trigger: ":tca"
     replace: "https://github.com/pointfreeco/swift-composable-architecture"
 
@@ -21,4 +24,8 @@ matches:
   # Discord
   - trigger: ":discord"
     replace: "https://discord.gg/W3p5GJfjry"
+
+  # TruTechTools
+  - trigger: ":ttt"
+    replace: "https://trutechtools.com"
 
