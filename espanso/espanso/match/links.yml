@@ -11,7 +11,7 @@ matches:
   - trigger: ":pf"
     replace: "https://pointfree.co"
 
-  - triggeer: ":gpf"
+  - trigger: ":gpf"
     replace: "https://github.com/pointfreeco"
 
   - trigger: ":tca"
