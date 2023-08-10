@@ -96,7 +96,11 @@ use {
 
 use {
     "TimUntersberger/neogit",
-    requires = {"nvim-lua/plenary.nvim"},
+    requires = {
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim", -- optional
+      "sindrets/diffview.nvim",        -- optional
+    },
     cmd = "Neogit",
     config = get_config("neogit")
 }
