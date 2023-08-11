@@ -107,6 +107,13 @@ use {
 
 use {"hrsh7th/vim-vsnip", config = get_config("vsnip")}
 
+use({
+    "andrewferrier/wrapping.nvim",
+    config = function()
+      require("wrapping").setup()
+    end,
+})
+
 -- Theme
 use {
   'EdenEast/nightfox.nvim',
