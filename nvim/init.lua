@@ -1,4 +1,4 @@
--- Plugins
+
 require('plugins')
 
 -- Key maps

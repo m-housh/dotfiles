@@ -34,7 +34,7 @@ g.nvim_tree_icons = {
 }
 g.loaded_netrw = 1
 g.loaded_netrwPlugin = 1
-local tree_cb = require"nvim-tree.config".nvim_tree_callback
+local tree_cb = require("nvim-tree.config").nvim_tree_callback
 
 -- This function has been generated from your
 --   view.mappings.list

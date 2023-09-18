@@ -2,10 +2,6 @@ local keymap = vim.api.nvim_set_keymap
 local default_options = {noremap = true, silent = true}
 -- local expr_options = {noremap = true, expr = true, silent = true}
 
--- map the leader key
-keymap('n', '<Space>', '<NOP>', default_options)
-vim.g.mapleader = " "
-
 -- easier escape key mapping
 keymap('i', 'jk', '<ESC>', default_options)
 
@@ -32,4 +28,5 @@ keymap("x", "K", ":move '<-2<CR>gv-gv", default_options)
 keymap("x", "J", ":move '>+1<CR>gv-gv", default_options)
 
 -- Toggle nvim-tree open or closed
-keymap("n", "<c-n>", "<CMD>NvimTreeToggle<CR>", default_options)
+keymap("n", "<c-n>", "<CMD>:Neotree toggle<CR>", default_options)
+
