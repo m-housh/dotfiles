@@ -11,3 +11,4 @@
 **/completions/*
 **/.netrwhist
 **/.zshrc-local
+nvim/lazy-lock.json
