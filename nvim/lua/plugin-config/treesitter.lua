@@ -18,9 +18,14 @@ return {
           "json",
           "latex",
           "ledger",
+          "llvm",
           "lua",
+          "make",
+          "markdown",
           "python",
+          "swift",
           "toml",
+          "xml",
           "yaml"
         }, -- one of "all", "maintained" (parsers with maintainers), or a list of languages
         ignore_install = {}, -- List of parsers to ignore installing
