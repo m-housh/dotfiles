@@ -4,6 +4,7 @@ return {
     'nvim-telescope/telescope-fzf-native.nvim',
     'nvim-treesitter/nvim-treesitter-textobjects',
   },
+  build = ':TSUpdate',
   config = function()
     require('nvim-treesitter.configs').setup {
       ensure_installed = {

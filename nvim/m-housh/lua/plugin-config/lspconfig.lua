@@ -53,8 +53,18 @@ return {
     capabilities = require("cmp_nvim_lsp").default_capabilities()
 
     local servers = {
-        "gopls", "bashls", "jedi_language_server", "dockerls", "terraformls",
-        "tsserver", "texlab", "yamlls", "jsonls", "clangd", "sourcekit"
+        "bashls",
+        "clangd",
+        "dockerls",
+        "gopls",
+        "jsonls",
+        "jedi_language_server",
+        "lua_ls",
+        "sourcekit",
+        "terraformls",
+        "tsserver",
+        "texlab",
+        "yamlls",
     }
     for _, lsp in ipairs(servers) do
         nvim_lsp[lsp].setup {
@@ -62,6 +72,12 @@ return {
             capabilities = capabilities,
             settings = {
                 gopls = {analyses = {unusedparams = false}, staticcheck = true},
+                lua_ls = {
+                  Lua = {
+                    workspace = { checkThirdParty = false },
+                    telemetry = { enable = false },
+                  }
+                },
                 json = {
                     format = {enabled = false},
                     schemas = {
