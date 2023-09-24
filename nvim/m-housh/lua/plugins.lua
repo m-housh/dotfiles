@@ -15,4 +15,12 @@ vim.opt.rtp:prepend(lazypath)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
-require("lazy").setup('plugin-config')
+require("lazy").setup(
+  'plugin-config',
+  {
+    dev = {
+      path = '~/LocalProjects/plugins',
+      fallback = true
+    }
+  }
+)
