@@ -43,6 +43,7 @@ export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 #export MYVIMRC="$HOME/.vim/vimrc"
 export MYZSHRC="$ZDOTDIR/.zshrc"
 export PROPOSALS="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work/Proposals"
+export NVIM_APPNAME="m-housh"
 
 autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
@@ -194,7 +195,7 @@ alias reload='exec zsh -l'
 alias temp='cd $(mktemp -d)'
 alias vi='nvim'
 alias nvim='unset VIMINIT && unset MYVIMRC && /opt/homebrew/bin/nvim'
-alias nvim-mhoush='NVIM_APPNAME=m-housh && /opt/homebrew/bin/nvim'
+alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'
 alias nvim-kickstart='NVIM_APPNAME=kickstart /opt/homebrew/bin/nvim'
 alias nvim-lazy='NVIM_APPNAME=lazy /opt/homebrew/bin/nvim'
 
@@ -207,11 +208,8 @@ mkcd() {
   mkdir -p "$dir" && cd "$dir"
 } && export mkcd
 
-
-
 #------------------------------ local configs ------------------------------
 _source_if "$ZDOTDIR/.zshrc-local"
-
 
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
