@@ -35,12 +35,12 @@ export DESKTOP="$HOME/Desktop"
 export SCRIPTS="$HOME/.local/scripts"
 export WORK="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work"
 export TERM=xterm-256color
-export EDITOR=vi
-export VISUAL=vi
-export EDITOR_PREFIX=vi
+export EDITOR=nvim
+export VISUAL=nvim
+export EDITOR_PREFIX=nvim
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
-export VIMINIT='source $MYVIMRC'
-export MYVIMRC="$HOME/.vim/vimrc"
+#export VIMINIT='source $MYVIMRC'
+#export MYVIMRC="$HOME/.vim/vimrc"
 export MYZSHRC="$ZDOTDIR/.zshrc"
 export PROPOSALS="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work/Proposals"
 
@@ -192,13 +192,22 @@ alias gs='git status'
 alias l='ls -lah --color=auto'
 alias reload='exec zsh -l'
 alias temp='cd $(mktemp -d)'
-alias vi='vim'
-alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
+alias vi='nvim'
+alias nvim='unset VIMINIT && unset MYVIMRC && /opt/homebrew/bin/nvim'
+alias nvim-mhoush='NVIM_APPNAME=m-housh && /opt/homebrew/bin/nvim'
+alias nvim-kickstart='NVIM_APPNAME=kickstart /opt/homebrew/bin/nvim'
+alias nvim-lazy='NVIM_APPNAME=lazy /opt/homebrew/bin/nvim'
+
+
 #------------------------------ functions ------------------------------
+
+# Create a directory and move into it.
 mkcd() {
   local dir="$1"
   mkdir -p "$dir" && cd "$dir"
 } && export mkcd
+
+
 
 #------------------------------ local configs ------------------------------
 _source_if "$ZDOTDIR/.zshrc-local"

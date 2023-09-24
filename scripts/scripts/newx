@@ -22,5 +22,5 @@ fi
 
 printf "#!/bin/%s\n\n" "${shell}" > "${path}"
 chmod +x "${path}"
-exec vim +2 "${path}"
+exec "${EDITOR}" +2 "${path}"
 
