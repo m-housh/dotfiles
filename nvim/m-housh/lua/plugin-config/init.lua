@@ -6,4 +6,8 @@ return {
       vim.g.vsnip_snippet_dir = os.getenv('HOME') .. '/.config/nvim/snippets/'
     end
   },
+  -- Local development plugin for swift.
+  {
+    dir = "~/LocalProjects/swift.nvim"
+  }
 }

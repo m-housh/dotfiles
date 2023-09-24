@@ -14,10 +14,3 @@ vim.api.nvim_exec([[
   augroup END
   ]], false)
 
-vim.api.nvim_create_autocmd(
-  "BufWritePost",
-  {
-    pattern = { "*.swift" },
-    command=":silent exec '!swift-format --in-place %'"
-  }
-)
