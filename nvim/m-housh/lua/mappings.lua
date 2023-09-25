@@ -27,7 +27,7 @@ keymap("n", "<Down>", ":resize +1<CR>", default_options)
 keymap("x", "K", ":move '<-2<CR>gv-gv", default_options)
 keymap("x", "J", ":move '>+1<CR>gv-gv", default_options)
 
--- Toggle nvim-tree open or closed
+-- Toggle neo-tree open or closed
 keymap("n", "<c-n>", "<CMD>:Neotree toggle<CR>", default_options)
 
 -- LuaSnip Keymaps
