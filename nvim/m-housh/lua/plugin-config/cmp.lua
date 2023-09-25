@@ -6,7 +6,8 @@ return {
     "hrsh7th/cmp-buffer",
     "hrsh7th/cmp-path",
     "hrsh7th/cmp-cmdline",
-    "hrsh7th/cmp-vsnip",
+    --"hrsh7th/cmp-vsnip",
+    "saadparwaiz1/cmp_luasnip",
     "f3fora/cmp-spell",
     "hrsh7th/cmp-calc",
     "hrsh7th/cmp-emoji"
@@ -16,6 +17,7 @@ return {
     local cmp = require "cmp"
     local lspkind = require("lspkind")
     local capabilities = require('cmp_nvim_lsp').default_capabilities()
+    local luasnip = require('luasnip')
 
     local has_words_before = function()
         local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -36,9 +38,10 @@ return {
 
     lspkind.init({
         symbol_map = {
-            Text = "",
-            Method = "",
-            Function = "",
+
+            Text = "",
+            Method = "󰡱",
+            Function = "󰡱",
             Constructor = "",
             Field = "ﰠ",
             Variable = "",
@@ -82,9 +85,9 @@ return {
         },
         experimental = {native_menu = false, ghost_text = false},
         snippet = {
-            expand = function(args)
-                vim.fn["vsnip#anonymous"](args.body) -- For `vsnip` users.
-            end
+          expand = function(args)
+            require('luasnip').lsp_expand(args.body)
+          end
         },
         mapping = {
             ["<C-p>"] = cmp.mapping.select_prev_item(),
@@ -98,15 +101,17 @@ return {
                 select = false
             },
             ["<Tab>"] = cmp.mapping(function(fallback)
-                if cmp.visible() then
-                    cmp.select_next_item()
-                elseif vim.fn["vsnip#available"](1) == 1 then
-                    feedkey("<Plug>(vsnip-expand-or-jump)", "")
-                elseif has_words_before() then
-                    cmp.complete()
-                else
-                    fallback() -- The fallback function sends a already mapped key. In this case, it's probably `<Tab>`.
-                end
+              if cmp.visible() then
+                cmp.select_next_item()
+              elseif luasnip.expandable() then
+                luasnip.expand()
+              elseif luasnip.expand_or_jumpable() then
+                luasnip.expand_or_jump()
+              elseif has_words_before() then
+                cmp.complete()
+              else
+                fallback()
+              end
             end, {"i", "s"}),
             ["<S-Tab>"] = cmp.mapping(function()
                 if cmp.visible() then
@@ -117,9 +122,13 @@ return {
             end, {"i", "s"})
         },
         sources = {
-            {name = "nvim_lsp"}, {name = "buffer", keyword_length = 5},
-            {name = "vsnip"}, {name = "calc"}, {name = "emoji"}, {name = "spell"},
-            {name = "path"}
+          {name = "nvim_lsp"},
+          {name = "buffer", keyword_length = 5},
+          {name = 'luasnip', option = { show_autosnippets = true } },
+          {name = "calc"},
+          {name = "emoji"},
+          {name = "spell"},
+          {name = "path"}
         }
     })
 
