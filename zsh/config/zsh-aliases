@@ -24,7 +24,7 @@ alias cdots() { cd "${HOME}/.dotfiles" }
 alias zdots="vi ${ZDOTDIR}"
 
 # open dotfiles in nvim editor
-alias dots="vi $DOTFILES"
+#alias dots="vi $DOTFILES"
 
 # print the banner
 #alias banner() { clear && cat < "$ZDOTDIR/banner" }
