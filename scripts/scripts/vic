@@ -1,5 +1,5 @@
 #!/bin/sh
 
-# opens a shell command in vi
-cmd=$(command -v $1)
-test -n "$cmd" && vi "$cmd"
+# opens a shell command in $EDITOR
+cmd="$(command -v $1)"
+test -n "$cmd" && "$EDITOR" "$cmd"
