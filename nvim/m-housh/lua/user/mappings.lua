@@ -1,6 +1,8 @@
 local keymap = vim.api.nvim_set_keymap
 local default_options = {noremap = true, silent = true}
 -- local expr_options = {noremap = true, expr = true, silent = true}
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
 
 -- easier escape key mapping
 keymap('i', 'jk', '<ESC>', default_options)
@@ -29,6 +31,14 @@ keymap("x", "J", ":move '>+1<CR>gv-gv", default_options)
 
 -- Toggle neo-tree open or closed
 keymap("n", "<c-n>", "<CMD>:Neotree toggle<CR>", default_options)
+
+-- Toggle term key maps, that get attached when terminal is opened.
+function _G.set_terminal_keymaps()
+  local opts = { buffer = 0 }
+  vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], opts)
+end
+
+vim.cmd('autocmd! TermOpen term://* lua set_terminal_keymaps()')
 
 -- LuaSnip Keymaps
 --local ls = require('luasnip')
