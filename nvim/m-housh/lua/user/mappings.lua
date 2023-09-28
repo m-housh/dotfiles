@@ -31,32 +31,32 @@ keymap("x", "J", ":move '>+1<CR>gv-gv", default_options)
 keymap("n", "<c-n>", "<CMD>:Neotree toggle<CR>", default_options)
 
 -- LuaSnip Keymaps
-local ls = require('luasnip')
+--local ls = require('luasnip')
 
 -- <c-k> to expand snippets.
 -- This will expand the snippet or jump to the next item within the snippet.
-vim.keymap.set({ "i", "s" }, "<c-k>", function()
-  if ls.expand_or_jumpable() then
-    ls.expand_or_jump()
-  end
-end, { silent = true })
+-- vim.keymap.set({ "i", "s" }, "<c-k>", function()
+--   if ls.expand_or_jumpable() then
+--     ls.expand_or_jump()
+--   end
+-- end, { silent = true })
 
 
 -- <c-j>
 -- This will jump backwards in the snippet.
-vim.keymap.set({ "i", "s" }, "<c-j>", function()
-  if ls.jumpable(-1) then
-    ls.jump(-1)
-  end
-end, { silent = true })
+-- vim.keymap.set({ "i", "s" }, "<c-j>", function()
+--   if ls.jumpable(-1) then
+--     ls.jump(-1)
+--   end
+-- end, { silent = true })
 
 -- <c-l>
 -- This is for selecting withing a list of options.
-vim.keymap.set("i", "<c-l>", function()
-  if ls.choice_active() then
-    ls.change_choice(1)
-  end
-end, { silent = true })
+-- vim.keymap.set("i", "<c-l>", function()
+--   if ls.choice_active() then
+--     ls.change_choice(1)
+--   end
+-- end, { silent = true })
 
 -- Reload the snippets.
-vim.keymap.set("n", "<leader><leader>s", "<cmd>source ~/.config/m-housh/lua/snippets/init.lua<cr>")
+--vim.keymap.set("n", "<leader><leader>s", "<cmd>source ~/.config/m-housh/lua/snippets/init.lua<cr>")
