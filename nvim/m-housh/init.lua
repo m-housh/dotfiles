@@ -1,14 +1,14 @@
 
-require('plugins')
+require('user.plugins')
 
 -- Key maps
-require('mappings')
+require('user.mappings')
 
 -- Common settings
-require('settings')
+require('user.settings')
 
 -- Auto commands
-require('autocmd')
+require('user.autocmd')
 
 -- Theme
-require('theme')
+require('user.theme')

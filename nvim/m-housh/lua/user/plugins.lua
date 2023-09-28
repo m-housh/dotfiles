@@ -16,7 +16,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 require("lazy").setup(
-  'plugin-config',
+  'user.plugin-config',
   {
     dev = {
       path = '~/LocalProjects/plugins',
