@@ -104,6 +104,7 @@ path_prepend \
   "/usr/local/bin" \
   "/opt/homebrew/bin" \
   "/opt/homebrew/sbin" \
+  "$HOME/go/bin" \
   "$HOME/.local/bin" \
   "$SCRIPTS"
 
