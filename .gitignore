@@ -1,7 +1,5 @@
 **/.DS_Store
 **/Brewfile.lock.json
-**/plugins
-**/plugin
 **/.zcompdump*
 **/.zcompdump
 **/.zcompcache
@@ -11,4 +9,3 @@
 **/completions/*
 **/.netrwhist
 **/.zshrc-local
-**/lazy-lock.json
