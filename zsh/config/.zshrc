@@ -44,6 +44,7 @@ export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 export MYZSHRC="$ZDOTDIR/.zshrc"
 export PROPOSALS="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work/Proposals"
 export NVIM_APPNAME="m-housh"
+export NAP_CONFIG="$HOME/.config/nap/config.yaml"
 
 autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
