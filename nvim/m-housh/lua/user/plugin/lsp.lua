@@ -14,6 +14,7 @@ return {
       "ray-x/lsp_signature.nvim",
       "neovim/nvim-lspconfig",
       "folke/neodev.nvim",
+      "mhartington/formatter.nvim"
     },
     opts = {
         ensure_installed = {

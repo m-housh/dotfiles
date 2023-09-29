@@ -16,5 +16,5 @@ return {
           markdown = 1.3
         },
       })
-    end
+   end
   }
