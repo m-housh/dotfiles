@@ -100,26 +100,26 @@ return {
                 behavior = cmp.ConfirmBehavior.Replace,
                 select = false
             },
---             ["<Tab>"] = cmp.mapping(function(fallback)
---               if cmp.visible() then
---                 cmp.select_next_item()
+            ["<Tab>"] = cmp.mapping(function(fallback)
+              if cmp.visible() then
+                cmp.select_next_item()
 --               elseif luasnip.expandable() then
 --                 luasnip.expand()
 --               elseif luasnip.expand_or_jumpable() then
 --                 luasnip.expand_or_jump()
---               elseif has_words_before() then
---                 cmp.complete()
---               else
---                 fallback()
---               end
---             end, {"i", "s"}),
---             ["<S-Tab>"] = cmp.mapping(function()
---                 if cmp.visible() then
---                     cmp.select_prev_item()
+              elseif has_words_before() then
+                cmp.complete()
+              else
+                fallback()
+              end
+            end, {"i", "s"}),
+            ["<S-Tab>"] = cmp.mapping(function()
+                if cmp.visible() then
+                    cmp.select_prev_item()
 --                 elseif vim.fn["vsnip#jumpable"](-1) == 1 then
 --                     feedkey("<Plug>(vsnip-jump-prev)", "")
---                 end
---             end, {"i", "s"})
+                end
+            end, {"i", "s"})
          },
         sources = {
           {name = "nvim_lsp"},

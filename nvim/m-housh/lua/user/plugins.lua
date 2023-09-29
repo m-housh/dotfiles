@@ -19,10 +19,14 @@ require("lazy").setup({
   },
   { import = 'user.plugin.cmp' },
   { import = 'user.plugin.diffview' },
+  { 'folke/neodev.nvim', opts = {} },
   { import = 'user.plugin.lsp' },
   { import = 'user.plugin.lualine' },
   { import = 'user.plugin.neogit' },
   { import = 'user.plugin.neo-tree' },
+  { 'stevearc/overseer.nvim', opts = {
+    strategy = "toggleterm"
+  }},
   { import = 'user.plugin.swift' },
   { import = 'user.plugin.telescope' },
   { import = 'user.plugin.theme' },

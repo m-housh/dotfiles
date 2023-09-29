@@ -12,7 +12,8 @@ return {
       "onsails/lspkind-nvim",
       "famiu/bufdelete.nvim",
       "ray-x/lsp_signature.nvim",
-      "neovim/nvim-lspconfig"
+      "neovim/nvim-lspconfig",
+      "folke/neodev.nvim",
     },
     opts = {
         ensure_installed = {
