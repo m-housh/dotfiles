@@ -15,12 +15,22 @@ vim.api.nvim_exec([[
   ]], false)
 
 -- Wrap markdown lines when a buffer is written.
+local markdownGroup = vim.api.nvim_create_augroup("MyMarkdownGroup", { clear = true })
+
+vim.api.nvim_create_autocmd(
+  "BufEnter",
+  {
+    pattern = { "*.md", "*.markdown" },
+    command = "setlocal textwidth=80",
+    group = markdownGroup
+  }
+)
 vim.api.nvim_create_autocmd(
   "BufWritePre",
   {
     pattern = { "*.md", "*.markdown" },
     command = ":normal ggVGgq",
-    group = vim.api.nvim_create_augroup("MyMarkdownLineWrapper",  { clear = true })
+    group = markdownGroup
   }
 )
 
