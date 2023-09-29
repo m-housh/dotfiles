@@ -5,7 +5,14 @@ return {
     require("formatter").setup({
       filetype = {
         markdown = {
-          require("formatter.filetypes.markdown").prettier
+            exe = "prettier",
+            args = {
+              "--stdin-filepath",
+              util.escape_path(util.get_current_buffer_file_path()),
+              "--line-width",
+              "100"
+            },
+            try_node_modules = true,
         },
         ["*"] = {
           -- formatter for any / all file types.
