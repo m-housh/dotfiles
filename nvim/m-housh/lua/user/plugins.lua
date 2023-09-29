@@ -24,9 +24,7 @@ require("lazy").setup({
   { import = 'user.plugin.lualine' },
   { import = 'user.plugin.neogit' },
   { import = 'user.plugin.neo-tree' },
-  { 'stevearc/overseer.nvim', opts = {
-    strategy = "toggleterm"
-  }},
+  { import = 'user.plugin.overseer' },
   { import = 'user.plugin.swift' },
   { import = 'user.plugin.telescope' },
   { import = 'user.plugin.theme' },

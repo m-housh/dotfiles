@@ -38,6 +38,7 @@ return {
       "hrsh7th/cmp-nvim-lsp",
     },
     config = function()
+      require('neodev').setup()
       require("mason").setup()
       require("mason-lspconfig").setup()
       local nvim_lsp = require("lspconfig")
@@ -109,6 +110,9 @@ return {
                   gopls = {analyses = {unusedparams = false}, staticcheck = true},
                   lua_ls = {
                     Lua = {
+                      completion = {
+                        callSnippet = "Replace"
+                      },
                       workspace = { checkThirdParty = false },
                       telemetry = { enable = false },
                     }
