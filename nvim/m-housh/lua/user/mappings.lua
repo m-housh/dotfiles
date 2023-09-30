@@ -32,6 +32,9 @@ keymap("x", "J", ":move '>+1<CR>gv-gv", default_options)
 -- Toggle neo-tree open or closed
 keymap("n", "<c-n>", "<CMD>:Neotree toggle<CR>", default_options)
 
+-- Toggle Lazy Git
+keymap("n", '<leader>gg', ':LazyGit<CR>', default_options)
+
 -- Toggle term key maps, that get attached when terminal is opened.
 function _G.set_terminal_keymaps()
   local opts = { buffer = 0 }

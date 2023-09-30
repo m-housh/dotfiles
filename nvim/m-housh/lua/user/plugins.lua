@@ -24,26 +24,21 @@ require("lazy").setup({
   -- Completions --
   { import = 'user.plugin.cmp' },
 
+  -- Git --
+  { import = 'user.plugin.lazygit' },
+
   -- LSP --
   { 'folke/neodev.nvim', opts = {} },
   { import = 'user.plugin.lsp' },
   { import = 'user.plugin.lualine' },
-
-
-  { import = 'user.plugin.swift' },
-
-  { import = 'user.plugin.neo-tree' },
-  { import = 'user.plugin.overseer' },
-  { import = 'user.plugin.telescope' },
   { import = 'user.plugin.treesitter' },
 
-  -- Git --
-  --{ import = 'user.plugin.diffview' },
-  { import = 'user.plugin.lazygit' },
-  --{ import = 'user.plugin.neogit' },
-
+  -- Navigation --
+  { import = 'user.plugin.neo-tree' },
+  { import = 'user.plugin.telescope' },
 
   -- Utilities --
+  { import = 'user.plugin.swift' },
   { import = 'user.plugin.toggleterm' },
   { import = 'user.plugin.which-key' },
   { import = 'user.plugin.wrapping' },
