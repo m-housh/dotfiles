@@ -17,19 +17,35 @@ require("lazy").setup({
     path = '~/LocalProjects/plugins',
     fallback = true
   },
+
+  -- Theme --
+  { import = 'user.plugin.theme' },
+
+  -- Completions --
   { import = 'user.plugin.cmp' },
-  { import = 'user.plugin.diffview' },
+
+  -- LSP --
   { 'folke/neodev.nvim', opts = {} },
   { import = 'user.plugin.lsp' },
   { import = 'user.plugin.lualine' },
-  { import = 'user.plugin.neogit' },
+
+
+  { import = 'user.plugin.swift' },
+
   { import = 'user.plugin.neo-tree' },
   { import = 'user.plugin.overseer' },
-  { import = 'user.plugin.swift' },
   { import = 'user.plugin.telescope' },
-  { import = 'user.plugin.theme' },
-  { import = 'user.plugin.toggleterm' },
   { import = 'user.plugin.treesitter' },
+
+  -- Git --
+  --{ import = 'user.plugin.diffview' },
+  { import = 'user.plugin.lazygit' },
+  --{ import = 'user.plugin.neogit' },
+
+
+  -- Utilities --
+  { import = 'user.plugin.toggleterm' },
   { import = 'user.plugin.which-key' },
   { import = 'user.plugin.wrapping' },
+
 })
