@@ -179,7 +179,7 @@ prompt pure
 #------------------------------ aliases ------------------------------
 
 alias bk='cd "${OLDPWD}"'
-alias cdots='cd "${DOTFILES}"'
+#alias cdots='cd "${DOTFILES}"'
 alias cl='printf "\e[H\e[2J"'
 alias clear='printf "\e[H\e[2J"'
 alias czets='cd "${ZETDIR}"'
@@ -199,11 +199,11 @@ alias t='tmux'
 alias tls='tmux list-sessions'
 alias temp='cd $(mktemp -d)'
 alias vi='nvim'
-alias n='unset VIMINIT && unset MYVIMRC && /opt/homebrew/bin/nvim'
-alias nvim='unset VIMINIT && unset MYVIMRC && /opt/homebrew/bin/nvim'
+alias n='unset VIMINIT && unset MYVIMRC && nvim'
+alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
 alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'
-alias nvim-kickstart='NVIM_APPNAME=kickstart /opt/homebrew/bin/nvim'
-alias nvim-lazy='NVIM_APPNAME=lazy /opt/homebrew/bin/nvim'
+alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'
+alias nvim-lazy='NVIM_APPNAME=lazy nvim'
 
 
 #------------------------------ functions ------------------------------
