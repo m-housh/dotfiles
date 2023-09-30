@@ -39,6 +39,7 @@ require("lazy").setup({
   { import = 'user.plugin.telescope' },
 
   -- Utilities --
+  { import = 'user.plugin.noice' },
   { import = 'user.plugin.swift' },
   { import = 'user.plugin.toggleterm' },
   { import = 'user.plugin.which-key' },

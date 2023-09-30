@@ -179,7 +179,6 @@ prompt pure
 #------------------------------ aliases ------------------------------
 
 alias bk='cd "${OLDPWD}"'
-#alias cdots='cd "${DOTFILES}"'
 alias cl='printf "\e[H\e[2J"'
 alias clear='printf "\e[H\e[2J"'
 alias czets='cd "${ZETDIR}"'
