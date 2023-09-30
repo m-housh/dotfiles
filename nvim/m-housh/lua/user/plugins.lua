@@ -27,11 +27,12 @@ require("lazy").setup({
   -- Git --
   { import = 'user.plugin.lazygit' },
 
-  -- LSP --
+  -- LSP, formatting, etc. --
   { 'folke/neodev.nvim', opts = {} },
   { import = 'user.plugin.lsp' },
   { import = 'user.plugin.lualine' },
   { import = 'user.plugin.treesitter' },
+  { import = 'user.plugin.formatter' },
 
   -- Navigation --
   { import = 'user.plugin.neo-tree' },
