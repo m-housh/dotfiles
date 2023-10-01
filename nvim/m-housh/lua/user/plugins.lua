@@ -33,6 +33,7 @@ require("lazy").setup({
   { import = 'user.plugin.lualine' },
   { import = 'user.plugin.treesitter' },
   { import = 'user.plugin.formatter' },
+  { import = 'user.plugin.go' },
 
   -- Navigation --
   { import = 'user.plugin.neo-tree' },
