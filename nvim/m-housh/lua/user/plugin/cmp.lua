@@ -7,17 +7,22 @@ return {
     "hrsh7th/cmp-path",
     "hrsh7th/cmp-cmdline",
     --"hrsh7th/cmp-vsnip",
-    --"saadparwaiz1/cmp_luasnip",
+    'saadparwaiz1/cmp_luasnip',
     "f3fora/cmp-spell",
     "hrsh7th/cmp-calc",
-    "hrsh7th/cmp-emoji"
+    "hrsh7th/cmp-emoji",
+    "L3MON4D3/LuaSnip",
+
+    -- Adds a number of user-friendly snippets
+    'rafamadriz/friendly-snippets',
   },
   config = function()
     -- Setup nvim-cmp.
     local cmp = require "cmp"
     local lspkind = require("lspkind")
-    local capabilities = require('cmp_nvim_lsp').default_capabilities()
-    --local luasnip = require('luasnip')
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
+    local luasnip = require('luasnip')
 
     local has_words_before = function()
         local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -67,6 +72,9 @@ return {
         }
     })
 
+    -- Configure nvim-cmp.
+    require('luasnip.loaders.from_vscode').lazy_load()
+    luasnip.config.setup {}
     cmp.setup({
         formatting = {
             format = lspkind.cmp_format {
@@ -86,6 +94,7 @@ return {
         experimental = {native_menu = false, ghost_text = false},
         snippet = {
           expand = function(args)
+            luasnip.lsp_expand(args.body)
             --require('luasnip').lsp_expand(args.body)
           end
         },
