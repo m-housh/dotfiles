@@ -37,6 +37,9 @@ keymap("n", '<leader>gg', ':LazyGit<CR>', default_options)
 keymap("n", "<leader>gf", ":Telescope git_files<CR>", default_options)
 keymap("n", "<leader>t", ":ToggleTerm<CR>", default_options)
 
+-- Zen Mode Toggle
+keymap('n', '<leader>z', "<cmd>:ZenMode<CR>", default_options)
+
 -- Toggle term key maps, that get attached when terminal is opened.
 function _G.set_terminal_keymaps()
   local opts = { buffer = 0 }

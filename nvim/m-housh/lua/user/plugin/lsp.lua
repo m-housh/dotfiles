@@ -82,6 +82,7 @@ return {
           buf_set_keymap("n", "<space>q", "<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>", opts)
           buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.formatting()<CR>", opts)
 
+          vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
       end
 
       -- Use a loop to conveniently call 'setup' on multiple servers and
@@ -109,7 +110,14 @@ return {
               on_attach = on_attach,
               capabilities = capabilities,
               settings = {
-                  gopls = {analyses = {unusedparams = false}, staticcheck = true},
+                  gopls = {
+                    experimentalPostfixCompletions = true,
+                    analyses = {
+                      unusedparams = true,
+                      shadow = true
+                    },
+                    staticcheck = true
+                  },
                   lua_ls = {
                     Lua = {
                       completion = {
