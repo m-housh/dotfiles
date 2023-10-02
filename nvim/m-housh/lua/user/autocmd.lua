@@ -21,10 +21,14 @@ vim.api.nvim_create_autocmd(
   "BufEnter",
   {
     pattern = { "*.md", "*.markdown" },
-    command = "setlocal textwidth=80",
-    group = markdownGroup
+    group = markdownGroup,
+    callback = function(event)
+      vim.cmd.setlocal('textwidth=80')
+      vim.cmd.setlocal('spell spelllang=en_us')
+    end
   }
 )
+
 vim.api.nvim_create_autocmd(
   "BufWritePre",
   {
