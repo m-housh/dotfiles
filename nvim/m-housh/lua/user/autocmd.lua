@@ -26,6 +26,7 @@ createCmd(
     pattern = { '*.md', '*.markdown', '*.txt', '*.tex' },
     group = spellGroup,
     callback = function(_)
+      vim.cmd.setlocal('textwidth=80')
       vim.cmd.setlocal('spell spelllang=en_us')
     end,
   }
@@ -33,13 +34,13 @@ createCmd(
 
 -- Markdown
 createCmd(
-  "BufWritePre",
+  "BufWritePost",
   {
     pattern = { "*.md", "*.markdown" },
     group = markdownGroup,
     callback = function(_)
       local cursor = vim.fn.getpos('.')
-      vim.cmd(':normal ggVgq')
+      vim.cmd("FormatWrite")
       vim.fn.setpos('.', cursor)
     end,
   }

@@ -48,6 +48,10 @@ end
 
 vim.cmd('autocmd! TermOpen term://* lua set_terminal_keymaps()')
 
+-- Formatting
+keymap('n', '<leader>f', '<cmd>:Format<CR>', default_options)
+keymap('n', '<leader>F', '<cmd>:FormatWrite<CR>', default_options)
+
 -- LuaSnip Keymaps
 --local ls = require('luasnip')
 
