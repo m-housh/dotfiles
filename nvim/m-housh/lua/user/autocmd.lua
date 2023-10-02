@@ -1,3 +1,8 @@
+local defaultGroupOptions = { clear = true }
+local markdownGroup = vim.api.nvim_create_augroup("MyMarkdownGroup", defaultGroupOptions)
+local spellGroup = vim.api.nvim_create_augroup('SpellGroup', defaultGroupOptions)
+local createCmd = vim.api.nvim_create_autocmd
+
 -- Remove all trailing whitespace on save
 vim.api.nvim_exec([[
   augroup TrimWhiteSpace
@@ -14,38 +19,41 @@ vim.api.nvim_exec([[
   augroup END
   ]], false)
 
--- Wrap markdown lines when a buffer is written.
-local markdownGroup = vim.api.nvim_create_augroup("MyMarkdownGroup", { clear = true })
-
-vim.api.nvim_create_autocmd(
+-- Spell check
+createCmd(
   "BufEnter",
   {
-    pattern = { "*.md", "*.markdown" },
-    group = markdownGroup,
-    callback = function(event)
-      vim.cmd.setlocal('textwidth=80')
+    pattern = { '*.md', '*.markdown', '*.txt', '*.tex' },
+    group = spellGroup,
+    callback = function(_)
       vim.cmd.setlocal('spell spelllang=en_us')
-    end
+    end,
   }
 )
 
-vim.api.nvim_create_autocmd(
+-- Markdown
+createCmd(
   "BufWritePre",
   {
     pattern = { "*.md", "*.markdown" },
-    command = ":normal ggVGgq",
-    group = markdownGroup
+    group = markdownGroup,
+    callback = function(_)
+      local cursor = vim.fn.getpos('.')
+      vim.cmd(':normal ggVgq')
+      vim.fn.setpos('.', cursor)
+    end,
   }
 )
 
-vim.api.nvim_create_autocmd(
+-- Go
+createCmd(
   "BufWritePre",
   {
     pattern = "*.go",
     callback = function()
       require('go.format').goimport()
     end,
-    group = vim.api.nvim_create_augroup("GoFormat", { clear = true })
+    group = vim.api.nvim_create_augroup("GoFormat", defaultGroupOptions)
   }
 )
 
