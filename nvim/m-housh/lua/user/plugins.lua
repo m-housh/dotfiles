@@ -50,5 +50,9 @@ require("lazy").setup({
     "folke/zen-mode.nvim",
     opts = { }
   },
+  {
+    "christoomey/vim-tmux-navigator",
+    lazy = false,
+  },
 
 })
