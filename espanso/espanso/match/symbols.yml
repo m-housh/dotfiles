@@ -1,0 +1,7 @@
+matches:
+  - trigger: ':deg:'
+    replace: '°'
+  - trigger: ':cmd:'
+    replace: '⌘'
+  - trigger: ':shift:'
+    replace: '⇧'

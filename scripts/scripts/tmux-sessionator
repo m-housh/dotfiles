@@ -2,44 +2,44 @@
 
 # Adapted from: https://github.com/ThePrimeagen/.dotfiles/blob/master/bin/.local/scripts/tmux-sessionizer
 
-declare -a findPaths=("$HOME")
+DEBUG=
 
-function fpath_prepend() {
+declare -a paths=()
+
+function debug_print {
+  if [ -n "$DEBUG" ]; then
+    echo "DEBUG: $1"
+  fi
+}
+
+function path_prepend() {
   declare arg
   for arg in "$@"; do
-    test -d $arg || continue
-    findPaths=("$arg" "$findPaths")
+    debug_print "arg: $arg"
+    # Check that arg is a directory but not a symlink
+    # Bc on some of my machines ~/projects is a symlink to $REPOS
+    test -d $arg && ! test -L $arg || continue
+    paths=($arg $paths)
   done
 }
+
+#################### MAIN ####################
 
 if [[ $# -eq 1 ]]; then
   selected=$1
 else
+  path_prepend "$HOME" \
+    "$HOME/projects" \
+    "$REPOS/local" \
+    $(find $REPOS/github.com -mindepth 1 -maxdepth 1 -type d -print | sort)
 
-  fpath_prepend "$REPOS" \
-    "$LOCAL_REPOS" \
-    "$GHREPOS" \
-    "$GHREPOS"
-
-  # Some of my machines, projects is a symlink to $REPOS, so ignore it.
-  # On other machines, it is local versions of projects, so add it.
-  if [[ ! -L "$HOME/projects" ]]; then
-    findPaths+="$HOME/projects"
+  debug_print "paths: $paths"
+  if [ -n "$DEBUG" ]; then
+    debug_print "Exiting because in debug mode."
+    exit 0
+  else
+    selected=$(find "${(@)paths}" -mindepth 1 -maxdepth 1 -type d | fzf)
   fi
-
-  if [[ -d "$REPOS/github.com" ]]; then
-    for dir in $(find "$REPOS/github.com" -mindepth 1 -maxdepth 1 -type d); do
-      # prepends to the array.
-      findPaths=($dir $findPaths)
-    done
-  fi
-
-  if [[ -d "$REPOS/local" ]]; then
-    # prepends to the array.
-    findPaths=("$REPOS/local" $findPaths)
-  fi
-
-  selected=$(find -L "${(@)findPaths}" -mindepth 1 -maxdepth 1 -type d | fzf)
 fi
 
 if [[ -z $selected ]]; then
@@ -54,8 +54,9 @@ if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
   exit 0
 fi
 
+# Create a session if it doesn't exist.
 if ! tmux has-session -t $selected_name 2> /dev/null; then
-  tmux new-session -ds $selected_name -c $selected_name
+  tmux new-session -ds $selected_name -c $selected
 fi
 
 tmux switch-client -t $selected_name

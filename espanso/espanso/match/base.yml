@@ -12,5 +12,6 @@ imports:
   - "./email.yml"
   - "./housecallpro.yml"
   - "./links.yml"
+  - './symbols.yml'
 
 
