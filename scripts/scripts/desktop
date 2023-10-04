@@ -1,0 +1,21 @@
+#!/bin/zsh
+
+declare hide
+declare show
+
+zparseopts -D -E -K -- \
+  {h,-hide}=hide \
+  {s,-show}=show
+
+if [ -n "$hide" ]; then
+  defaults write com.apple.finder CreateDesktop false && killall Finder
+  exit 0
+fi
+
+if [ -n "$show" ]; then
+  defaults write com.apple.finder CreateDesktop true && killall Finder
+  exit 0
+fi
+
+echo "Please pass in --hide | --show"
+exit 1
