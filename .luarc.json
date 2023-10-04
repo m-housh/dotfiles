@@ -76,6 +76,7 @@
         "/Users/michael/.local/share/m-housh/lazy/toggleterm.nvim/lua",
         "/Users/michael/.dotfiles/nvim/m-housh/lua",
         "/Users/michael/.dotfiles/nvim/m-housh/lua",
-        "${3rd}/luv/library"
+        "${3rd}/luv/library",
+        "${3rd}/luassert/library"
     ]
 }

@@ -4,9 +4,23 @@
 
 declare -a findPaths=("$HOME")
 
+function fpath_prepend() {
+  declare arg
+  for arg in "$@"; do
+    test -d $arg || continue
+    findPaths=("$arg" "$findPaths")
+  done
+}
+
 if [[ $# -eq 1 ]]; then
   selected=$1
 else
+
+  fpath_prepend "$REPOS" \
+    "$LOCAL_REPOS" \
+    "$GHREPOS" \
+    "$GHREPOS"
+
   # Some of my machines, projects is a symlink to $REPOS, so ignore it.
   # On other machines, it is local versions of projects, so add it.
   if [[ ! -L "$HOME/projects" ]]; then
