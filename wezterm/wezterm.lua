@@ -16,6 +16,7 @@ config.font = wezterm.font_with_fallback {
 config.font_size = 16.0
 
 -- Window
+config.adjust_window_size_when_changing_font_size = false
 config.enable_scroll_bar = false
 config.window_padding = {
   left = 0,
@@ -24,12 +25,13 @@ config.window_padding = {
   bottom = 0
 }
 config.window_close_confirmation = 'NeverPrompt'
-config.window_decorations = 'TITLE'
+--config.window_decorations = 'TITLE'
 
 -- Tab Bar
 config.show_tabs_in_tab_bar = true
 config.show_new_tab_button_in_tab_bar = false
 config.use_fancy_tab_bar = true
 config.tab_bar_at_bottom = true
+config.hide_tab_bar_if_only_one_tab = true
 
 return config
