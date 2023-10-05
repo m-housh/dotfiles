@@ -5,3 +5,5 @@ matches:
     replace: '⌘'
   - trigger: ':shift:'
     replace: '⇧'
+  - trigger: ':noteq:'
+    replace: '≠'
