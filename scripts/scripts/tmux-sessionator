@@ -28,9 +28,6 @@ function path_prepend() {
     # Check that arg is a directory but not a symlink
     # Bc on some of my machines ~/projects is a symlink to $REPOS
     test -d $arg && ! test -L $arg || continue
-    paths=${paths//$arg}
-    paths=${paths/#$arg}
-    paths=${paths/%$arg}
     paths=($arg $paths)
   done
 }
@@ -39,7 +36,7 @@ function setup_fuzzy_find_paths() {
   path_prepend "$HOME" \
     "$HOME/projects" \
     "$REPOS/local" \
-    $(find "$REPOS/github.com" -mindepth 1 -maxdepth 1 -type d -print 2> /dev/null)
+    $(find $REPOS/github.com -mindepth 1 -maxdepth 1 -type d -print 2> /dev/null)
 }
 
 #################### MAIN ####################
@@ -57,14 +54,14 @@ elif [[ "$#" -eq 1 ]]; then
   selected=$1
 else
   setup_fuzzy_find_paths
-  debug_print "fuzzy find paths: $paths"
+  debug_print "fuzzy find paths: ${(@)paths}"
 
   if [ -n "$DEBUG" ]; then
     debug_print "Exiting because in debug mode."
     exit 0
   fi
 
-  selected=$(find "${(@)paths}" -mindepth 1 -maxdepth 1 -type d | fzf)
+  selected=$(find ${(@)paths} -mindepth 1 -maxdepth 1 -type d | fzf)
 fi
 
 if [[ -z $selected ]]; then
