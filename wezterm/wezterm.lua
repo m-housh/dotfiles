@@ -6,7 +6,7 @@ if wezterm.config_builder then
 end
 
 --config.color_scheme = 'rose-pine'
-config.color_scheme = 'nightfox'
+config.color_scheme = 'terrafox'
 
 -- Font
 config.font = wezterm.font_with_fallback {

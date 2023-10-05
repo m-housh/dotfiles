@@ -4,13 +4,22 @@
 
 DEBUG=
 
+#################### Options ####################
+
 declare -a paths=()
+declare chooseOpt=
+
+zparseopts -D -- \
+  {c,-choose}=chooseOpt
+
+#################### Helpers ####################
 
 function debug_print {
   if [ -n "$DEBUG" ]; then
     echo "DEBUG: $1"
   fi
 }
+
 
 function path_prepend() {
   declare arg
@@ -19,27 +28,43 @@ function path_prepend() {
     # Check that arg is a directory but not a symlink
     # Bc on some of my machines ~/projects is a symlink to $REPOS
     test -d $arg && ! test -L $arg || continue
+    paths=${paths//$arg}
+    paths=${paths/#$arg}
+    paths=${paths/%$arg}
     paths=($arg $paths)
   done
 }
 
-#################### MAIN ####################
-
-if [[ $# -eq 1 ]]; then
-  selected=$1
-else
+function setup_fuzzy_find_paths() {
   path_prepend "$HOME" \
     "$HOME/projects" \
     "$REPOS/local" \
-    $(find $REPOS/github.com -mindepth 1 -maxdepth 1 -type d -print | sort)
+    $(find "$REPOS/github.com" -mindepth 1 -maxdepth 1 -type d -print 2> /dev/null)
+}
 
-  debug_print "paths: $paths"
+#################### MAIN ####################
+
+declare choose="${chooseOpt[-1]}"
+
+if [[ -n $choose ]]; then
+  debug_print "Choose from existing."
+  selected=$(
+    tmux list-sessions -F \#S | gum filter \
+      --placeholder "Pick a session..."
+  )
+elif [[ "$#" -eq 1 ]]; then
+  debug_print "Using existing session: $1"
+  selected=$1
+else
+  setup_fuzzy_find_paths
+  debug_print "fuzzy find paths: $paths"
+
   if [ -n "$DEBUG" ]; then
     debug_print "Exiting because in debug mode."
     exit 0
-  else
-    selected=$(find "${(@)paths}" -mindepth 1 -maxdepth 1 -type d | fzf)
   fi
+
+  selected=$(find "${(@)paths}" -mindepth 1 -maxdepth 1 -type d | fzf)
 fi
 
 if [[ -z $selected ]]; then
@@ -50,13 +75,13 @@ selected_name=$(basename "$selected" | tr . _)
 tmux_running=$(pgrep tmux)
 
 if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
-  tmux new-session -s $selected_name -c $selected
+  tmux new-session -s "$selected_name" -c "$selected"
   exit 0
 fi
 
 # Create a session if it doesn't exist.
-if ! tmux has-session -t $selected_name 2> /dev/null; then
-  tmux new-session -ds $selected_name -c $selected
+if ! tmux has-session -t "$selected_name" 2> /dev/null; then
+  tmux new-session -ds "$selected_name" -c "$selected"
 fi
 
-tmux switch-client -t $selected_name
+tmux switch-client -t "$selected_name"

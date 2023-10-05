@@ -52,6 +52,9 @@ vim.cmd('autocmd! TermOpen term://* lua set_terminal_keymaps()')
 keymap('n', '<leader>f', '<cmd>:Format<CR>', default_options)
 keymap('n', '<leader>F', '<cmd>:FormatWrite<CR>', default_options)
 
+-- Turn off highlighting after search.
+keymap('n', '<leader>n', '<cmd>:noh<cr>', default_options)
+
 -- LuaSnip Keymaps
 --local ls = require('luasnip')
 
