@@ -56,7 +56,7 @@ keymap('n', '<leader>F', '<cmd>:FormatWrite<CR>', default_options)
 -- Finds
 
 -- Find espanso config files.
-keymap('n', '<leader>fn', function()
+keymap('n', '<leader>fe', function()
   telescope.find_files({
     cwd='$HOME/.dotfiles/espanso/espanso'
   })
