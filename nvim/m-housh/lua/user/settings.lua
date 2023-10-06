@@ -4,7 +4,7 @@ local fn = vim.fn
 
 vim.cmd.set('inccommand=split')
 o.updatetime = 500 -- faster completion
-o.timeoutlen = 500 -- time to wait for a mapped sequence to complete (in milliseconds)
+o.timeoutlen = 800 -- time to wait for a mapped sequence to complete (in milliseconds)
 o.ttimeoutlen = 300 -- Time in milliseconds to wait for a key code sequence to complete
 o.backup = false -- creates a backup file
 o.swapfile = false -- enable/disable swap file creation
