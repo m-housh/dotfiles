@@ -4,6 +4,7 @@ return {
     "L3MON4D3/LuaSnip",
     version = "2.*",
     build = "make install_jsregexp",
+    event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       local luasnip = require('luasnip')
       local types = require('luasnip.util.types')

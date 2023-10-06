@@ -3,6 +3,7 @@ return {
     dependencies = {
       'akinsho/toggleterm.nvim'
     },
+    event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       require('swift').setup()
       local default_options = { noremap = true, silent = true }

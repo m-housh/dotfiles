@@ -16,6 +16,7 @@ return {
     -- Adds a number of user-friendly snippets
     'rafamadriz/friendly-snippets',
   },
+  event = { 'BufReadPre', 'BufNewFile' },
   config = function()
     -- Setup nvim-cmp.
     local cmp = require "cmp"

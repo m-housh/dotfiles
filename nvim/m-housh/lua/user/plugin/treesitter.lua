@@ -5,6 +5,7 @@ return {
     'nvim-treesitter/nvim-treesitter-textobjects',
   },
   build = ':TSUpdate',
+  event = { 'BufReadPre', 'BufNewFile' },
   config = function()
     require('nvim-treesitter.configs').setup {
       ensure_installed = {
@@ -61,7 +62,9 @@ return {
                     ["ib"] = "@block.inner",
                     ["ab"] = "@block.outer",
                     ["ir"] = "@parameter.inner",
-                    ["ar"] = "@parameter.outer"
+                    ["ar"] = "@parameter.outer",
+                    ["a="] = "@assignment.outer",
+                    ["i="] = "@assignment.inner",
                 }
             }
         },
