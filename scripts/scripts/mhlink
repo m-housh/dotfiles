@@ -1,10 +1,31 @@
 #!/usr/bin/env zsh
 
-root=
+# Generates a link to my website / blog.
+#
+# Use the -l | --last option to generate a link based on the most
+# recent page-bundle created (this does not work if the post has been
+# sitting around / worked on for a bit).
+#
+# If no option is passed in then it will open an fzf (fuzzy search)
+# from the directories.
+#
+# Use the --local option to generate a link to a version running on localhost.
+#
+# A general usage to generate a link and copy it to the clipboard:
+#
+# `$ mhlink --last | pbcopy`
+#
+#
+
+#################### Options ####################
+lastOpt=
 localOpt=
 
 zparseopts -- \
-  {l,-local}=localOpt
+  {l,-last}=lastOpt \
+  -local=localOpt
+
+#################### Main ####################
 
 if [ -d "$HOME/projects/github.com/m-housh/mhoush.com" ]; then
   root="$HOME/projects/github.com/m-housh/mhoush.com"
@@ -19,25 +40,28 @@ postsPath="$root/content/posts"
   && echo "Could not find posts directory" \
   && exit 1
 
+# Get's all the directories / page-bundles.
 posts=$(find "$postsPath" -mindepth 1 -maxdepth 1 -type d -print0 | \
   xargs -0  stat -f"%m %Sm %N" | \
-  sort -rn
-)
+  sort -rn)
 
-choice=$(echo "$posts" | fzf)
-
-[ -z $choice ] \
-  && echo "No selection made." \
-  && exit 1
+# Use the last directory or choose from a list.
+[ -n "$lastOpt" ] \
+  && choice=$(echo $posts | tr '\n' ' ' | cut -w -f6) \
+  || choice=$(echo $posts | fzf)
 
 # Delete everything before the last /
 choice="${choice##*/}"
 
-prefix="https://mhoush.com"
+# Exit if a choice was not made / found.
+[ -z $choice ] \
+  && echo "No selection made." \
+  && exit 1
 
-if [ -n "$localOpt" ]; then
-  prefix="http://localhost:1313"
-fi
+# Set the prefix / website according to the options.
+[ -n $localOpt ] \
+  && prefix="http://localhost:1313" \
+  || prefix="https://mhoush.com"
 
 echo "$prefix/$choice/"
 
