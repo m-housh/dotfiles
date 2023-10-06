@@ -1,5 +1,6 @@
 local keymap = vim.keymap.set
 local default_options = {noremap = true, silent = true}
+local telescope = require('telescope.builtin')
 -- local expr_options = {noremap = true, expr = true, silent = true}
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
@@ -51,6 +52,36 @@ vim.cmd('autocmd! TermOpen term://* lua set_terminal_keymaps()')
 -- Formatting
 keymap('n', '<leader>f', '<cmd>:Format<CR>', default_options)
 keymap('n', '<leader>F', '<cmd>:FormatWrite<CR>', default_options)
+
+-- Finds
+
+-- Find espanso config files.
+keymap('n', '<leader>fn', function()
+  telescope.find_files({
+    cwd='$HOME/.dotfiles/espanso/espanso'
+  })
+end, default_options)
+
+-- Find nvim config files.
+keymap('n', '<leader>fn', function()
+  telescope.find_files({
+    cwd='$HOME/.dotfiles/nvim/m-housh'
+  })
+end, default_options)
+
+-- Find script files.
+keymap('n', '<leader>fs', function()
+  telescope.find_files({
+    cwd='$HOME/.dotfiles/scripts/scripts'
+  })
+end, default_options)
+
+--   Find zsh config files.
+keymap('n', '<leader>fz', function()
+  telescope.find_files({
+    cwd='$HOME/.dotfiles/zsh/config'
+  })
+end, default_options)
 
 -- Turn off highlighting after search.
 keymap('n', '<leader>n', '<cmd>:noh<cr>', default_options)

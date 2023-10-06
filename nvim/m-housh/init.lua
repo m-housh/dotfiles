@@ -1,7 +1,4 @@
 
--- Key maps
-require('user.mappings')
-
 -- Common settings
 require('user.settings')
 
@@ -10,6 +7,9 @@ require('user.autocmd')
 
 -- Plugins
 require('user.plugins')
+
+-- Key maps
+require('user.mappings')
 
 -- Theme (must stay after plugins are loaded)
 require('user.theme')
