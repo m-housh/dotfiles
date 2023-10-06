@@ -1,0 +1,43 @@
+#!/usr/bin/env zsh
+
+root=
+localOpt=
+
+zparseopts -- \
+  {l,-local}=localOpt
+
+if [ -d "$HOME/projects/github.com/m-housh/mhoush.com" ]; then
+  root="$HOME/projects/github.com/m-housh/mhoush.com"
+else
+  root="$HOME/projects/mhoush.com"
+fi
+
+postsPath="$root/content/posts"
+
+# Abort early if the post path does not exist.
+[ ! -d $postsPath ] \
+  && echo "Could not find posts directory" \
+  && exit 1
+
+posts=$(find "$postsPath" -mindepth 1 -maxdepth 1 -type d -print0 | \
+  xargs -0  stat -f"%m %Sm %N" | \
+  sort -rn
+)
+
+choice=$(echo "$posts" | fzf)
+
+[ -z $choice ] \
+  && echo "No selection made." \
+  && exit 1
+
+# Delete everything before the last /
+choice="${choice##*/}"
+
+prefix="https://mhoush.com"
+
+if [ -n "$localOpt" ]; then
+  prefix="http://localhost:1313"
+fi
+
+echo "$prefix/$choice/"
+

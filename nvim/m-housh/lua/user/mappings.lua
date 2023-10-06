@@ -15,10 +15,10 @@ keymap('i', '<c-s>', '<ESC>:w<CR>a', default_options)
 keymap("v", "p", "\"_dP", default_options)
 
 -- buffer focus
-keymap('n', '<c-j>', '<c-w>j', default_options)
-keymap('n', '<c-h>', '<c-w>h', default_options)
-keymap('n', '<c-k>', '<c-w>k', default_options)
-keymap('n', '<c-l>', '<c-w>l', default_options)
+-- keymap('n', '<c-j>', '<c-w>j', default_options)
+-- keymap('n', '<c-h>', '<c-w>h', default_options)
+-- keymap('n', '<c-k>', '<c-w>k', default_options)
+-- keymap('n', '<c-l>', '<c-w>l', default_options)
 
 -- Resizing panes
 keymap("n", "<Left>", ":vertical resize +1<CR>", default_options)
@@ -79,7 +79,8 @@ end, default_options)
 --   Find zsh config files.
 keymap('n', '<leader>fz', function()
   telescope.find_files({
-    cwd='$HOME/.dotfiles/zsh/config'
+    cwd = '$HOME/.dotfiles/zsh/config',
+    hidden = true
   })
 end, default_options)
 
