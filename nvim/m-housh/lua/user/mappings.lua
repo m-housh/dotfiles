@@ -1,4 +1,4 @@
-local keymap = vim.api.nvim_set_keymap
+local keymap = vim.keymap.set
 local default_options = {noremap = true, silent = true}
 -- local expr_options = {noremap = true, expr = true, silent = true}
 vim.g.mapleader = " "
@@ -54,6 +54,9 @@ keymap('n', '<leader>F', '<cmd>:FormatWrite<CR>', default_options)
 
 -- Turn off highlighting after search.
 keymap('n', '<leader>n', '<cmd>:noh<cr>', default_options)
+
+-- Toggle Spell Checking.
+keymap('n', '<leader>s', '<cmd>:set spell!<cr>', default_options)
 
 -- LuaSnip Keymaps
 --local ls = require('luasnip')
