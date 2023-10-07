@@ -59,7 +59,7 @@ choice="${choice##*/}"
   && exit 1
 
 # Set the prefix / website according to the options.
-[ -n $localOpt ] \
+[ -n "$localOpt" ] \
   && prefix="http://localhost:1313" \
   || prefix="https://mhoush.com"
 
