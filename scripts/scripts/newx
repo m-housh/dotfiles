@@ -7,7 +7,7 @@ test ! -n "${SCRIPTS}" && echo "SCRIPTS not set" && exit 1;
 
 # fallback to check if the name arg ${1} exists, if not show usage text.
 test ! -n "${1}" && \
-  echo "usage: newscript <name> <optional: shell>" && \
+  echo "usage: newx <name> <optional: shell>" && \
   echo "shell defaults to sh if not supplied" && \
   exit 1;
 

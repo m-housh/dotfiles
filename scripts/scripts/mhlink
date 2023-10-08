@@ -27,8 +27,8 @@ zparseopts -- \
 
 #################### Main ####################
 
-if [ -d "$HOME/projects/github.com/m-housh/mhoush.com" ]; then
-  root="$HOME/projects/github.com/m-housh/mhoush.com"
+if [ -d "$GHREPOS/mhoush.com" ]; then
+  root="$$GHREPOS/mhoush.com"
 else
   root="$HOME/projects/mhoush.com"
 fi
