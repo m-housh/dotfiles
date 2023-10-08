@@ -64,4 +64,3 @@ choice="${choice##*/}"
   || prefix="https://mhoush.com"
 
 echo "$prefix/$choice/"
-

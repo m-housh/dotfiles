@@ -12,37 +12,44 @@
 _source_if() { test -r "$1" && source "$1" || return 0 }
 
 #------------------------------ exports ------------------------------
+# Config
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local"
 export ZDOTDIR="$HOME/.config/zsh"
 export SHELL="$(which zsh)"
-export GITUSER="m-housh"
-export BUCKET="/Volumes/Bucket"
+
+# Directories
 export ARCHIVE="/Volumes/Archive"
+export BUCKET="/Volumes/Bucket"
 export REPOS="$BUCKET/Repos"
 export GHREPOS="$REPOS/github.com/$GITUSER"
 export HHEREPOS="$BUCKET/Repos/github.com/hhe-dev"
 export LOCAL_REPOS="$REPOS/local"
 export HCP_NOTES="$HHEREPOS/hcp-notes"
-export ZETDIR="$GHREPOS/zets"
 export HXZET="$BUCKET/Repos/github.com/hvac-hx/hx-zets"
 export HAAS="$BUCKET/Repos/github.com/haas"
 export HAASZET="$HAAS/zets"
 export DOCUMENTS="$HOME/Documents"
 export DOWNLOADS="$HOME/Downloads"
 export PDFS="$HOME/Library/Mobile Documents/com~apple~Preview/Documents"
+export PROPOSALS="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work/Proposals"
 export SCREENSHOTS="$BUCKET/Pictures/Screenshots"
 export DOTFILES="$HOME/.dotfiles"
-#export DESKTOP="$HOME/Desktop"
 export SCRIPTS="$HOME/.local/scripts"
 export WORK="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work"
+export ZETDIR="$GHREPOS/zets"
+
+# Git
+export GITUSER="m-housh"
+export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+
 export TERM=xterm-256color
 export EDITOR=nvim
 export VISUAL=nvim
 export EDITOR_PREFIX=nvim
-export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 #export VIMINIT='source $MYVIMRC'
 #export MYVIMRC="$HOME/.vim/vimrc"
 export MYZSHRC="$ZDOTDIR/.zshrc"
-export PROPOSALS="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work/Proposals"
 export NVIM_APPNAME="m-housh"
 export NAP_CONFIG="$HOME/.config/nap/config.yaml"
 
@@ -53,7 +60,6 @@ zle -N down-line-or-beginning-search
 
 # Colors
 autoload -Uz colors && colors
-
 
 #------------------------------ pager ------------------------------
 export LESS_TERMCAP_mb="[35m" # magenta
@@ -153,7 +159,6 @@ export KEYTIMEOUT=1               # Switch between vim mode quicker.
 # Load Useful Functions
 _source_if "${ZDOTDIR}/zsh-functions"
 
-
 # Plugins
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
@@ -195,8 +200,8 @@ alias gs='git status'
 alias l='ls -lah --color=auto'
 alias reload='exec zsh -l'
 alias t='tmux'
-alias ts='$SCRIPTS/tmux-sessionator'
-alias tss='$SCRIPTS/tmux-sessionator --choose'
+alias ts='$~/.local/scripts/tmux-sessionator'
+alias tss='~/.local/scripts/tmux-sessionator --choose'
 alias tls='tmux list-sessions'
 alias temp='cd $(mktemp -d)'
 alias vi='nvim'
@@ -220,4 +225,4 @@ _source_if "$ZDOTDIR/.zshrc-local"
 
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-test -d "$HOME/.tea" && source <("$HOME/.tea/tea.xyz/v*/bin/tea" --magic=zsh --silent)
+#test -d "$HOME/.tea" && source <("$HOME/.tea/tea.xyz/v*/bin/tea" --magic=zsh --silent)
