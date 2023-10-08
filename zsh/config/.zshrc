@@ -43,6 +43,9 @@ export ZETDIR="$GHREPOS/zets"
 export GITUSER="m-housh"
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
+# NPM
+NPM_CONFIG_CACHE="$HOME/.local/npm"
+
 export TERM=xterm-256color
 export EDITOR=nvim
 export VISUAL=nvim
@@ -69,6 +72,7 @@ export LESS_TERMCAP_se=""
 export LESS_TERMCAP_so="[34m" # blue
 export LESS_TERMCAP_ue=""
 export LESS_TERMCAP_so="[4m" # underline
+export LESSHISTFILE="-"
 
 #------------------------------ path ------------------------------
 

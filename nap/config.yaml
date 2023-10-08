@@ -1,5 +1,5 @@
 # Configuration
-home: ~/.nap
+home: ~/.local/nap
 default_language: go
 theme: nord
 
