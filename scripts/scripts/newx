@@ -1,26 +1,74 @@
-#!/bin/sh
+#!/bin/zsh
 
-# Creates a new executable file in the $SCRIPTS directory.
+# Creates a new executable file.
 
-# check if the scripts path / environment variable is set
-test ! -n "${SCRIPTS}" && echo "SCRIPTS not set" && exit 1;
+declare -a localOpt
+declare -a functionOpt
+declare -a shellOpt=("zsh")
+DEBUG="$(env | grep DEBUG)"
 
-# fallback to check if the name arg ${1} exists, if not show usage text.
-test ! -n "${1}" && \
-  echo "usage: newx <name> <optional: shell>" && \
-  echo "shell defaults to sh if not supplied" && \
-  exit 1;
+zparseopts -D -K -- \
+  {l,-local}+:=localOpt \
+  {f,-function}+:=functionOpt \
+  {s,-shell}+=shellOpt
 
-path="${SCRIPTS}/${1}"
-shell="${2:-sh}"
+shell=${shellOpt[-1]}
+localPath=${localOpt[-1]}
 
-if [ -e "${path}" ]; then
-  echo "Already exists try:"
-  echo "$EDITOR $path"
-  exit 1
+#-------------------- Helpers --------------------
+
+function debug_print() {
+  [ -n "$DEBUG" ] \
+    && echo "DEBUG: $1"
+}
+
+function create_script() {
+
+  local script_path="$1"
+
+  debug_print "shell: $shell"
+  debug_print "script-path: $script_path"
+
+  printf "#!/bin/%s\n\n" "${shell}" > "${script_path}"
+  chmod +x "${script_path}"
+  exec "${EDITOR}" +2 "${script_path}"
+}
+
+function parse_local_path() {
+  if [ -z "$localPath" ]; then
+    local prefix="${1[1]}${1[2]}"
+    debug_print "prefix: $prefix"
+    [ "$prefix" = "./" ] && localPath="$1"
+  fi
+}
+
+#-------------------- Main --------------------
+
+debug_print "first-arg: $1"
+
+if [ -n "${functionOpt[-1]}" ]; then
+  debug_print "function-opt: $functionOpt"
+
+  [ ! -d "$ZFUNCDIR" ] \
+    && echo "Function directory not found" \
+    && return 1
+
+  create_script "$ZFUNCDIR/${functionOpt[-1]}"
+  return 0
 fi
 
-printf "#!/bin/%s\n\n" "${shell}" > "${path}"
-chmod +x "${path}"
-exec "${EDITOR}" +2 "${path}"
+parse_local_path "$1"
+
+if [ -n "$localPath" ]; then
+  debug_print "local: $localPath"
+  create_script "$localPath"
+  return 0
+fi
+
+debug_print "scripts: $1"
+[ ! -d "$SCRIPTS" ] \
+  && echo "Scripts directory not found. Set the SCRIPTS environment variable." \
+  && return 1
+
+create_script "${SCRIPTS}/$1"
 
