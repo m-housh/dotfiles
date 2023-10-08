@@ -53,7 +53,11 @@ vim.cmd('autocmd! TermOpen term://* lua set_terminal_keymaps()')
 keymap('n', '<leader>f', '<cmd>:Format<CR>', default_options)
 keymap('n', '<leader>F', '<cmd>:FormatWrite<CR>', default_options)
 
--- Finds
+-- Telescope keymaps
+vim.keymap.set('n', '<leader>ff', telescope.find_files, {})
+vim.keymap.set('n', '<leader>fg', telescope.live_grep, {})
+vim.keymap.set('n', '<leader>fb', telescope.buffers, {})
+vim.keymap.set('n', '<leader>fh', telescope.help_tags, {})
 
 -- Find espanso config files.
 keymap('n', '<leader>fe', function()

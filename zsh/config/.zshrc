@@ -32,17 +32,6 @@ export LESSHISTFILE="-"
 
 #------------------------------ path ------------------------------
 
-path_append() {
-  declare arg
-  for arg in "$@"; do
-    test -d "$arg" || continue
-    PATH=${PATH//":$arg:"/:}
-    PATH=${PATH/#"$arg:"/}
-    PATH=${PATH/%":$arg"/}
-    export PATH="${PATH:+"$PATH:"}$arg"
-  done
-} && export path_append
-
 path_prepend() {
   declare arg
   for arg in "$@"; do
@@ -75,12 +64,6 @@ path_prepend \
   "$GOPATH/bin" \
   "$HOME/.local/bin" \
   "$SCRIPTS"
-
-fpath_prepend \
-  "$(brew --prefix)/share/zsh/site-functions" \
-  "$(brew --prefix)/share/zsh-completions" \
-  "$ZDOTDIR/completions" \
-  "$HOME/.local/completions"
 
 #------------------------------ history ------------------------------
 setopt appendhistory            # append to history
@@ -166,24 +149,22 @@ alias tss='~/.local/scripts/tmux-sessionator --choose'
 alias tls='tmux list-sessions'
 alias temp='cd $(mktemp -d)'
 alias vi='nvim'
-alias n='unset VIMINIT && unset MYVIMRC && nvim'
 alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
 alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'
 alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'
 alias nvim-lazy='NVIM_APPNAME=lazy nvim'
 
-
-#------------------------------ functions ------------------------------
-
-# Create a directory and move into it.
-mkcd() {
-  local dir="$1"
-  mkdir -p "$dir" && cd "$dir"
-} && export mkcd
-
 #------------------------------ local configs ------------------------------
 _source_if "$ZDOTDIR/.zshrc-local"
 
-# [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+#------------------------------ functions ------------------------------
+fpath_prepend \
+  "$(brew --prefix)/share/zsh/site-functions" \
+  "$(brew --prefix)/share/zsh-completions" \
+  "$ZDOTDIR/completions" \
+  "$HOME/.local/completions" \
+  "$ZDOTDIR/functions"
 
-#test -d "$HOME/.tea" && source <("$HOME/.tea/tea.xyz/v*/bin/tea" --magic=zsh --silent)
+autoload -Uz $fpath[1]/*(.:t)
+
+

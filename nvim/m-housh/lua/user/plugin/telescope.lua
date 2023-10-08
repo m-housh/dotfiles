@@ -4,6 +4,7 @@ return {
   dependencies = {
     'nvim-lua/plenary.nvim'
   },
+  lazy = true,
   config = function()
     local actions = require('telescope.actions')
 
@@ -67,12 +68,5 @@ return {
         buffer_previewer_maker = require'telescope.previewers'.buffer_previewer_maker
       }
     })
-
-    local builtin = require('telescope.builtin')
-    -- Telescope keymaps
-    vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
-    vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
-    vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
-    vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
   end
 }

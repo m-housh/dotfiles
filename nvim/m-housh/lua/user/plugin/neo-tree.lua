@@ -12,7 +12,9 @@ return {
       enable_diagnostics = true,
       filesystem = {
         always_show = {
-          "plugins"
+          "plugins",
+          ".zshrc",
+          ".zshenv"
         },
         filtered_items = {
           hide_dotfiles = false
