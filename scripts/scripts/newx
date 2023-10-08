@@ -16,7 +16,7 @@ shell="${2:-sh}"
 
 if [ -e "${path}" ]; then
   echo "Already exists try:"
-  echo "vi ${path}"
+  echo "$EDITOR $path"
   exit 1
 fi
 

@@ -1,4 +1,0 @@
-#!/bin/zsh
-
-# Move into the proposals directory
-cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work/Proposals"

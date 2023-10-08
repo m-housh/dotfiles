@@ -1,0 +1,19 @@
+#!/bin/zsh
+
+function vic() {
+  # opens a shell command in $EDITOR
+  cmd="$(command -v $1)"
+
+  [ -f "$cmd" ] \
+    && "$EDITOR" "$cmd" \
+    && return 0
+
+  # if command was not found try the function directory.
+  cmd="$ZFUNCDIR/$1"
+  [ -f "$cmd" ] \
+    && "$EDITOR" "$cmd" \
+    && return 0
+
+  echo "Command not found: $1"
+  return 1
+}

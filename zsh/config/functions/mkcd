@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+# Creates a directory then `cd`'s into the directory
+
+function mkcd() {
+  dir=$1
+  if [ -z "$dir" ]; then
+    echo "usage: mkcd <dir>" && return 1
+  fi
+  mkdir "$dir"
+  cd "$dir"
+}

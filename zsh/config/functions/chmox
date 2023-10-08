@@ -1,0 +1,8 @@
+#!/bin/zsh
+
+# makes files executable
+
+function chmox() {
+  [ ! -f "$1" ] && echo "usage: chmox <file>" && return 1
+  chmod u+x "$1"
+}

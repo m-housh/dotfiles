@@ -1,5 +1,0 @@
-#!/bin/sh
-
-# opens a shell command in $EDITOR
-cmd="$(command -v $1)"
-test -n "$cmd" && "$EDITOR" "$cmd"

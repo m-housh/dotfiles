@@ -2,7 +2,7 @@
 
 set -e
 
-# Creates a new `zet` inside the House Call Pro `Zettlekasten`
+# Creates a new `zet` inside the private `Zettlekasten`
 
 _main() {
   (ZETDIR="$GHREPOS/private-zets" eval zet "$@")

@@ -2,10 +2,10 @@
 
 set -e
 
-# Creates a new `zet` inside the House Call Pro `Zettlekasten`
+# Creates a new `zet` inside the NCI Summit `Zettlekasten`
 
 _main() {
-  (ZETDIR="$HOME/Documents/NCISummit" eval zet "$@")
+  ZETDIR="$HOME/Documents/NCISummit" eval zet "$@"
 }
 
 _main "$@"

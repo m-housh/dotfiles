@@ -1,0 +1,16 @@
+#!/bin/zsh
+
+# Creates an encrypted disk image from a folder
+function dmg() {
+  from="$1"
+  to="$2"
+
+  if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "Usage: dmg <fromdir> <todir>"
+    echo ""
+    return 1
+  fi
+
+  name="$(isosec).dmg"
+  hdiutil create -encryption AES-256 -srcfolder "$from" "$to/$name"
+}

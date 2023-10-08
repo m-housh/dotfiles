@@ -1,0 +1,7 @@
+#!/bin/zsh
+
+function clean-screenshots() {
+  for file in "$SCREENSHOTS"/*; do
+    rm "$file"
+  done
+}

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-session="dots"
-
-tmux switch-client -t "$session" || \
-  tmux attach -t "$session" || \
-  tmux new-session -c "$DOTFILES" -s "$session"

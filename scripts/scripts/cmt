@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 # adapted from...
 # https://github.com/rwxrob/dot/blob/main/scripts/cmt

@@ -6,9 +6,9 @@
 	<string>com.micheal.clear-screenshots</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>sh</string>
+		<string>zsh</string>
 		<string>-c</string>
-		<string>/Users/michael/.local/scripts/clear_screenshots</string>
+      <string>/Users/michael/.config/zsh/functions/clean-screenshots</string>
 	</array>
 	<key>StartCalendarInterval</key>
 	<dict>

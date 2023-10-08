@@ -8,9 +8,17 @@
 #
 
 function n() {
-  [ -d "$1" ] || [ -z "$1" ] \
-    && nvim -c ":Telescope find_files" \
-    && return 0
+  if [ -z "$1" ]; then
+    local gitdir=$(git rev-parse --show-toplevel 2> /dev/null)
+
+    [ -n "$gitdir" ] \
+      && nvim -c ":Telescope git_files" \
+      && return 0
+
+    [ -d "$1" ] \
+      && nvim -c ":Telescope find_files" \
+      && return 0
+  fi
 
   nvim "$1"
 }

@@ -1,5 +1,0 @@
-#!/bin/sh
-
-for file in "$SCREENSHOTS"/*; do
-  rm "$file"
-done
