@@ -1,3 +1,5 @@
+# This should be placed in "$XDG_CONFIG_HOME/zsh/.zshenv"
+
 # Config
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local"

@@ -1,0 +1,11 @@
+#!/bin/zsh
+
+# Add all and commit to git.
+
+function gma() {
+  [ -z "$1" ] \
+    && echo "usage: gma <commit-message>" \
+    && return 1
+
+  git add . && git commit -m "$1"
+}

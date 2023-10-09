@@ -65,6 +65,15 @@ path_prepend \
   "$HOME/.local/bin" \
   "$SCRIPTS"
 
+fpath_prepend \
+  "$(brew --prefix)/share/zsh/site-functions" \
+  "$(brew --prefix)/share/zsh-completions" \
+  "$ZDOTDIR/completions" \
+  "$HOME/.local/completions" \
+  "$ZDOTDIR/functions"
+
+autoload -Uz $fpath[1]/*(.:t)
+
 #------------------------------ history ------------------------------
 setopt appendhistory            # append to history
 setopt sharehistory             # share history across multiple sessions
@@ -137,8 +146,6 @@ alias ga='git add'
 alias gcb='git checkout -b'
 alias gco='git checkout'
 alias gcm='git commit -a -m'
-#alias gl() { git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit }
-#alias gma() { git add . && git commit -m "$1" }
 alias gp='git push'
 alias gs='git status'
 alias l='ls -lah --color=auto'
@@ -157,15 +164,4 @@ alias nvim-lazy='NVIM_APPNAME=lazy nvim'
 
 #------------------------------ local configs ------------------------------
 _source_if "$ZDOTDIR/.zshrc-local"
-
-#------------------------------ functions ------------------------------
-fpath_prepend \
-  "$(brew --prefix)/share/zsh/site-functions" \
-  "$(brew --prefix)/share/zsh-completions" \
-  "$ZDOTDIR/completions" \
-  "$HOME/.local/completions" \
-  "$ZDOTDIR/functions"
-
-autoload -Uz $fpath[1]/*(.:t)
-
 
