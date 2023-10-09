@@ -132,7 +132,7 @@ _comp_options+=(globdots)		            # Include hidden files.
 
 # Prompt / managed by brew. (`brew install pure`)
 autoload -Uz promptinit; promptinit
-prompt pure
+prompt -s pure
 
 #------------------------------ aliases ------------------------------
 

@@ -31,6 +31,8 @@ export DOTFILES="$HOME/.dotfiles"
 export SCRIPTS="$HOME/.local/scripts"
 export WORK="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work"
 export ZETDIR="$GHREPOS/zets"
+export MYZSHRC="$ZDOTDIR/.zshrc"
+export NAP_CONFIG="$HOME/.config/nap/config.yaml"
 
 # NPM
 export NPM_CONFIG_CACHE="$HOME/.local/npm"
@@ -44,6 +46,4 @@ export VISUAL=nvim
 export EDITOR_PREFIX=nvim
 #export VIMINIT='source $MYVIMRC'
 #export MYVIMRC="$HOME/.vim/vimrc"
-export MYZSHRC="$ZDOTDIR/.zshrc"
 export NVIM_APPNAME="m-housh"
-export NAP_CONFIG="$HOME/.config/nap/config.yaml"
