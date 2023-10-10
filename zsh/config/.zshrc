@@ -160,6 +160,7 @@ alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
 alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'
 alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'
 alias nvim-lazy='NVIM_APPNAME=lazy nvim'
+alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"
 
 #------------------------------ local configs ------------------------------
 _source_if "$ZDOTDIR/.zshrc-local"
