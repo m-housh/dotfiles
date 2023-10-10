@@ -54,7 +54,6 @@ fpath_prepend() {
   done
 } && export fpath_prepend
 
-
 # last arg will be first in path
 path_prepend \
   "/usr/local/bin" \
@@ -132,7 +131,7 @@ _comp_options+=(globdots)		            # Include hidden files.
 
 # Prompt / managed by brew. (`brew install pure`)
 autoload -Uz promptinit; promptinit
-prompt -s pure
+prompt pure
 
 #------------------------------ aliases ------------------------------
 
