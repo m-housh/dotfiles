@@ -68,3 +68,6 @@ export BUNDLE_USER_PLUGIN="$XDG_DATA_HOME/bundle"
 
 export LESSHISTFILE="$XDG_CACHE_HOME/less/history"
 export PSQL_HISTORY="$XDG_DATA_HOME/psql_history"
+
+# Hashicorp/Vault
+export VAULT_ADDR="https://vault.housh.dev"
