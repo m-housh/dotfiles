@@ -10,7 +10,7 @@ return {
 
     require('telescope').setup({
       defaults = {
-        file_ignore_patterns = {"node_modules", "%.jpg", "%.png"},
+        file_ignore_patterns = {"node_modules", "%.jpg", "%.png", ".swiftpm"},
         vimgrep_arguments = {
           'rg',
           '--follow',
