@@ -3,7 +3,7 @@ return {
     dependencies = {
       'akinsho/toggleterm.nvim'
     },
-    ft = { 'swfit' },
+    ft = { 'swift' },
     config = function()
       require('swift').setup()
       local default_options = { noremap = true, silent = true }
