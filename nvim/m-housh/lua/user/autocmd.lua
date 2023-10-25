@@ -2,6 +2,7 @@ local defaultGroupOptions = { clear = true }
 local markdownGroup = vim.api.nvim_create_augroup("MyMarkdownGroup", defaultGroupOptions)
 local spellGroup = vim.api.nvim_create_augroup('SpellGroup', defaultGroupOptions)
 local createCmd = vim.api.nvim_create_autocmd
+local swiftGroup = vim.api.nvim_create_augroup('swift_lsp', { clear = true })
 
 -- Remove all trailing whitespace on save
 vim.api.nvim_exec([[
@@ -58,3 +59,23 @@ createCmd(
   }
 )
 
+-- Swift
+createCmd(
+  "FileType",
+  {
+    pattern = { 'swift' },
+    callback = function()
+      local root_dir = vim.fs.dirname(vim.fs.find({
+        "Package.swift",
+        ".git",
+      }, { upward = true })[1])
+      local client = vim.lsp.start({
+        name = "sourcekit-lsp",
+        cmd = { "sourcekit-lsp" },
+        root_dir = root_dir
+      })
+      vim.lsp.buf_attach_client(0, client)
+    end,
+    group = swiftGroup
+  }
+)
