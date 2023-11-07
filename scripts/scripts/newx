@@ -5,17 +5,37 @@
 declare -a localOpt
 declare -a functionOpt
 declare -a shellOpt=("zsh")
+declare -a helpOpt
 DEBUG="$(env | grep DEBUG)"
 
 zparseopts -D -K -- \
   {l,-local}+:=localOpt \
   {f,-function}+:=functionOpt \
-  {s,-shell}+=shellOpt
+  {s,-shell}+=shellOpt \
+  {h,-help}=helpOpt
 
 shell=${shellOpt[-1]}
 localPath=${localOpt[-1]}
 
 #-------------------- Helpers --------------------
+function usage() {
+  cat << EOF
+newx:  Create new executable (script, function, or local script).
+
+Typical usage:
+
+  newx foo (creates new script named 'foo')
+
+Usage: newx [-l <name>] [-f <name>] [-s <shell>]
+
+  -l | --local <name>: Create a script in current directory.
+  -f | --function <name>: Create a function.
+
+    Advanced options:
+  -s | --shell <shell>: Customize the shell for the script.
+EOF
+
+}
 
 function debug_print() {
   [ -n "$DEBUG" ] \
@@ -45,6 +65,10 @@ function parse_local_path() {
 #-------------------- Main --------------------
 
 debug_print "first-arg: $1"
+
+if [ -n "${helpOpt}" ]; then
+  usage && exit 0
+fi
 
 if [ -n "${functionOpt[-1]}" ]; then
   debug_print "function-opt: $functionOpt"
