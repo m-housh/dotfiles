@@ -1,0 +1,25 @@
+#!/bin/zsh
+
+# Creates a new home performance assesment directory, from the skeleton
+# directory.
+
+sdate="$(date '+%Y.%m.%d' | cut -c3-)"
+customerName="$1"
+dirName="${sdate}.${customerName}_HPA"
+skelPath="$SKELETONDIR/hpa"
+
+#-------------------- MAIN --------------------
+
+if [ -z $customerName ]; then
+  echo "Customer name should not be empty." && exit 1
+fi
+
+if [ ! -d $skelPath ]; then
+  echo "Could not find skeleton directory." && exit 1
+fi
+
+if [ ! -d $PROPOSALS ]; then
+  echo "Could not find proposals directory." && exit 1
+fi
+
+cp -R "$skelPath" "$PROPOSALS/$dirName"
