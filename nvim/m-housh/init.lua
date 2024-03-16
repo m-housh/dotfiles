@@ -1,10 +1,6 @@
 -- Leader needs to be set before loading plugins
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
-
--- Common settings
-require('user.settings')
-
 -- Auto commands
 require('user.autocmd')
 
@@ -17,4 +13,8 @@ require('user.mappings')
 -- Theme (must stay after plugins are loaded)
 require('user.theme')
 
+-- Common settings
+require('user.settings')
+
+vim.o.shiftwidth = 2
 

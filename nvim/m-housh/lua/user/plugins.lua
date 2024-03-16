@@ -55,5 +55,8 @@ require("lazy").setup({
     "christoomey/vim-tmux-navigator",
     lazy = false,
   },
-
+  {
+    "NMAC427/guess-indent.nvim",
+    opts = { }
+  },
 })
