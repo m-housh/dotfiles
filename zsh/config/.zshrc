@@ -81,6 +81,7 @@ setopt hist_expire_dups_first   # expire duplicates first
 setopt hist_ignore_dups         # do not store duplicates
 setopt hist_find_no_dups        # ignore duplicates when searching
 setopt hist_reduce_blanks       # do not store blank lines.
+setopt histignorespace          # do not store commands that start with a space in history
 
 export HISTSIZE=5000
 export HISTFILESIZE=10000
