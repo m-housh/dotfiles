@@ -36,7 +36,8 @@ function setup_fuzzy_find_paths() {
   path_prepend "$HOME" \
     "$HOME/projects" \
     "$REPOS/local" \
-    $(find $REPOS/github.com -mindepth 1 -maxdepth 1 -type d -print 2> /dev/null)
+    $(find $REPOS/github.com -mindepth 1 -maxdepth 1 -type d -print 2> /dev/null) \
+    $(find $GHREPOS/ansible -mindepth 1 -maxdepth 1 -type d -print 2> /dev/null)
 }
 
 #################### MAIN ####################
