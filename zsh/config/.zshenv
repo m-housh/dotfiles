@@ -72,3 +72,6 @@ export PSQL_HISTORY="$XDG_DATA_HOME/psql_history"
 
 # Hashicorp/Vault
 export VAULT_ADDR="https://vault.housh.dev"
+
+# Ansible
+export ANSIBLE_HOME="$XDG_CONFIG_HOME/ansible"
