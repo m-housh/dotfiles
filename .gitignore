@@ -10,3 +10,6 @@
 **/.netrwhist
 **/.zshrc-local
 facebook-bot/config/*
+facebook-bot/config/*
+**/tmp
+ansible/tmp/*
