@@ -1,3 +1,4 @@
 -- Nightfox
-require('nightfox').load('terrafox')
+--require('nightfox').load('terrafox')
+vim.cmd.colorscheme "catppuccin"
 
