@@ -11,7 +11,7 @@ return {
     "f3fora/cmp-spell",
     "hrsh7th/cmp-calc",
     "hrsh7th/cmp-emoji",
-    "L3MON4D3/LuaSnip",
+    --"L3MON4D3/LuaSnip",
 
     -- Adds a number of user-friendly snippets
     'rafamadriz/friendly-snippets',
@@ -23,7 +23,7 @@ return {
     local lspkind = require("lspkind")
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
-    local luasnip = require('luasnip')
+    --local luasnip = require('luasnip')
 
     local has_words_before = function()
         local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -74,8 +74,8 @@ return {
     })
 
     -- Configure nvim-cmp.
-    require('luasnip.loaders.from_vscode').lazy_load()
-    luasnip.config.setup {}
+    --require('luasnip.loaders.from_vscode').lazy_load()
+    --luasnip.config.setup {}
     cmp.setup({
         formatting = {
             format = lspkind.cmp_format {
@@ -134,7 +134,7 @@ return {
         sources = {
           {name = "nvim_lsp"},
           {name = "buffer", keyword_length = 5},
-          {name = 'luasnip', option = { show_autosnippets = true } },
+          --{name = 'luasnip', option = { show_autosnippets = true } },
           {name = "calc"},
           {name = "emoji"},
           {name = "spell"},
