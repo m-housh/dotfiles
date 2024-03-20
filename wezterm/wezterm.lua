@@ -6,10 +6,11 @@ if wezterm.config_builder then
 end
 
 --config.color_scheme = 'rose-pine'
-config.color_scheme = 'terafox'
-config.colors = {
-  background = "#131111"
-}
+--config.color_scheme = 'terafox'
+config.color_scheme = 'Catppuccin Mocha'
+-- config.colors = {
+--   background = "#131111"
+-- }
 
 -- Font
 config.font = wezterm.font_with_fallback {
