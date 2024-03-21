@@ -13,3 +13,6 @@ facebook-bot/config/*
 facebook-bot/config/*
 **/tmp
 ansible/tmp/*
+ansible/collections/*
+ansible/galaxy_cache/*
+ansible/galaxy_token
