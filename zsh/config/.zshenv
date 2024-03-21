@@ -75,3 +75,8 @@ export VAULT_ADDR="https://vault.housh.dev"
 
 # Ansible
 export ANSIBLE_HOME="$XDG_CONFIG_HOME/ansible"
+
+# Tmux-Sessionator path.
+export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$HHE_REPOS:$REPOS:$GH_REPOS:"
+
+[ -f "$ZDOTDIR/.zshrc-local" ] && source "$ZDOTDIR/.zshrc-local"

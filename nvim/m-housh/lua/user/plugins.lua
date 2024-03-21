@@ -59,5 +59,6 @@ require("lazy").setup({
     "NMAC427/guess-indent.nvim",
     opts = { }
   },
+  { import = 'user.plugin.todo-comments' },
 
 })

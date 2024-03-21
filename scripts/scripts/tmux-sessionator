@@ -25,19 +25,18 @@ function path_prepend() {
   declare arg
   for arg in "$@"; do
     debug_print "arg: $arg"
-    # Check that arg is a directory but not a symlink
-    # Bc on some of my machines ~/projects is a symlink to $REPOS
-    test -d $arg && ! test -L $arg || continue
-    paths=($arg $paths)
+    [ -d $arg ] && debug_print "arg is a directory" && paths=($arg $paths) \
+      || debug_print "arg is not a directory"
   done
 }
 
 function setup_fuzzy_find_paths() {
-  path_prepend "$HOME" \
-    "$HOME/projects" \
-    "$REPOS/local" \
-    $(find $REPOS/github.com -mindepth 1 -maxdepth 1 -type d -print 2> /dev/null) \
-    $(find $GHREPOS/ansible -mindepth 1 -maxdepth 1 -type d -print 2> /dev/null)
+  local path="$TMUX_SESSIONATOR_PATH"
+  debug_print "path: $path"
+  for arg in ${(s[:])path}; do
+    path_prepend "$arg"
+  done
+  debug_print "paths: $paths"
 }
 
 #################### MAIN ####################
@@ -55,14 +54,14 @@ elif [[ "$#" -eq 1 ]]; then
   selected=$1
 else
   setup_fuzzy_find_paths
-  debug_print "fuzzy find paths: ${(@)paths}"
+  debug_print "fuzzy find paths: ${paths}"
 
   if [ -n "$DEBUG" ]; then
     debug_print "Exiting because in debug mode."
     exit 0
   fi
 
-  selected=$(find ${(@)paths} -mindepth 1 -maxdepth 1 -type d | fzf)
+  selected=$(find ${paths} -mindepth 1 -maxdepth 1 -type d | fzf)
 fi
 
 if [[ -z $selected ]]; then

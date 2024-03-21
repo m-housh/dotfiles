@@ -110,19 +110,21 @@ return {
                 behavior = cmp.ConfirmBehavior.Replace,
                 select = true
             },
-            ["<Tab>"] = cmp.mapping(function(fallback)
-              if cmp.visible() then
-                cmp.select_next_item()
---               elseif luasnip.expandable() then
---                 luasnip.expand()
---               elseif luasnip.expand_or_jumpable() then
---                 luasnip.expand_or_jump()
-              elseif has_words_before() then
-                cmp.complete()
-              else
-                fallback()
-              end
-            end, {"i", "s"}),
+            -- Accept ([y]es) the completions.
+            ['<C-y'] = cmp.mapping.confirm { select = true },
+--             ["<Tab>"] = cmp.mapping(function(fallback)
+--               if cmp.visible() then
+--                 cmp.select_next_item()
+-- --               elseif luasnip.expandable() then
+-- --                 luasnip.expand()
+-- --               elseif luasnip.expand_or_jumpable() then
+-- --                 luasnip.expand_or_jump()
+--               elseif has_words_before() then
+--                 cmp.complete()
+--               else
+--                 fallback()
+--               end
+--             end, {"i", "s"}),
             ["<S-Tab>"] = cmp.mapping(function()
                 if cmp.visible() then
                     cmp.select_prev_item()
