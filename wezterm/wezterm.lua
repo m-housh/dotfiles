@@ -6,11 +6,14 @@ if wezterm.config_builder then
 end
 
 --config.color_scheme = 'rose-pine'
+
 --config.color_scheme = 'terafox'
-config.color_scheme = 'Catppuccin Mocha'
 -- config.colors = {
 --   background = "#131111"
 -- }
+
+config.color_scheme = 'Catppuccin Mocha'
+
 
 -- Font
 config.font = wezterm.font_with_fallback {
@@ -22,9 +25,11 @@ config.font_size = 16.0
 -- Window
 config.adjust_window_size_when_changing_font_size = false
 config.enable_scroll_bar = false
+config.initial_cols = 150
+config.initial_rows= 80
 config.window_padding = {
-  left = 0,
-  right = 0,
+  left = 5,
+  right = 5,
   top = 0,
   bottom = 0
 }

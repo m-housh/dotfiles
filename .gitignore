@@ -16,3 +16,4 @@ ansible/tmp/*
 ansible/collections/*
 ansible/galaxy_cache/*
 ansible/galaxy_token
+**/lazy-lock.json

@@ -79,4 +79,5 @@ export ANSIBLE_HOME="$XDG_CONFIG_HOME/ansible"
 # Tmux-Sessionator path.
 export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$HHE_REPOS:$REPOS:$GH_REPOS:"
 
+# TODO: This should be moved to "$XDG_DATA_HOME".
 [ -f "$ZDOTDIR/.zshrc-local" ] && source "$ZDOTDIR/.zshrc-local"
