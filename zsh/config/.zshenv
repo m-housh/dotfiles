@@ -30,7 +30,7 @@ export ARCHIVE="/Volumes/Archive"
 export BUCKET="/Volumes/Bucket"
 export REPOS="$BUCKET/Repos"
 export GHREPOS="$REPOS/github.com/$GITUSER"
-export HHEREPOS="$BUCKET/Repos/github.com/hhe-dev"
+export HHEREPOS="$REPOS/github.com/hhe-dev"
 export LOCAL_REPOS="$REPOS/local"
 export HCP_NOTES="$HHEREPOS/hcp-notes"
 export HXZET="$BUCKET/Repos/github.com/hvac-hx/hx-zets"
@@ -82,5 +82,5 @@ export ANSIBLE_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
 export DEFAULT_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
 
 # Tmux-Sessionator path.
-export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$HHE_REPOS:$REPOS:$GH_REPOS"
+export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$REPOS:$GH_REPOS"
 
