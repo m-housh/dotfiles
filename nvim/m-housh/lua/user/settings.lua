@@ -62,3 +62,4 @@ o.wildignore = [[
 *.swp,.lock,.DS_Store,._*
 */tmp/*,*.so,*.swp,*.zip,**/node_modules/**,**/target/**,**.terraform/**"
 ]]
+o.viminfo="" -- disable viminfo from copying information from current session, for security.
