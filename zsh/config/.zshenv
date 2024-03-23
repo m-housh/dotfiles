@@ -82,13 +82,3 @@ export ANSIBLE_HOME="$XDG_CONFIG_HOME/ansible"
 # Tmux-Sessionator path.
 export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$HHE_REPOS:$REPOS:$GH_REPOS"
 
-function _source_files_if_found {
-  for file in "$@"; do
-    [ -x "$file" ] && source "$file"
-  done
-}
-
-_source_files_if_found \
-  "$ZDOTDIR/.zshrc-local" \
-  "$XDG_DATA_HOME/env.zsh" \
-  "$XDG_DATA_HOME/env"
