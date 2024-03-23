@@ -1,4 +1,7 @@
 # This should be placed in "$XDG_CONFIG_HOME/zsh/.zshenv"
+#
+# This includes general default environment variables, local overrides may be stored
+# in `$XDG_DATA_HOME/zsh/env.zsh`.
 
 # XDG
 export XDG_CONFIG_HOME="$HOME/.config"
@@ -77,8 +80,15 @@ export VAULT_ADDR="https://vault.housh.dev"
 export ANSIBLE_HOME="$XDG_CONFIG_HOME/ansible"
 
 # Tmux-Sessionator path.
-export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$HHE_REPOS:$REPOS:$GH_REPOS:"
+export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$HHE_REPOS:$REPOS:$GH_REPOS"
 
-# TODO: This should be moved to "$XDG_DATA_HOME".
-[ -x "$ZDOTDIR/.zshrc-local" ] && source "$ZDOTDIR/.zshrc-local"
-[ -x "$XDG_DATA_HOME/zsh/env.zsh" ] && source "$XDG_DATA_HOME/zsh/env.zsh"
+function _source_files_if_found {
+  for file in "$@"; do
+    [ -x "$file" ] && source "$file"
+  done
+}
+
+_source_files_if_found \
+  "$ZDOTDIR/.zshrc-local" \
+  "$XDG_DATA_HOME/env.zsh" \
+  "$XDG_DATA_HOME/env"
