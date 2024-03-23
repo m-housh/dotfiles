@@ -81,4 +81,4 @@ export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$HHE_REPOS:$REPOS:$GH_
 
 # TODO: This should be moved to "$XDG_DATA_HOME".
 [ -x "$ZDOTDIR/.zshrc-local" ] && source "$ZDOTDIR/.zshrc-local"
-[ -x "$XDG_DATA_HOME/zsh/env" ] && source "$XDG_DATA_HOME/zsh/env"
+[ -x "$XDG_DATA_HOME/zsh/env.zsh" ] && source "$XDG_DATA_HOME/zsh/env.zsh"
