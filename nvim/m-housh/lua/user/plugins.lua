@@ -60,5 +60,6 @@ require("lazy").setup({
     opts = { }
   },
   { import = 'user.plugin.todo-comments' },
+  { "NoahTheDuke/vim-just", ft = { "just" } },
 
 })

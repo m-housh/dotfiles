@@ -78,6 +78,8 @@ export VAULT_ADDR="https://vault.housh.dev"
 
 # Ansible
 export ANSIBLE_HOME="$XDG_CONFIG_HOME/ansible"
+export ANSIBLE_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
+export DEFAULT_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
 
 # Tmux-Sessionator path.
 export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$HHE_REPOS:$REPOS:$GH_REPOS"
