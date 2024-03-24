@@ -50,6 +50,7 @@ export MYZSHRC="$ZDOTDIR/.zshrc"
 export NAP_CONFIG="$HOME/.config/nap/config.yaml"
 export SKELETONDIR="$DOTFILES/skeleton"
 export ANSIBLE_GEN_DIR="$GHREPOS/ansible/ansible-gen-playbook"
+export SITES="$GHREPOS/sites"
 
 # NPM
 export NPM_CONFIG_CACHE="$HOME/.local/npm"
