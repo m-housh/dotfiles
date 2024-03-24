@@ -146,6 +146,7 @@ alias ga='git add'
 alias gcb='git checkout -b'
 alias gco='git checkout'
 alias gcm='git commit -a -m'
+alias gen='just --justfile "$ANSIBLE_GEN_DIR/justfile"'
 alias gp='git push'
 alias gs='git status'
 alias hn='hugo new'
@@ -159,6 +160,7 @@ alias tls='tmux list-sessions'
 alias temp='cd $(mktemp -d)'
 alias vi='nvim'
 alias newxf='~/.local/scripts/newx --function'
+alias nlnv='nvim "$LOCAL_ENV"'
 alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
 alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'
 alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'
@@ -169,7 +171,7 @@ alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"
 # TODO: The .zshrc-local is a legacy location and should be removed once my machines are
 #       use the new location in XDG_DATA_HOME.
 # HACK: These need to stay here, otherwise environment overrides do not work properly
-#       I tried sourcing them in the the `.zshenv` files, but didn't work.
+#       I tried sourcing them in the the `.zshenv` files, but did not work.
 _source_if "$ZDOTDIR/.zshrc-local"
-_source_if "$XDG_DATA_HOME/zsh/env.zsh"
+_source_if "$LOCAL_ENV"
 
