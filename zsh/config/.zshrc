@@ -142,6 +142,7 @@ prompt pure
 #------------------------------ aliases ------------------------------
 
 alias bk='cd "${OLDPWD}"'               # change to last directory
+alias cda='cd "$ANSIBLE_LOCAL"'         # change into local ansible directory.
 alias cl='printf "\e[H\e[2J"'           # clear the terminal
 alias clear='printf "\e[H\e[2J"'        # clear the terminal
 alias czets='cd "${ZETDIR}"'            # move into zettlekasten notes
