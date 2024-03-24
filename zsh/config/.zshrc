@@ -168,6 +168,8 @@ alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"
 #------------------------------ local configs ------------------------------
 # TODO: The .zshrc-local is a legacy location and should be removed once my machines are
 #       use the new location in XDG_DATA_HOME.
+# HACK: These need to stay here, otherwise environment overrides do not work properly
+#       I tried sourcing them in the the `.zshenv` files, but didn't work.
 _source_if "$ZDOTDIR/.zshrc-local"
 _source_if "$XDG_DATA_HOME/zsh/env.zsh"
 
