@@ -80,6 +80,7 @@ export PSQL_HISTORY="$XDG_DATA_HOME/psql_history"
 export VAULT_ADDR="https://vault.housh.dev"
 
 # Ansible
+export ANSIBLE_LOCAL="$GHREPOS/ansible"
 export ANSIBLE_HOME="$XDG_CONFIG_HOME/ansible"
 export ANSIBLE_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
 export DEFAULT_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
