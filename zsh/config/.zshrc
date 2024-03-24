@@ -161,6 +161,7 @@ alias l='ls -lahH --color=auto'         # better ls command.
 alias lfs='ls -lahH --color=auto "$ZDOTDIR/functions"'    # List functions.
 alias reload='exec zsh -l'              # reload the shell, useful when making changes.
 alias t='tmux'                          # access tmux quickly
+alias tka='tmux kill-server'            # kill tmux server and all sessions.
 alias ts='~/.local/scripts/tmux-sessionator'  # create new tmux session, fuzzy finding common locations.
 alias tss='~/.local/scripts/tmux-sessionator --choose'  # attach to an existing tmux session.
 alias tls='tmux list-sessions'          # list tmux sessions
