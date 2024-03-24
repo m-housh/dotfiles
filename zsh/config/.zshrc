@@ -32,6 +32,7 @@ export LESSHISTFILE="-"
 
 #------------------------------ path ------------------------------
 
+# Helper function to prepend to the $PATH
 path_prepend() {
   declare arg
   for arg in "$@"; do
@@ -43,6 +44,7 @@ path_prepend() {
   done
 } && export path_prepend
 
+# Helper function to prepend to the $FPATH
 fpath_prepend() {
   declare arg
   for arg in "$@"; do
@@ -54,7 +56,7 @@ fpath_prepend() {
   done
 } && export fpath_prepend
 
-# last arg will be first in path
+# last arg will be first in $PATH
 path_prepend \
   "/usr/local/bin" \
   "/opt/homebrew/bin" \
@@ -64,6 +66,7 @@ path_prepend \
   "$HOME/.local/bin" \
   "$SCRIPTS"
 
+# last arg will be first in $FPATH
 fpath_prepend \
   "$(brew --prefix)/share/zsh/site-functions" \
   "$(brew --prefix)/share/zsh-completions" \
@@ -91,6 +94,8 @@ export HISTFILE=$ZDOTDIR/history
 
 #------------------------------ cdpath ------------------------------
 setopt autocd
+
+# NOTE: This may be overriden in local env overrides (typically located in $XDG_DATA_HOME/zsh/env.zsh
 export CDPATH=".:$GHREPOS:$GHREPOS/ansible:$REPOS/github.com:$DOTFILES:$LOCAL_REPOS:$HOME"
 
 #------------------------------ options ------------------------------
@@ -136,36 +141,37 @@ prompt pure
 
 #------------------------------ aliases ------------------------------
 
-alias bk='cd "${OLDPWD}"'
-alias cl='printf "\e[H\e[2J"'
-alias clear='printf "\e[H\e[2J"'
-alias czets='cd "${ZETDIR}"'
-alias dv='dirs -v'
-alias g='git'
-alias ga='git add'
-alias gcb='git checkout -b'
-alias gco='git checkout'
-alias gcm='git commit -a -m'
-alias gen='just --justfile "$ANSIBLE_GEN_DIR/justfile"'
-alias gp='git push'
-alias gs='git status'
-alias hn='hugo new'
-alias hnc='hugo new content'
-alias l='ls -lah --color=auto'
-alias reload='exec zsh -l'
-alias t='tmux'
-alias ts='~/.local/scripts/tmux-sessionator'
-alias tss='~/.local/scripts/tmux-sessionator --choose'
-alias tls='tmux list-sessions'
-alias temp='cd $(mktemp -d)'
-alias vi='nvim'
-alias newxf='~/.local/scripts/newx --function'
-alias nlnv='nvim "$LOCAL_ENV"'
-alias nvim='unset VIMINIT && unset MYVIMRC && nvim'
-alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'
-alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'
-alias nvim-lazy='NVIM_APPNAME=lazy nvim'
-alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"
+alias bk='cd "${OLDPWD}"'               # change to last directory
+alias cl='printf "\e[H\e[2J"'           # clear the terminal
+alias clear='printf "\e[H\e[2J"'        # clear the terminal
+alias czets='cd "${ZETDIR}"'            # move into zettlekasten notes
+alias dv='dirs -v'                      # list directory info
+alias g='git'                           # access git commands quickly
+alias ga='git add'                      # add files to git quickly
+alias gcb='git checkout -b'             # checkout a new git branch, creating if needed.
+alias gco='git checkout'                # checkout an already existing git branch
+alias gcm='git commit -a -m'            # commit files to git quickly
+alias gen='just --justfile "$ANSIBLE_GEN_DIR/justfile"' # generate template files / directories
+alias gp='git push'                     # push repo to git
+alias gs='git status'                   # git status quickly
+alias hn='hugo new'                     # generate a hugo site
+alias hnc='hugo new content'            # generate new hugo site content quickly
+alias l='ls -lahH --color=auto'         # better ls command.
+alias lfs='ls -lahH --color=auto "$ZDOTDIR/functions"'    # List functions.
+alias reload='exec zsh -l'              # reload the shell, useful when making changes.
+alias t='tmux'                          # access tmux quickly
+alias ts='~/.local/scripts/tmux-sessionator'  # create new tmux session, fuzzy finding common locations.
+alias tss='~/.local/scripts/tmux-sessionator --choose'  # attach to an existing tmux session.
+alias tls='tmux list-sessions'          # list tmux sessions
+alias temp='cd $(mktemp -d)'            # create a temporary directory and move into it.
+alias vi='nvim'                         # set vi to open neovim
+alias newf='"$SCRIPS"/newx --function' # generate a new shell function
+alias nlnv='nvim "$LOCAL_ENV"'          # open local environment overrides file in neovime
+alias nvim='unset VIMINIT && unset MYVIMRC && nvim'   # alias nvim to unset vimrc, useful when using both vim & neovim
+alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'      # set neovim to use my config.
+alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'    # set neovim to use kickstart config.
+alias nvim-lazy='NVIM_APPNAME=lazy nvim'              # set neovim to use lazy config.
+alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"  # set wget history location.
 
 #------------------------------ local configs ------------------------------
 # TODO: The .zshrc-local is a legacy location and should be removed once my machines are
