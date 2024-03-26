@@ -146,6 +146,8 @@ alias cda='cd "$ANSIBLE_LOCAL"'         # change into local ansible directory.
 alias cl='printf "\e[H\e[2J"'           # clear the terminal
 alias clear='printf "\e[H\e[2J"'        # clear the terminal
 alias czets='cd "${ZETDIR}"'            # move into zettlekasten notes
+alias d='docker'                        # run docker commands quickly
+alias dc='docker compose'               # run docker-compose commands quickly
 alias dv='dirs -v'                      # list directory info
 alias g='git'                           # access git commands quickly
 alias ga='git add'                      # add files to git quickly
@@ -157,6 +159,7 @@ alias gp='git push'                     # push repo to git
 alias gs='git status'                   # git status quickly
 alias hn='hugo new'                     # generate a hugo site
 alias hnc='hugo new content'            # generate new hugo site content quickly
+alias j='just'                          # run justfile's quickly.
 alias l='ls -lahH --color=auto'         # better ls command.
 alias lfs='ls -lahH --color=auto "$ZDOTDIR/functions"'    # List functions.
 alias reload='exec zsh -l'              # reload the shell, useful when making changes.
