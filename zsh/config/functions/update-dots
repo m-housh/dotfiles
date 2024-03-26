@@ -1,0 +1,6 @@
+#!/bin/zsh
+
+function update-dots() {
+  find "$ANSIBLE_MACOS_PLAYBOOK_DIR" -type f -maxdepth 1 -mindepth 1 -name justfile \
+    | xargs -I {} just --justfile {} run-playbook --tags dotfiles "$@"
+}
