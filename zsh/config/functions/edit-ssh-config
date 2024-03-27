@@ -1,0 +1,5 @@
+#!/bin/zsh
+
+function edit-ssh-config() {
+  ansible-vault edit "$DOTFILES/ssh/config"
+}
