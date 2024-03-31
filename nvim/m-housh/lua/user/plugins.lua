@@ -61,5 +61,12 @@ require("lazy").setup({
   },
   { import = 'user.plugin.todo-comments' },
   { "NoahTheDuke/vim-just", ft = { "just" } },
+  {
+    'chipsenkbeil/distant.nvim',
+    branch = 'v0.3',
+    config = function()
+        require('distant'):setup()
+    end
+  },
 
 })
