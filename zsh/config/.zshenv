@@ -53,6 +53,8 @@ export ANSIBLE_GEN_DIR="$GHREPOS/ansible/ansible-gen-playbook"
 export ANSIBLE_MACOS_PLAYBOOK_DIR="$GHREPOS/ansible/ansible-macos-playbook"
 export SITES="$GHREPOS/sites"
 export PASSWORD_STORE_DIR="$XDG_DATA_HOME/password-store"
+export PASSWORD_STORE_GENERATED_LENGTH=40
+
 
 # NPM
 export NPM_CONFIG_CACHE="$HOME/.local/npm"
