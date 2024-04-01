@@ -10,7 +10,7 @@
 [commit]
 	gpgsign = true
 [tag]
-	gpgsign = true
+	gpgSign = true
 
 [color]
 	ui = true
