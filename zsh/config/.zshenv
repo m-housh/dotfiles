@@ -52,9 +52,6 @@ export SKELETONDIR="$DOTFILES/skeleton"
 export ANSIBLE_GEN_DIR="$GHREPOS/ansible/ansible-gen-playbook"
 export ANSIBLE_MACOS_PLAYBOOK_DIR="$GHREPOS/ansible/ansible-macos-playbook"
 export SITES="$GHREPOS/sites"
-export PASSWORD_STORE_DIR="$XDG_DATA_HOME/password-store"
-export PASSWORD_STORE_GENERATED_LENGTH=40
-
 
 # NPM
 export NPM_CONFIG_CACHE="$HOME/.local/npm"
@@ -91,4 +88,11 @@ export DEFAULT_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
 
 # Tmux-Sessionator path.
 export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$REPOS:$GH_REPOS"
+
+# Password-store
+export PASSWORD_STORE_DIR="$XDG_DATA_HOME/password-store"
+export PASSWORD_STORE_GENERATED_LENGTH=40
+
+# GPG-TUI
+export GPG_TUI_CONFIG="$XDG_CONFIG_HOME/gpg-tui/gpg-tui.toml"
 
