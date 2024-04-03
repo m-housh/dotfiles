@@ -95,4 +95,5 @@ export PASSWORD_STORE_GENERATED_LENGTH=40
 
 # GPG-TUI
 export GPG_TUI_CONFIG="$XDG_CONFIG_HOME/gpg-tui/gpg-tui.toml"
+export GPG_TTY=$(tty)
 
