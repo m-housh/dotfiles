@@ -133,6 +133,10 @@ autoload -Uz compinit; compinit         # zstyle(s) should be added before this.
 zmodload zsh/complist
 _comp_options+=(globdots)		            # Include hidden files.
 
+autoload bashcompinit && bashcompinit
+[[ -r "$PASSWORD_STORE_DIR/.extensions/completions/extensions.bash.completion" ]] && \
+  source "$PASSWORD_STORE_DIR/.extensions/completions/extensions.bash.completion"
+
 #------------------------------ prompt ------------------------------
 
 # Prompt / managed by brew. (`brew install pure`)
@@ -166,6 +170,7 @@ alias lfs='ls -lahH --color=auto "$ZDOTDIR/functions"'    # List functions.
 alias p='pass'                          # run the pass command quickly.
 alias pf='pass fzf'                     # fuzzy find a password quickly and copy selection to clipboard.
 alias pg='pass get'                     # get an attribute of a password file quickly.
+alias pgc='pass get --clip'             # get an attribute of a password file and copy to the clipboard.
 alias reload='exec zsh -l'              # reload the shell, useful when making changes.
 alias t='tmux'                          # access tmux quickly
 alias tka='tmux kill-server'            # kill tmux server and all sessions.
