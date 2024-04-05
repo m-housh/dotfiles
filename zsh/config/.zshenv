@@ -54,7 +54,7 @@ export ANSIBLE_MACOS_PLAYBOOK_DIR="$GHREPOS/ansible/ansible-macos-playbook"
 export SITES="$GHREPOS/sites"
 
 # NPM
-export NPM_CONFIG_CACHE="$HOME/.local/npm"
+export NPM_CONFIG_CACHE="$XDG_DATA_HOME/npm"
 export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc"
 
 # Go
