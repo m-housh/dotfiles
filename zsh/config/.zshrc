@@ -163,6 +163,9 @@ alias hnc='hugo new content'            # generate new hugo site content quickly
 alias j='just'                          # run justfile's quickly.
 alias l='ls -lahH --color=auto'         # better ls command.
 alias lfs='ls -lahH --color=auto "$ZDOTDIR/functions"'    # List functions.
+alias p='pass'                          # run the pass command quickly.
+alias pf='pass fzf'                     # fuzzy find a password quickly and copy selection to clipboard.
+alias pg='pass get'                     # get an attribute of a password file quickly.
 alias reload='exec zsh -l'              # reload the shell, useful when making changes.
 alias t='tmux'                          # access tmux quickly
 alias tka='tmux kill-server'            # kill tmux server and all sessions.
