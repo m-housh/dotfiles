@@ -6,8 +6,8 @@
 # @raycast.mode compact
 
 # Optional parameters:
-# @raycast.icon 🤖
-# @raycast.argument1 { "type": "text", "placeholder": "name" }
+# @raycast.icon 🔐
+# @raycast.argument1 { "type": "text", "placeholder": "for" }
 # @raycast.packageName Password
 
 # Documentation:
@@ -15,17 +15,13 @@
 # @raycast.author Michael Housh
 # @raycast.authorURL https://github.com/m-housh
 
-#echo "Hello World! Argument1 value: "$1""
-
 PREFIX="$HOME/.local/share/password-store"
+PASS=/opt/homebrew/bin/pass
 selected=$(find "$PREFIX" -type f -name "$1".gpg)
-echo "Selected find: $selected" > /tmp/pass-copy.out
-
-if [[ -n "$selected" ]]; then
+if [ -n "$selected" ]; then
   selected="${selected//$PREFIX/}"
   selected="${selected//.gpg/}"
-  echo "Selected cleaned: $selected" >> /tmp/pass-copy.out
-  pass -c "$selected"
+  "$PASS" --clip "$selected"
 else
   exit 1
 fi
