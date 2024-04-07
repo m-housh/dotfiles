@@ -139,9 +139,10 @@ autoload bashcompinit && bashcompinit
 
 #------------------------------ prompt ------------------------------
 
-# Prompt / managed by brew. (`brew install pure`)
+# Prompt / managed by brew. (`brew install starship`)
 autoload -Uz promptinit; promptinit
-prompt pure
+eval "$(starship init zsh)"
+#prompt pure
 
 #------------------------------ aliases ------------------------------
 
@@ -167,10 +168,11 @@ alias hnc='hugo new content'            # generate new hugo site content quickly
 alias j='just'                          # run justfile's quickly.
 alias l='ls -lahH --color=auto'         # better ls command.
 alias lfs='ls -lahH --color=auto "$ZDOTDIR/functions"'    # List functions.
-alias p='pass'                          # run the pass command quickly.
+alias pass='gopass'
+alias p='gopass'                          # run the pass command quickly.
 alias pf='pass fzf'                     # fuzzy find a password quickly and copy selection to clipboard.
-alias pg='pass get'                     # get an attribute of a password file quickly.
-alias pgc='pass get --clip'             # get an attribute of a password file and copy to the clipboard.
+alias pg='gopass show'                     # get an attribute of a password file quickly.
+alias pgc='gopass show --clip'             # get an attribute of a password file and copy to the clipboard.
 alias reload='exec zsh -l'              # reload the shell, useful when making changes.
 alias t='tmux'                          # access tmux quickly
 alias tka='tmux kill-server'            # kill tmux server and all sessions.

@@ -98,3 +98,5 @@ export PASSWORD_STORE_ENABLE_EXTENSIONS=true
 export GPG_TUI_CONFIG="$XDG_CONFIG_HOME/gpg-tui/gpg-tui.toml"
 export GPG_TTY=$(tty)
 
+# Starship Prompt
+export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
