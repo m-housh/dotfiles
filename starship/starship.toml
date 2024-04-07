@@ -4,9 +4,9 @@ format = """
 [](color_orange)\
 $os\
 $username\
-[](bg:color_yellow fg:color_orange)\
+[](bg:color_pink fg:color_orange)\
 $directory\
-[](fg:color_yellow bg:color_lavender)\
+[](fg:color_pink bg:color_lavender)\
 $git_branch\
 $git_status\
 [](fg:color_lavender bg:color_blue)\
@@ -22,9 +22,9 @@ $python\
 [](fg:color_blue bg:color_bg3)\
 $docker_context\
 $conda\
-[](fg:color_bg3 bg:color_bg1)\
+[](fg:color_bg3 bg:color_green)\
 $time\
-[ ](fg:color_bg1)\
+[ ](fg:color_green)\
 $line_break$character"""
 
 palette = 'gruvbox_dark'
@@ -43,10 +43,11 @@ color_red = '#ed8796'
 color_yellow = '#eed49f'
 color_grey = '#585b70'
 color_maroon = '#eba0ac'
+color_pink = '#f5c2e7'
 
 [os]
 disabled = false
-style = "bg:color_orange fg:color_fg0"
+style = "bold bg:color_orange fg:color_fg0"
 
 [os.symbols]
 Windows = "󰍲"
@@ -71,12 +72,12 @@ RedHatEnterprise = "󱄛"
 
 [username]
 show_always = true
-style_user = "bold bg:color_orange fg:color_fg0"
-style_root = "bold bg:color_orange fg:color_fg0"
+style_user = "bold bg:color_orange fg:color_grey"
+style_root = "bold bg:color_orange fg:color_grey"
 format = '[ $user ]($style)'
 
 [directory]
-style = "bold fg:color_grey bg:color_yellow"
+style = "bold fg:color_grey bg:color_pink"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
@@ -155,8 +156,8 @@ format = '[[ $symbol( $environment) ](fg:#83a598 bg:color_bg3)]($style)'
 [time]
 disabled = false
 time_format = "%R"
-style = "bg:color_bg1"
-format = '[[  $time ](fg:color_fg0 bg:color_bg1)]($style)'
+style = "bg:color_green"
+format = '[[  $time ](bold fg:color_grey bg:color_green)]($style)'
 
 [line_break]
 disabled = false
