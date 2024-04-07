@@ -59,6 +59,10 @@ createCmd(
   }
 )
 
+vim.api.nvim_exec([[
+  autocmd BufNewFile,BufRead /private/**/gopass** setlocal noswapfile nobackup noundofile shada=""
+  ]], false)
+
 -- Swift
 -- createCmd(
 --   "FileType",

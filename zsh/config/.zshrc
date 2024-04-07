@@ -63,7 +63,7 @@ path_prepend \
   "/opt/homebrew/sbin" \
   "$GOROOT/bin" \
   "$GOPATH/bin" \
-  "$HOME/.local/bin" \
+  "$XDG_DATA_HOME/bin" \
   "$SCRIPTS"
 
 # last arg will be first in $FPATH
