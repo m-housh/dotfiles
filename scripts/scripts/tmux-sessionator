@@ -2,7 +2,7 @@
 
 # Adapted from: https://github.com/ThePrimeagen/.dotfiles/blob/master/bin/.local/scripts/tmux-sessionizer
 
-DEBUG=
+debug="${DEBUG}"
 
 #################### Options ####################
 
@@ -15,7 +15,7 @@ zparseopts -D -- \
 #################### Helpers ####################
 
 function debug_print {
-  if [ -n "$DEBUG" ]; then
+  if [ -n "$debug" ]; then
     echo "DEBUG: $1"
   fi
 }
