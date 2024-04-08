@@ -27,9 +27,9 @@ $time\
 [ ](fg:color_green)\
 $line_break$character"""
 
-palette = 'gruvbox_dark'
+palette = 'catppuccin_mocha'
 
-[palettes.gruvbox_dark]
+[palettes.catppuccin_mocha]
 color_fg0 = '#cad3f5'
 color_bg1 = '#1e2030'
 color_bg3 = '#24273a'
