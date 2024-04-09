@@ -100,3 +100,5 @@ export GPG_TTY=$(tty)
 
 # Starship Prompt
 export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
+
+[ -f "$LOCAL_ENV" ] && source "$LOCAL_ENV"
