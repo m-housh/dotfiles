@@ -1,0 +1,4 @@
+[mounts]
+	path = /Users/michael/.local/share/password-store
+[mounts "servers"]
+	path = /Users/michael/.local/share/server-password-store
