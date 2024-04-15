@@ -6,7 +6,8 @@ return {
     "hrsh7th/cmp-buffer",
     "hrsh7th/cmp-path",
     "hrsh7th/cmp-cmdline",
-    --"hrsh7th/cmp-vsnip",
+    "hrsh7th/cmp-vsnip",
+    "hrsh7th/vim-vsnip",
     'saadparwaiz1/cmp_luasnip',
     "f3fora/cmp-spell",
     "hrsh7th/cmp-calc",
@@ -95,7 +96,8 @@ return {
         experimental = {native_menu = false, ghost_text = false},
         snippet = {
           expand = function(args)
-            luasnip.lsp_expand(args.body)
+            vim.fn["vsnip#anonymous"](args.body)
+            --luasnip.lsp_expand(args.body)
             --require('luasnip').lsp_expand(args.body)
           end
         },
@@ -136,7 +138,7 @@ return {
         sources = {
           {name = "nvim_lsp"},
           {name = "buffer", keyword_length = 5},
-          --{name = 'luasnip', option = { show_autosnippets = true } },
+          {name = 'luasnip', option = { show_autosnippets = true } },
           {name = "calc"},
           {name = "emoji"},
           {name = "spell"},
