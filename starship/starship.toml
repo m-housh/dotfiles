@@ -79,7 +79,7 @@ format = '[ $user ]($style)'
 
 [hostname]
 ssh_only = true
-format = '[$ssh_symbol](bold blue) on [$hostname](bold red)'
+format = '[$ssh_symbol : $hostname](bold bg:color_orange fg:color_grey)'
 disabled = false
 
 [directory]
