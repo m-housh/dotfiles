@@ -129,9 +129,12 @@ eval "$(fzf --zsh)"
 zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 
 
 # partial completion suggestions
-zstyle ':completion:*' list-suffixes zstyle ':completion:*' expand prefix suffix 
+zstyle ':completion:*' list-suffixes
+# zstyle ':completion:*' expand prefix suffix 
 
-zstyle ':completion:*' menu select
+zstyle ':completion:*' menu no
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
+
 autoload -Uz compinit; compinit         # zstyle(s) should be added before this.
 zmodload zsh/complist
 _comp_options+=(globdots)		            # Include hidden files.
@@ -171,11 +174,12 @@ alias hnc='hugo new content'            # generate new hugo site content quickly
 alias j='just'                          # run justfile's quickly.
 alias l='ls -lahH --color=auto'         # better ls command.
 alias lfs='ls -lahH --color=auto "$ZDOTDIR/functions"'    # List functions.
+alias ls='ls --color'
 alias pass='gopass'
-alias p='gopass'                          # run the pass command quickly.
+alias p='gopass'                        # run the pass command quickly.
 alias pf='pass fzf'                     # fuzzy find a password quickly and copy selection to clipboard.
-alias pg='gopass show'                     # get an attribute of a password file quickly.
-alias pgc='gopass show --clip'             # get an attribute of a password file and copy to the clipboard.
+alias pg='gopass show'                  # get an attribute of a password file quickly.
+alias pgc='gopass show --clip'          # get an attribute of a password file and copy to the clipboard.
 alias reload='exec zsh -l'              # reload the shell, useful when making changes.
 alias t='tmux'                          # access tmux quickly
 alias tka='tmux kill-server'            # kill tmux server and all sessions.
