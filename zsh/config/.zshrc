@@ -121,6 +121,9 @@ _source_if "${ZDOTDIR}/zsh-functions"
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 
+# Use fzf in history / search contexts.
+eval "$(fzf --zsh)"
+
 #------------------------------ completions ------------------------------
 # case insensitive path-completion 
 zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 
@@ -190,6 +193,7 @@ alias nvim-lazy='NVIM_APPNAME=lazy nvim'              # set neovim to use lazy c
 alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"  # set wget history location.
 
 #------------------------------ local configs ------------------------------
+
 # TODO: The .zshrc-local is a legacy location and should be removed once my machines are
 #       use the new location in XDG_DATA_HOME.
 # HACK: These need to stay here, otherwise environment overrides do not work properly
