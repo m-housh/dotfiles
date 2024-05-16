@@ -120,6 +120,7 @@ _source_if "${ZDOTDIR}/zsh-functions"
 # Plugins
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
+zsh_add_plugin "Aloxaf/fzf-tab"
 
 # Use fzf in history / search contexts.
 eval "$(fzf --zsh)"
@@ -142,6 +143,8 @@ _comp_options+=(globdots)		            # Include hidden files.
 autoload bashcompinit && bashcompinit
 [[ -r "$PASSWORD_STORE_DIR/.extensions/completions/extensions.bash.completion" ]] && \
   source "$PASSWORD_STORE_DIR/.extensions/completions/extensions.bash.completion"
+
+_source_if "$ZDOTDIR/plugins/fzf-tab/fzf-tab.plugin.zsh"
 
 #------------------------------ prompt ------------------------------
 
