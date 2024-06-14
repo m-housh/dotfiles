@@ -21,3 +21,7 @@
 	required = true
 [credential]
 	helper = gopass
+
+[credential "https://git.housh.dev"]
+	username = michael
+
