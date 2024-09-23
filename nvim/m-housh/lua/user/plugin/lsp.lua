@@ -28,7 +28,7 @@ return {
           "lua_ls",
           "marksman",
           "terraformls",
-          "tsserver",
+          "ts_ls",
           "texlab",
           "yamlls",
         }
@@ -101,7 +101,7 @@ return {
           "marksman",
           "sourcekit",
           "terraformls",
-          "tsserver",
+          "ts_ls",
           "texlab",
           "yamlls",
       }
