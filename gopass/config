@@ -1,4 +1,6 @@
 [mounts]
 	path = /Users/michael/.local/share/password-store
+[recipients]
+	hash = 3199e2acda60d6f17a15882ba11749feda9775cf848554c8f04f12bc84521fd3
 [mounts "servers"]
-	path = /Users/michael/.local/share/server-password-store
+	path = /Users/michael/.local/share/gopass/stores/servers
