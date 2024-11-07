@@ -34,6 +34,7 @@ require("lazy").setup({
   { import = 'user.plugin.treesitter' },
   { import = 'user.plugin.formatter' },
   { import = 'user.plugin.go' },
+  { import = 'user.plugin.nvim-lint' },
   --{'fladson/vim-kitty', lazy=true, },
 
   -- Navigation --

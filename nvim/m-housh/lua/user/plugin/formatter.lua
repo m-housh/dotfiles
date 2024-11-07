@@ -22,11 +22,34 @@ return {
             try_node_modules = true,
           }
         end,
+        swift = function()
+          return {
+            exe = "swiftformat",
+          }
+        end,
         ["*"] = {
           -- formatter for any / all file types.
           require("formatter.filetypes.any").remove_trailing_whitespace
         }
       }
+    })
+
+    -- Keymaps
+    local wk = require('which-key')
+    wk.add({
+      { "<space>f", ":Format", desc = "[F]ormat" },
+      { "<space>F", ":FormateWrite", desc = "[F]ormat write" }
+    },
+      { mode = 'n', silent = true }
+    )
+
+    local augroup = vim.api.nvim_create_augroup
+    local autocmd = vim.api.nvim_create_autocmd
+
+    augroup("__formatter__", { clear = true })
+    autocmd("BufWritePost", {
+      group = "__formatter__",
+      command = ":FormatWrite"
     })
   end
 }
