@@ -28,7 +28,7 @@ export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 # Directories
 export ARCHIVE="/Volumes/Archive"
 export BUCKET="/Volumes/Bucket"
-export REPOS="$BUCKET/Repos"
+export REPOS="/Volumes/michael/Repos"
 export GHREPOS="$REPOS/github.com/$GITUSER"
 export HHEREPOS="$REPOS/github.com/hhe-dev"
 export LOCAL_REPOS="$REPOS/local"
