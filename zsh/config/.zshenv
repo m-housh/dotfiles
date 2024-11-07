@@ -31,6 +31,7 @@ export BUCKET="/Volumes/Bucket"
 export REPOS="/Volumes/michael/Repos"
 export GHREPOS="$REPOS/github.com/$GITUSER"
 export HHEREPOS="$REPOS/github.com/hhe-dev"
+export HVACIOTREPOS="$REPOS/github.com/hvac-iot"
 export LOCAL_REPOS="$REPOS/local"
 export LOCAL_ENV="$XDG_DATA_HOME/zsh/env.zsh"
 export HCP_NOTES="$HHEREPOS/hcp-notes"
@@ -87,7 +88,7 @@ export ANSIBLE_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
 export DEFAULT_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
 
 # Tmux-Sessionator path.
-export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$REPOS:$ANSIBLE_LOCAL:$GHREPOS"
+export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$REPOS:$ANSIBLE_LOCAL:$GHREPOS:$HVACIOTREPOS"
 
 # Password-store
 export PASSWORD_STORE_DIR="$XDG_DATA_HOME/password-store"
