@@ -9,7 +9,7 @@ require('user.autocmd')
 require('user.plugins')
 
 -- Key maps
-require('user.mappings')
+require('user.keymaps')
 
 -- Theme (must stay after plugins are loaded)
 require('user.theme')
@@ -18,4 +18,3 @@ require('user.theme')
 require('user.settings')
 
 vim.o.shiftwidth = 2
-

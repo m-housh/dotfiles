@@ -3,7 +3,7 @@
 # This includes general default environment variables, local overrides may be stored
 # in `$XDG_DATA_HOME/zsh/env.zsh`.
 
-# XDG
+# XDG Directories
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state"
@@ -12,7 +12,7 @@ export XDG_CACHE_HOME="$HOME/.cache"
 # Config
 export ZDOTDIR="$HOME/.config/zsh"
 export ZFUNCDIR="$ZDOTDIR/functions"
-export SHELL="$(which zsh)"
+export SHELL="$(command -v zsh)"
 export TERM=xterm-256color
 export EDITOR=nvim
 export VISUAL=nvim
@@ -26,33 +26,28 @@ export GITUSER="m-housh"
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
 # Directories
+export ANSIBLE_GEN_DIR="$GHREPOS/ansible/ansible-gen-playbook"
+export ANSIBLE_LOCAL="$GHREPOS/ansible"
+export ANSIBLE_MACOS_PLAYBOOK_DIR="$HOME/ansible-macos-playbook"
 export ARCHIVE="/Volumes/Archive"
 export BUCKET="/Volumes/Bucket"
-export REPOS="/Volumes/Bucket/Repos"
-export GHREPOS="$REPOS/github.com"
-#export HHEREPOS="$REPOS/github.com/hhe-dev"
-#export HVACIOTREPOS="$REPOS/github.com/hvac-iot"
-export LOCAL_REPOS="$REPOS/local"
-export LOCAL_ENV="$XDG_DATA_HOME/zsh/env.zsh"
-#export HCP_NOTES="$HHEREPOS/hcp-notes"
-#export HXZET="$BUCKET/Repos/github.com/hvac-hx/hx-zets"
-#export HAAS="$BUCKET/Repos/github.com/haas"
-#export HAASZET="$HAAS/zets"
+export DOTFILES="$HOME/.dotfiles"
 export DOCUMENTS="$HOME/Documents"
 export DOWNLOADS="$HOME/Downloads"
-export PDFS="$HOME/Library/Mobile Documents/com~apple~Preview/Documents"
-export PROPOSALS="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work/Proposals"
-export SCREENSHOTS="$BUCKET/Pictures/Screenshots"
-export DOTFILES="$HOME/.dotfiles"
-export SCRIPTS="$XDG_DATA_HOME/scripts"
-export WORK="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work"
-export ZETDIR="$GHREPOS/zets"
+export GHREPOS="$REPOS/github.com"
+export LOCAL_REPOS="$REPOS/local"
+export LOCAL_ENV="$XDG_DATA_HOME/zsh/env.zsh"
 export MYZSHRC="$ZDOTDIR/.zshrc"
 export NAP_CONFIG="$HOME/.config/nap/config.yaml"
-export SKELETONDIR="$DOTFILES/skeleton"
-export ANSIBLE_GEN_DIR="$GHREPOS/ansible/ansible-gen-playbook"
-export ANSIBLE_MACOS_PLAYBOOK_DIR="$GHREPOS/ansible/ansible-macos-playbook"
+export PDFS="$HOME/Library/Mobile Documents/com~apple~Preview/Documents"
+export PROPOSALS="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work/Proposals"
+export REPOS="/Volumes/Bucket/Repos"
+export SCREENSHOTS="$BUCKET/Pictures/Screenshots"
+export SCRIPTS="$XDG_DATA_HOME/scripts"
 export SITES="$GHREPOS/sites"
+export SKELETONDIR="$DOTFILES/skeleton"
+export WORK="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work"
+export ZETDIR="$GHREPOS/zets"
 
 # NPM
 export NPM_CONFIG_CACHE="$XDG_DATA_HOME/npm"
@@ -82,7 +77,6 @@ export PSQL_HISTORY="$XDG_DATA_HOME/psql_history"
 export VAULT_ADDR="https://vault.housh.dev"
 
 # Ansible
-export ANSIBLE_LOCAL="$GHREPOS/ansible"
 export ANSIBLE_HOME="$XDG_CONFIG_HOME/ansible"
 export ANSIBLE_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
 export DEFAULT_VAULT_PASSWORD_FILE="$XDG_DATA_HOME/ansible/.vaultpwd"
