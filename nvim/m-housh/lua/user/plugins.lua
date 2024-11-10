@@ -40,6 +40,7 @@ require("lazy").setup({
   -- Navigation --
   { import = 'user.plugin.neo-tree' },
   { import = 'user.plugin.telescope' },
+  { import = 'user.plugin.harpoon' },
 
   -- Utilities --
   { import = 'user.plugin.comment' },
