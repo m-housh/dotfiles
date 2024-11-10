@@ -7,7 +7,7 @@ local telescope = require('telescope.builtin')
 local wk = require("which-key")
 
 local wk_add = function(mode, keymaps)
-  wk.add(keymaps, { mode = mode, noremap = true, silent = true })
+  wk.add(keymaps, { mode = mode, silent = true })
 end
 
 local find_files = function(dir)
@@ -39,6 +39,9 @@ wk_add("n", {
   { "<C-n>", "<CMD>:Neotree toggle<CR>", desc = "Toggle Neotree" },
   { "<C-s>", "<CMD>:write<CR>", desc = "[S]ave" },
 
+  { "J", ":move .+1<CR>==", desc = "Move line down" },
+  { "K", ":move .-2<CR>==", desc = "Move line up" },
+
   -- Git
   { "<leader>gg", ":LazyGit<CR>", desc = "Open [G]it" },
   { "<leader>gf", ":Telescope git_files<CR>", desc = "Find [G]it [F]ile" },
@@ -63,10 +66,20 @@ wk_add("n", {
 --   { "p", "\"_dP", desc = "[P]aste" },
 -- })
 
-wk_add("x", {
-  { "K", ":move '<-2<CR>gv-gv", desc = "Move selected block up" },
-  { "J", ":move '>+1<CR>gv-gv", desc = "Move selected block down" },
-})
+-- wk_add("v", {
+--   { "K", ":move '<-2<CR>", desc = "Move selected block up" },
+--   { "J", ":move '>+1<CR>", desc = "Move selected block down" },
+-- })
+vim.keymap.set(
+  "v", "K",
+  ":move '<-2<CR>gv=gv",
+  { desc = "Move selected block up.", silent = true, noremap = true }
+)
+vim.keymap.set(
+  "v", "J",
+  ":move '>+1<CR>gv=gv",
+  { desc = "Move selected block up.", silent = true, noremap = true }
+)
 
 -- Toggle term key maps, that get attached when terminal is opened.
 function _G.set_terminal_keymaps()

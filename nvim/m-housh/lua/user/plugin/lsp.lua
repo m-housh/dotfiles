@@ -70,7 +70,7 @@ return {
           local wk = require('which-key')
 
           wk.add({
-            { "K", vim.lsp.buf.hover, desc = "LSP hover info" },
+            { "<C-k>", vim.lsp.buf.hover, desc = "LSP hover info" },
             { "gd", vim.lsp.buf.definition, desc = "[G]oto [D]efinition" },
             { "gD", vim.lsp.buf.declaration, desc = "[G]oto [D]eclaration" },
             { "gi", vim.lsp.buf.implementation, desc = "[G]oto [I]mplementation" },
