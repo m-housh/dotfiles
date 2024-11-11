@@ -6,7 +6,15 @@ return {
   },
   config = function()
     local harpoon = require('harpoon')
-    harpoon:setup({})
+    harpoon:setup({
+      settings = {
+        save_on_toggle = true,
+        sync_on_ui_close = true,
+        key = function()
+          return vim.loop.cwd()
+        end,
+      }
+    })
 
     local conf = require('telescope.config').values
     local function toggle_telescope(harpoon_files)
@@ -39,6 +47,29 @@ return {
       function() harpoon.ui:toggle_quick_menu(harpoon:list()) end,
       { desc = "Toggle quick menu." }
     )
+
+    -- Buffer key maps. Currently keeping all buffer movements
+    -- isolated to top left row of keys on keyboard and all begin
+    -- with the <Control> key.
+
+    -- Select buffer numbers.
+    vim.keymap.set("n", "<C-y>",
+      function() harpoon:list():select(1) end,
+      { desc = "Select first harpoon buffer." }
+    )
+    vim.keymap.set("n", "<C-u>",
+      function() harpoon:list():select(2) end,
+      { desc = "Select second harpoon buffer." }
+    )
+    vim.keymap.set("n", "<C-i>",
+      function() harpoon:list():select(3) end,
+      { desc = "Select third harpoon buffer." }
+    )
+    vim.keymap.set("n", "<C-o>",
+      function() harpoon:list():select(3) end,
+      { desc = "Select third harpoon buffer." }
+    )
+
 
     -- Toggle previous and next buffers.
     vim.keymap.set("n", "<C-[>",
