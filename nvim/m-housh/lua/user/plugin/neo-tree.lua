@@ -14,7 +14,8 @@ return {
         always_show = {
           "plugins",
           ".zshrc",
-          ".zshenv"
+          ".zshenv",
+          "*.env"
         },
         filtered_items = {
           hide_dotfiles = false
