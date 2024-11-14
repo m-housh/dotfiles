@@ -53,19 +53,19 @@ return {
     -- with the <Control> key.
 
     -- Select buffer numbers.
-    vim.keymap.set("n", "<C-y>",
+    vim.keymap.set("n", "<C-S-Y>",
       function() harpoon:list():select(1) end,
       { desc = "Select first harpoon buffer." }
     )
-    vim.keymap.set("n", "<C-u>",
+    vim.keymap.set("n", "<C-S-U>",
       function() harpoon:list():select(2) end,
       { desc = "Select second harpoon buffer." }
     )
-    vim.keymap.set("n", "<C-i>",
+    vim.keymap.set("n", "<C-S-I>",
       function() harpoon:list():select(3) end,
       { desc = "Select third harpoon buffer." }
     )
-    vim.keymap.set("n", "<C-o>",
+    vim.keymap.set("n", "<C-S-O>",
       function() harpoon:list():select(3) end,
       { desc = "Select third harpoon buffer." }
     )

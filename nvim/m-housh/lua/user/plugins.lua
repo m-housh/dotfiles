@@ -27,16 +27,6 @@ require("lazy").setup({
   -- Git --
   { import = 'user.plugin.lazygit' },
 
-  -- LSP, formatting, etc. --
-  { 'folke/neodev.nvim', opts = {} },
-  { import = 'user.plugin.lsp' },
-  { import = 'user.plugin.lualine' },
-  { import = 'user.plugin.treesitter' },
-  { import = 'user.plugin.formatter' },
-  { import = 'user.plugin.go' },
-  { import = 'user.plugin.nvim-lint' },
-  --{'fladson/vim-kitty', lazy=true, },
-
   -- Navigation --
   { import = 'user.plugin.neo-tree' },
   { import = 'user.plugin.telescope' },
@@ -70,5 +60,17 @@ require("lazy").setup({
         require('distant'):setup()
     end
   },
+
+  -- LSP, formatting, etc. --
+  { 'folke/neodev.nvim', opts = {} },
+  { import = 'user.plugin.lsp' },
+  { import = 'user.plugin.lualine' },
+  { import = 'user.plugin.treesitter' },
+  { import = 'user.plugin.formatter' },
+  { import = 'user.plugin.go' },
+  { import = 'user.plugin.nvim-lint' },
+  --{'fladson/vim-kitty', lazy=true, },
+
+
 
 })

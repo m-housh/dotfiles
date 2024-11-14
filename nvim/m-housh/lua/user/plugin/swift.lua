@@ -9,7 +9,7 @@ return {
       local default_options = { noremap = true, silent = true }
       local actions = require('swift.actions')
 
-      vim.keymap.set('n', '<c-b>', actions.build, default_options)
-      vim.keymap.set('n', '<c-u>', actions.test, default_options)
+      vim.keymap.set('n', '<C-b>', actions.build, default_options)
+      vim.keymap.set('n', '<C-S-U>', actions.test, default_options)
     end
   }

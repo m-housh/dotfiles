@@ -7,6 +7,7 @@ return {
   lazy = true,
   config = function()
     local actions = require('telescope.actions')
+    local builtin = require('telescope.builtin')
 
     require('telescope').setup({
       defaults = {
@@ -68,5 +69,7 @@ return {
         buffer_previewer_maker = require'telescope.previewers'.buffer_previewer_maker
       }
     })
+
+    vim.keymap.set("n", "<C-A-j>", builtin.jumplist, { silent = true, noremap = true, desc = "Open [J]ump List."})
   end
 }

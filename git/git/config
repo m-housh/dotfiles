@@ -24,4 +24,5 @@
 
 [credential "https://git.housh.dev"]
 	username = michael
-
+[push]
+	autoSetupRemote = true
