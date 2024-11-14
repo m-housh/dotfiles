@@ -1,5 +1,6 @@
 [core]
   excludesfile = ~/.config/git/gitignore
+	ignorecasse = false
 [init]
   defaultBranch = main
 [user]
