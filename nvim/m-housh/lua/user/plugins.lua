@@ -17,28 +17,9 @@ require("lazy").setup({
     path = '~/LocalProjects/plugins',
     fallback = true
   },
-
-  -- Theme --
-  { import = 'user.plugin.theme' },
-
-  -- Completions --
-  { import = 'user.plugin.cmp' },
-
-  -- Git --
-  { import = 'user.plugin.lazygit' },
-
-  -- Navigation --
-  { import = 'user.plugin.neo-tree' },
-  { import = 'user.plugin.telescope' },
-  { import = 'user.plugin.harpoon' },
-
-  -- Utilities --
-  { import = 'user.plugin.comment' },
-  { import = 'user.plugin.noice' },
-  { import = 'user.plugin.swift' },
-  { import = 'user.plugin.toggleterm' },
-  { import = 'user.plugin.which-key' },
-  { import = 'user.plugin.wrapping' },
+  -- Import all the plugin configs in the 'plugin' directory
+  { import = 'user.plugin' },
+  -- Plugins that don't have a configuration file.
   {
     "folke/zen-mode.nvim",
     opts = { }
@@ -51,7 +32,6 @@ require("lazy").setup({
     "NMAC427/guess-indent.nvim",
     opts = { }
   },
-  { import = 'user.plugin.todo-comments' },
   { "NoahTheDuke/vim-just", ft = { "just" } },
   {
     'chipsenkbeil/distant.nvim',
@@ -63,14 +43,15 @@ require("lazy").setup({
 
   -- LSP, formatting, etc. --
   { 'folke/neodev.nvim', opts = {} },
-  { import = 'user.plugin.lsp' },
-  { import = 'user.plugin.xcodebuild' },
-  { import = 'user.plugin.lualine' },
-  { import = 'user.plugin.treesitter' },
-  { import = 'user.plugin.formatter' },
-  { import = 'user.plugin.go' },
-  { import = 'user.plugin.nvim-lint' },
-  --{'fladson/vim-kitty', lazy=true, },
 
-
+}, {
+    checker = {
+      enabled = true,
+      notify = false
+    },
+    change_detection = {
+      notify = false
+    }
 })
+
+vim.keymap.set("n", "<leader>ll", "<CMD>Lazy<CR>", { desc = "Open [L]azy" })

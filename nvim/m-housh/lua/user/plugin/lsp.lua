@@ -70,14 +70,18 @@ return {
           -- Configure keybindings once we've attached.
           local wk = require('which-key')
 
+          -- Normal mode keymaps
           wk.add({
             { "<C-k>", vim.lsp.buf.hover, desc = "LSP hover info" },
+            { "<leader>ca", vim.lsp.buf.code_action, desc = "LSP [C]ode [A]ction" },
             { "gd", vim.lsp.buf.definition, desc = "[G]oto [D]efinition" },
             { "gD", vim.lsp.buf.declaration, desc = "[G]oto [D]eclaration" },
             { "gi", vim.lsp.buf.implementation, desc = "[G]oto [I]mplementation" },
             { "gr", vim.lsp.buf.references, desc = "List [R]eferences" },
             {"gs", vim.lsp.buf.signature_help, desc = "[S]ignature help" },
-            { "<space>rn", vim.lsp.buf.rename, desc = "[R]e[N]ame" },
+            { "<leader>rn", vim.lsp.buf.rename, desc = "[R]e[N]ame" },
+            { "<leader>rl", ":LspRestart | :LspStart<CR>", desc = "[R]estart or start lsp." },
+            { "<leader><leader>d", "<CMD>Telescope diagnostics bufnr=0<CR>", desc = "[D]iagnostics" },
             { "[d", vim.diagnostic.goto_prev, desc = "Go to previous diagnostic" },
             { "]d", vim.diagnostic.goto_prev, desc = "Go to next diagnostic" },
           }, {
@@ -85,6 +89,13 @@ return {
             silent = true,
             noremap = true
           })
+
+          -- Visual mode keymaps
+          wk.add({
+            { "<leader>ca", vim.lsp.buf.code_action, desc = "LSP [C]ode [A]ction" },
+          },
+          { mode = 'v', silent = true }
+          )
         end,
       })
     end
