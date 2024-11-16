@@ -63,8 +63,8 @@ require("lazy").setup({
 
   -- LSP, formatting, etc. --
   { 'folke/neodev.nvim', opts = {} },
-  { import = 'user.plugin.xcodebuild' },
   { import = 'user.plugin.lsp' },
+  { import = 'user.plugin.xcodebuild' },
   { import = 'user.plugin.lualine' },
   { import = 'user.plugin.treesitter' },
   { import = 'user.plugin.formatter' },
