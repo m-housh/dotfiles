@@ -61,9 +61,11 @@ path_prepend \
   "/usr/local/bin" \
   "/opt/homebrew/bin" \
   "/opt/homebrew/sbin" \
+  "$HOME/.local/share/gem/bin" \
   "$GOROOT/bin" \
   "$GOPATH/bin" \
   "$XDG_DATA_HOME/bin" \
+  "$HOME/.local/bin" \
   "$SCRIPTS"
 
 # last arg will be first in $FPATH
@@ -207,4 +209,3 @@ alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"  # set wget history locat
 #       I tried sourcing them in the the `.zshenv` files, but did not work.
 _source_if "$ZDOTDIR/.zshrc-local"
 _source_if "$LOCAL_ENV"
-

@@ -63,6 +63,7 @@ require("lazy").setup({
 
   -- LSP, formatting, etc. --
   { 'folke/neodev.nvim', opts = {} },
+  { import = 'user.plugin.xcodebuild' },
   { import = 'user.plugin.lsp' },
   { import = 'user.plugin.lualine' },
   { import = 'user.plugin.treesitter' },
@@ -70,7 +71,6 @@ require("lazy").setup({
   { import = 'user.plugin.go' },
   { import = 'user.plugin.nvim-lint' },
   --{'fladson/vim-kitty', lazy=true, },
-
 
 
 })

@@ -61,6 +61,7 @@ return {
             },
           },
         },
+        cmd = { "/usr/bin/sourcekit-lsp" }
       })
 
       vim.api.nvim_create_autocmd('LspAttach', {
@@ -81,7 +82,8 @@ return {
             { "]d", vim.diagnostic.goto_prev, desc = "Go to next diagnostic" },
           }, {
             mode = 'n',
-            silent = true
+            silent = true,
+            noremap = true
           })
         end,
       })
