@@ -1,332 +1,90 @@
 return {
-  {
-    "williamboman/nvim-lsp-installer",
-    config = function()
-      require("nvim-lsp-installer").setup({})
-    end
-  },
-  {
-    "williamboman/mason-lspconfig.nvim",
-    dependencies = {
-      "williamboman/mason.nvim",
-      "onsails/lspkind-nvim",
-      "famiu/bufdelete.nvim",
-      "ray-x/lsp_signature.nvim",
-      "neovim/nvim-lspconfig",
-      "folke/neodev.nvim",
-      "mhartington/formatter.nvim",
-      "ray-x/go.nvim",
-    },
-    opts = {
-        ensure_installed = {
-          "bashls",
-          "clangd",
-          "dockerls",
-          "gopls",
-          "jsonls",
-          "jedi_language_server",
-          "lua_ls",
-          "marksman",
-          "terraformls",
-          "ts_ls",
-          "texlab",
-          "yamlls",
-        }
-    }
-  },
+	"neovim/nvim-lspconfig",
+	event = { "BufReadPre", "BufNewFile" },
+	dependencies = {
+		"hrsh7th/cmp-nvim-lsp",
+		{ "antosha417/nvim-lsp-file-operations", config = true },
+	},
+	config = function()
+		local lspconfig = require("lspconfig")
+		local cmp_nvim_lsp = require("cmp_nvim_lsp")
+		local capabilities = cmp_nvim_lsp.default_capabilities()
+		local opts = { noremap = true, silent = true }
+		local on_attach =
+			function(_, bufnr)
+				opts.buffer = bufnr
 
-  {
-    "neovim/nvim-lspconfig",
-    event = { "BufReadPost", "BufNewFile" },
-    cmd = { "LspInfo", "LspInstall", "LspUninstall", "LspStart", "LspStop", "LspRestart" },
-    config = function()
-      require('neodev').setup()
-      require("mason").setup()
-      require("mason-lspconfig").setup()
-      local lspconfig = require('lspconfig')
+				opts.desc = "Show line diagnostics"
+				vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts)
 
-      lspconfig.bashls.setup {}
-      lspconfig.clangd.setup {}
-      lspconfig.dockerls.setup {}
-      lspconfig.gopls.setup {}
-      lspconfig.jsonls.setup {}
-      lspconfig.lua_ls.setup {}
-      lspconfig.marksman.setup {}
-      lspconfig.yamlls.setup {}
-      lspconfig.sourcekit.setup({
-        capabilities = {
-          workspace = {
-            didChangeWatchedFiles = {
-              dynamicRegistration = true,
-            },
-          },
-        },
-        cmd = { "/usr/bin/sourcekit-lsp" }
-      })
+				opts.desc = "Show diagnostics in Telescope"
+				vim.keymaps.set("n", "<leader><leader>d", "<CMD>Telescope diagnostics bufnr=0<CR>", opts)
 
-      vim.api.nvim_create_autocmd('LspAttach', {
-        desc = 'LSP Actions',
-        callback = function(args)
-          -- Configure keybindings once we've attached.
-          local wk = require('which-key')
+				opts.desc = "Show documentation for what is under cursor"
+				vim.keymap.set("n", "<C-k>", vim.lsp.buf.hover, opts)
 
-          -- Normal mode keymaps
-          wk.add({
-            { "<C-k>", vim.lsp.buf.hover, desc = "LSP hover info" },
-            { "<leader>ca", vim.lsp.buf.code_action, desc = "LSP [C]ode [A]ction" },
-            { "gd", vim.lsp.buf.definition, desc = "[G]oto [D]efinition" },
-            { "gD", vim.lsp.buf.declaration, desc = "[G]oto [D]eclaration" },
-            { "gi", vim.lsp.buf.implementation, desc = "[G]oto [I]mplementation" },
-            { "gr", vim.lsp.buf.references, desc = "List [R]eferences" },
-            {"gs", vim.lsp.buf.signature_help, desc = "[S]ignature help" },
-            { "<leader>rn", vim.lsp.buf.rename, desc = "[R]e[N]ame" },
-            { "<leader>rl", ":LspRestart | :LspStart<CR>", desc = "[R]estart or start lsp." },
-            { "<leader><leader>d", "<CMD>Telescope diagnostics bufnr=0<CR>", desc = "[D]iagnostics" },
-            { "[d", vim.diagnostic.goto_prev, desc = "Go to previous diagnostic" },
-            { "]d", vim.diagnostic.goto_prev, desc = "Go to next diagnostic" },
-          }, {
-            mode = 'n',
-            silent = true,
-            noremap = true
-          })
+				opts.desc = "[G]oto [D]efinition"
+				vim.keymap.set("n", "gd", "<cmd>Telescope lsp_definitions trim_text=true<cr>", opts)
 
-          -- Visual mode keymaps
-          wk.add({
-            { "<leader>ca", vim.lsp.buf.code_action, desc = "LSP [C]ode [A]ction" },
-          },
-          { mode = 'v', silent = true }
-          )
-        end,
-      })
-    end
-  }
+				opts.desc = "[G]oto [D]eclaration"
+				vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
+
+				opts.desc = "LSP [C]ode [A]ction"
+				vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
+
+				--opts.desc = "[R]e-[N]ame"
+				--vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+
+				opts.desc = "[R]eload or start LSP"
+				vim.keymap.set("n", "<leader>rl", ":LspRestart | :LspStart<CR>", opts)
+
+				opts.desc = "Goto previous diagnostic"
+				vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
+
+				opts.desc = "Goto next diagnostic"
+				vim.keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
+			end, lspconfig["sourcekit"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+				on_init = function(client)
+					-- HACK: to fix some issues with LSP
+					-- more details: https://github.com/neovim/neovim/issues/19237#issuecomment-2237037154
+					client.offset_encoding = "utf-8"
+				end,
+			})
+
+		-- nice icons
+		local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
+		for type, icon in pairs(signs) do
+			local hl = "DiagnosticSign" .. type
+			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
+		end
+
+		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "[R]e-[N]ame" })
+	end,
 }
--- return {
---   {
---     "williamboman/nvim-lsp-installer",
---     config = function()
---       require("nvim-lsp-installer").setup({})
---     end
---   },
---   {
---     "williamboman/mason-lspconfig.nvim",
---     dependencies = {
---       "williamboman/mason.nvim",
---       "onsails/lspkind-nvim",
---       "famiu/bufdelete.nvim",
---       "ray-x/lsp_signature.nvim",
---       "neovim/nvim-lspconfig",
---       "folke/neodev.nvim",
---       "mhartington/formatter.nvim",
---       "ray-x/go.nvim",
---     },
---     opts = {
---         ensure_installed = {
---           "bashls",
---           "clangd",
---           "dockerls",
---           "gopls",
---           "jsonls",
---           "jedi_language_server",
---           "lua_ls",
---           "marksman",
---           "terraformls",
---           "ts_ls",
---           "texlab",
---           "yamlls",
---         }
---     }
---   },
---   {
---     "neovim/nvim-lspconfig",
---     dependencies = {
---       "hrsh7th/cmp-nvim-lsp",
---     },
---     config = function()
---       require('neodev').setup()
---       require("mason").setup()
---       require("mason-lspconfig").setup()
---       local nvim_lsp = require("lspconfig")
---       local telescope_builtin = require('telescope.builtin')
+
 --
---       vim.api.nvim_create_autocmd('LspAttach', {
---         group = vim.api.nvim_create_augroup('my-lsp-attach', { clear = true }),
---         callback = function(event)
---           -- Helper function to create a keymap.
---           local map = function(keys, func, desc)
---             vim.keymap.set('n', keys, func, { buffer = true, desc = 'LSP: ' .. desc })
---           end
+-- 					-- Normal mode keymaps
+-- 					wk.add({
+-- 						{ "<C-k>", vim.lsp.buf.hover, desc = "LSP hover info" },
+-- 						{ "<leader>ca", vim.lsp.buf.code_action, desc = "LSP [C]ode [A]ction" },
+-- 						{ "gi", vim.lsp.buf.implementation, desc = "[G]oto [I]mplementation" },
+-- 						{ "gr", vim.lsp.buf.references, desc = "List [R]eferences" },
+-- 						{ "gs", vim.lsp.buf.signature_help, desc = "[S]ignature help" },
+-- 					}, {
+-- 						mode = "n",
+-- 						silent = true,
+-- 						noremap = true,
+-- 					})
 --
---           -- Mappings.
---           -- See `:help vim.lsp.*` for documentation on any of the below functions
---
---           map('[d', '<CMD>lua vim.lsp.diagnostic.goto_prev()<CR>', 'Goto previous')
---           map(']d', '<CMD>lua vim.lsp.diagnostic.goto_next()<CR>', 'Goto next')
---           map('<space>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
---           map('<space>rn', vim.lsp.buf.rename, '[R]e[n]ame')
---           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
---           map('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
---           map('gi', telescope_builtin.lsp_implementations, '[G]oto, [I]mplementation')
---           map('gr', telescope_builtin.lsp_references, '[G]oto [R]eferences')
---           map('gt', telescope_builtin.lsp_type_definitions, '[T]ype Definitions')
---           map('K', vim.lsp.buf.hover, 'Hover Documentation')
---
--- --           -- buf_set_keymap('n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
--- --           buf_set_keymap("n", "<space>wa",
--- --                          "<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", opts)
--- --           buf_set_keymap("n", "<space>wr",
--- --                          "<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", opts)
--- --           buf_set_keymap("n", "<space>wl",
--- --                          "<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>",
--- --                          opts)
--- --           buf_set_keymap("n", "<space>e", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>", opts)
--- --           buf_set_keymap("n", "<space>q", "<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>", opts)
---           vim.api.nvim_buf_set_option(event.buf, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
---         end,
---       })
---
---       -- Use a loop to conveniently call 'setup' on multiple servers and
---       -- map buffer local keybindings when the language server attaches
---       local capabilities = vim.lsp.protocol.make_client_capabilities()
---       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
---
---       local servers = {
---           "bashls",
---           "clangd",
---           "dockerls",
---           "gopls",
---           "jsonls",
---           "jedi_language_server",
---           "lua_ls",
---           "marksman",
---           "sourcekit",
---           "terraformls",
---           "ts_ls",
---           "texlab",
---           "yamlls",
---       }
---
---       for _, lsp in ipairs(servers) do
---           nvim_lsp[lsp].setup {
---               capabilities = capabilities,
---               settings = {
---                   gopls = {
---                     experimentalPostfixCompletions = true,
---                     analyses = {
---                       unusedparams = true,
---                       shadow = true
---                     },
---                     staticcheck = true
---                   },
---                   lua_ls = {
---                     Lua = {
---                       completion = {
---                         callSnippet = "Replace"
---                       },
---                       workspace = { checkThirdParty = false },
---                       telemetry = { enable = false },
---                     }
---                   },
---                   json = {
---                       format = {enabled = false},
---                       schemas = {
---                           {
---                               description = "ESLint config",
---                               fileMatch = {".eslintrc.json", ".eslintrc"},
---                               url = "http://json.schemastore.org/eslintrc"
---                           }, {
---                               description = "Package config",
---                               fileMatch = {"package.json"},
---                               url = "https://json.schemastore.org/package"
---                           }, {
---                               description = "Packer config",
---                               fileMatch = {"packer.json"},
---                               url = "https://json.schemastore.org/packer"
---                           }, {
---                               description = "Renovate config",
---                               fileMatch = {
---                                   "renovate.json", "renovate.json5",
---                                   ".github/renovate.json", ".github/renovate.json5",
---                                   ".renovaterc", ".renovaterc.json"
---                               },
---                               url = "https://docs.renovatebot.com/renovate-schema"
---                           }, {
---                               description = "OpenApi config",
---                               fileMatch = {"*api*.json"},
---                               url = "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/schemas/v3.1/schema.json"
---                           }
---                       }
---                   },
---                   redhat = {telemetry = {enabled = false}},
---                   texlab = {
---                       auxDirectory = ".",
---                       bibtexFormatter = "texlab",
---                       build = {
---                           args = {
---                               "--keep-intermediates", "--keep-logs", "--synctex", "%f"
---                           },
---                           executable = "tectonic",
---                           forwardSearchAfter = false,
---                           onSave = false
---                       },
---                       chktex = {onEdit = false, onOpenAndSave = false},
---                       diagnosticsDelay = 300,
---                       formatterLineLength = 80,
---                       forwardSearch = {args = {}},
---                       latexFormatter = "latexindent",
---                       latexindent = {modifyLineBreaks = false}
---                   },
---                   yaml = {
---                       schemaStore = {
---                           enable = true,
---                           url = "https://www.schemastore.org/api/json/catalog.json"
---                       },
---                       schemas = {
---                           kubernetes = "/*.yaml",
---                           ["http://json.schemastore.org/github-workflow"] = ".github/workflows/*.{yml,yaml}",
---                           ["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
---                           ["http://json.schemastore.org/ansible-stable-2.9"] = "roles/tasks/*.{yml,yaml}",
---                           ["http://json.schemastore.org/prettierrc"] = ".prettierrc.{yml,yaml}",
---                           ["http://json.schemastore.org/kustomization"] = "kustomization.{yml,yaml}",
---                           ["http://json.schemastore.org/ansible-playbook"] = "*play*.{yml,yaml}",
---                           ["http://json.schemastore.org/chart"] = "Chart.{yml,yaml}",
---                           ["https://json.schemastore.org/dependabot-v2"] = ".github/dependabot.{yml,yaml}",
---                           ["https://json.schemastore.org/gitlab-ci"] = "*gitlab-ci*.{yml,yaml}",
---                           ["https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/schemas/v3.1/schema.json"] = "*api*.{yml,yaml}",
---                           ["https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json"] = "docker-compose.{yml,yaml}",
---                           ["https://raw.githubusercontent.com/argoproj/argo-workflows/master/api/jsonschema/schema.json"] = "*flow*.{yml,yaml}"
---                       },
---                       format = {enabled = false},
---                       validate = false, -- TODO: conflicts between Kubernetes resources and kustomization.yaml
---                       completion = true,
---                       hover = true
---                   }
---               },
---               flags = {debounce_text_changes = 150}
---           }
---           require"lsp_signature".setup({
---               bind = true, -- This is mandatory, otherwise border config won't get registered.
---               floating_window = true, -- show hint in a floating window, set to false for virtual text only mode
---               doc_lines = 2, -- Set to 0 for not showing doc
---               hint_prefix = "🐼 ",
---               -- use_lspsaga = false,  -- set to true if you want to use lspsaga popup
---               handler_opts = {
---                   border = "shadow" -- double, single, shadow, none
---               }
---           })
---       end
---
---       -- Test source-kit
---       require('lspconfig').sourcekit.setup{
---         capabilities = {
---           workspace = {
---             didChangeWatchedFiles = {
---               dynamicRegistration = true
---             }
---           }
---         }
---       }
---
---     end
---   }
+-- 					-- Visual mode keymaps
+-- 					wk.add({
+-- 						{ "<leader>ca", vim.lsp.buf.code_action, desc = "LSP [C]ode [A]ction" },
+-- 					}, { mode = "v", silent = true })
+-- 				end,
+-- 			})
+-- 		end,
+-- 	},
+-- }
 -- }
