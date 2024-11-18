@@ -1,14 +1,12 @@
 return {
 	"L3MON4D3/LuaSnip",
-	opts = {
-		history = true,
-		enable_autosnippets = false, -- don't automatically expand snippets.
-		updatevents = "TextChanged,TextChangedI",
-	},
 	config = function()
 		local ls = require("luasnip")
 		local types = require("luasnip.util.types")
 		ls.setup({
+			history = true,
+			enable_autosnippets = false,
+			updatevents = "TextChanged,TextChangedI",
 			extra_opts = {
 				[types.choiceNode] = {
 					active = {

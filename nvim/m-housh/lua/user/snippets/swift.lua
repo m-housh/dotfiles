@@ -12,7 +12,7 @@ local rep = require("luasnip.extras").rep
 -- Add snippets
 ls.add_snippets("swift", {
 	-- Add a dependency snippet.
-	s("@d", fmt("@Dependency(\\.{}) var {}", { i(1), rep(1) })),
+	s({ trig = "@d", desc = "Add a dependency." }, fmt("@Dependency(\\.{}) var {}", { i(1), rep(1) })),
 
 	-- Add a dependency client.
 	s(
@@ -66,19 +66,23 @@ ls.add_snippets("swift", {
 		)
 	),
 
-	s({ trig = "spi", desc = "Add spi modifier." }, fmt("@_spi({})", { i(1, "name") })),
+	-- Decorate a type or function with an @_spi(...)
+	s({ trig = "@_s", desc = "Add spi modifier." }, fmt("@_spi({})", { i(1, "name") })),
 
+	-- Add an @_spi(...) import ...
 	s(
-		{ trig = "sii", desc = "Import with spi." },
+		{ trig = "@_si", desc = "Import with spi." },
 		fmt(
 			[[
 		@_spi({}) import {}
 		{}
 		]],
-			{ i(1, "name"), i(2, "modlue"), i(0) }
+			{ i(1, "name"), i(2, "module"), i(0) }
 		)
 	),
 
+	-- Document a function
+	-- TODO: add dynamic number of prameters.
 	s(
 		{ trig = "docf", desc = "Document a function." },
 		fmt(
@@ -88,10 +92,11 @@ ls.add_snippets("swift", {
 		/// - Parameters:
 		///		- {}: {}
 		]],
-			{ i(1, "A short description."), i(2, "<param>"), i(3, "<param-description>") }
+			{ i(1, "A short description."), i(2, "<param>"), i(3, "Describe the parameter.") }
 		)
 	),
 
+	-- Add a parameter to a documentation string.
 	s(
 		{ trig = "param", desc = "Add a parameter to documentation" },
 		fmt(
@@ -101,6 +106,8 @@ ls.add_snippets("swift", {
 			{ i(1, "<param>"), i(2, "<description>") }
 		)
 	),
+
+	-- Add a withDependencies
 	s(
 		{ trig = "wd", desc = "withDependencies" },
 		fmt(
