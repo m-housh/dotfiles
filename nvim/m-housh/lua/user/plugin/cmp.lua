@@ -14,6 +14,8 @@ return {
 		local luasnip = require("luasnip")
 		local lspkind = require("lspkind")
 
+		-- TODO: This is implemented in LuaSnip config, does it need to be here?
+
 		-- loads vscode style snippets from installed plugins (e.g. friendly-snippets)
 		require("luasnip.loaders.from_vscode").lazy_load()
 
@@ -32,6 +34,9 @@ return {
 				["<C-Space>"] = cmp.mapping.complete(), -- show completion suggestions
 				["<C-e>"] = cmp.mapping.abort(), -- close completion window
 				["<CR>"] = cmp.mapping.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace }),
+				-- TODO:
+				-- The next two mappings are also implemented in the LuaSnip configuration,
+				-- as <C-j> and <C-k> do they actually need to be here??
 				["<C-b>"] = cmp.mapping(function(fallback)
 					if luasnip.jumpable(-1) then
 						luasnip.jump(-1)

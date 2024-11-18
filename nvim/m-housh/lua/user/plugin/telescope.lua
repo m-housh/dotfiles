@@ -27,14 +27,18 @@ return {
 				},
 				mappings = {
 					i = {
-						-- Close on first esc instead of gonig to normal mode
+						-- Close on first esc instead of going to normal mode
 						["<esc>"] = actions.close,
 						["<A-q>"] = actions.send_selected_to_qflist,
 						["<C-q>"] = actions.send_to_qflist,
 						["<s-tab>"] = actions.toggle_selection + actions.move_selection_next,
 						["<tab>"] = actions.toggle_selection + actions.move_selection_previous,
+						["<C-j>"] = actions.move_selection_next,
+						["<C-k>"] = actions.move_selection_previous,
 					},
 					n = {
+						["<C-j>"] = actions.move_selection_next,
+						["<C-k>"] = actions.move_selection_previous,
 						["<s-tab>"] = actions.toggle_selection + actions.move_selection_next,
 						["<tab>"] = actions.toggle_selection + actions.move_selection_previous,
 						["<A-q>"] = actions.send_selected_to_qflist,

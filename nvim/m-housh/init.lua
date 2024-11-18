@@ -16,9 +16,3 @@ require("user.theme")
 
 -- Common settings
 require("user.settings")
-
--- Snippets are setup in the luasnip settings, they get loaded from the snippets directory
--- based on filetype.
---require("user.snippets")
-
-vim.o.shiftwidth = 2

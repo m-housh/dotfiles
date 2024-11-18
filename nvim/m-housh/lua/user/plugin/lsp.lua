@@ -74,6 +74,7 @@ return {
 					-- more details: https://github.com/neovim/neovim/issues/19237#issuecomment-2237037154
 					client.offset_encoding = "utf-8"
 				end,
+				cmd = lsp == "sourcekit" and { vim.trim(vim.fn.system("xcrun -f sourcekit-lsp")) } or nil,
 			})
 		end
 
@@ -84,6 +85,7 @@ return {
 			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
 		end
 
+		-- For some reason I was having trouble getting this to work inside the on-attach, so it's here.
 		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "[R]e-[N]ame" })
 	end,
 }

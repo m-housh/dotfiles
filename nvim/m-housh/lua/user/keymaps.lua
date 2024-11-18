@@ -36,7 +36,6 @@ wk_add("n", {
 
 	{ "<leader>n", "<CMD>:noh<CR>", desc = "[N]o highlighting" },
 	{ "<leader>s", "<CMD>:set spell!<CR>", desc = "[S]pell check toggle" },
-	--{ "<C-n>", "<CMD>:Neotree toggle<CR>", desc = "Toggle Neotree" },
 	{ "<C-s>", "<CMD>:write<CR>", desc = "[S]ave" },
 
 	{ "J", ":move .+1<CR>==", desc = "Move line down" },
@@ -62,14 +61,7 @@ wk_add("n", {
 --------------------------------------------------------------------------------
 -- Visual Mode
 --------------------------------------------------------------------------------
--- wk_add("v", {
---   { "p", "\"_dP", desc = "[P]aste" },
--- })
 
--- wk_add("v", {
---   { "K", ":move '<-2<CR>", desc = "Move selected block up" },
---   { "J", ":move '>+1<CR>", desc = "Move selected block down" },
--- })
 vim.keymap.set("v", "K", ":move '<-2<CR>gv=gv", { desc = "Move selected block up.", silent = true, noremap = true })
 vim.keymap.set("v", "J", ":move '>+1<CR>gv=gv", { desc = "Move selected block up.", silent = true, noremap = true })
 
@@ -79,33 +71,3 @@ function _G.set_terminal_keymaps()
 	keymap("t", "<esc>", [[<C-\><C-n>]], opts)
 end
 vim.cmd("autocmd! TermOpen term://* lua set_terminal_keymaps()")
-
--- LuaSnip Keymaps
---local ls = require('luasnip')
-
--- <c-k> to expand snippets.
--- This will expand the snippet or jump to the next item within the snippet.
--- vim.keymap.set({ "i", "s" }, "<c-k>", function()
---   if ls.expand_or_jumpable() then
---     ls.expand_or_jump()
---   end
--- end, { silent = true })
-
--- <c-j>
--- This will jump backwards in the snippet.
--- vim.keymap.set({ "i", "s" }, "<c-j>", function()
---   if ls.jumpable(-1) then
---     ls.jump(-1)
---   end
--- end, { silent = true })
-
--- <c-l>
--- This is for selecting withing a list of options.
--- vim.keymap.set("i", "<c-l>", function()
---   if ls.choice_active() then
---     ls.change_choice(1)
---   end
--- end, { silent = true })
-
--- Reload the snippets.
---vim.keymap.set("n", "<leader><leader>s", "<cmd>source ~/.config/m-housh/lua/snippets/init.lua<cr>")

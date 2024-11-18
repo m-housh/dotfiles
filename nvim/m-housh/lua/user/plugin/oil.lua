@@ -11,9 +11,8 @@ return {
 				["<M-h>"] = "actions.select_split",
 			},
 			view_options = {
-				--show_hidden = true,
-				is_hidden_file = function(name, bufnr)
-					-- Don't show .DS_STORE in output.
+				is_hidden_file = function(name, _) -- second arg is bufnr, but not currently used.
+					-- Don't show .DS_Store in output.
 					local is_ds_store = name ~= ".DS_Store"
 					return not is_ds_store
 				end,
@@ -25,5 +24,8 @@ return {
 
 		-- Open parent directory in floating window.
 		vim.keymap.set("n", "<space>-", require("oil").toggle_float)
+
+		-- Old habits die hard, map what used to toggle neo-tree to just open a float.
+		vim.keymap.set("n", "<C-n>", require("oil").toggle_float)
 	end,
 }
