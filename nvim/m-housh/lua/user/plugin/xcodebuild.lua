@@ -2,6 +2,7 @@ local progress_handle
 
 return {
 	"wojciech-kulik/xcodebuild.nvim",
+	--branch = "fix/issue-249",
 	dependencies = {
 		"nvim-telescope/telescope.nvim",
 		"MunifTanjim/nui.nvim",
