@@ -34,7 +34,8 @@ function tns() {
   # create a session if it doesn't exist, in the background, so
   # that we can switch sessions.
   if ! tmux has-session -t "$session_name" 2> /dev/null; then
-    tmux new-session -ds "$session_name" -c "$tmux_dir"
+    tmux new-session -ds "$session_name" -c "$tmux_dir" -n "editor" "$EDITOR ."
+    tmux new-window -d -n "terminal" -c "$tmux_dir"
   fi
 
   # attach to the session or switch if it already exists.
