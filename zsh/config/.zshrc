@@ -98,7 +98,7 @@ export HISTFILE=$ZDOTDIR/history
 setopt autocd
 
 # NOTE: This may be overriden in local env overrides (typically located in $XDG_DATA_HOME/zsh/env.zsh
-export CDPATH=".:$GHREPOS:$GHREPOS/ansible:$REPOS/github.com:$DOTFILES:$LOCAL_REPOS:$HOME"
+export CDPATH=".:$REPOS:$REPOS/ansible:$DOTFILES:$LOCAL_REPOS:$BUCKET:$HOME"
 
 #------------------------------ options ------------------------------
 #                         (see `man zshoptions`)
