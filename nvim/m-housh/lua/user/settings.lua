@@ -2,7 +2,7 @@ local o = vim.opt
 local wo = vim.wo
 local fn = vim.fn
 
-vim.cmd.set('inccommand=split')
+vim.cmd.set("inccommand=split")
 o.updatetime = 500 -- faster completion
 o.timeoutlen = 800 -- time to wait for a mapped sequence to complete (in milliseconds)
 o.ttimeoutlen = 300 -- Time in milliseconds to wait for a key code sequence to complete
@@ -47,7 +47,7 @@ wo.colorcolumn = "99999"
 o.wildmode = "full"
 o.lazyredraw = false -- do not redraw screen while running macros
 o.grepprg = "rg --hidden --vimgrep --smart-case --"
-o.completeopt = {"menu", "menuone", "noselect", "noinsert"} -- A comma separated list of options for Insert mode completion
+o.completeopt = { "menu", "menuone", "noselect", "noinsert" } -- A comma separated list of options for Insert mode completion
 o.wildignorecase = true -- When set case is ignored when completing file names and directories
 o.wildignore = [[
 .git,.hg,.svn
@@ -62,4 +62,4 @@ o.wildignore = [[
 *.swp,.lock,.DS_Store,._*
 */tmp/*,*.so,*.swp,*.zip,**/node_modules/**,**/target/**,**.terraform/**"
 ]]
-o.viminfo="" -- disable viminfo from copying information from current session, for security.
+o.viminfo = "" -- disable viminfo from copying information from current session, for security.
