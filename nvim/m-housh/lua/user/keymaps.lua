@@ -44,7 +44,7 @@ wk_add("n", {
 	-- Git
 	{ "<leader>gg", ":LazyGit<CR>", desc = "Open [G]it" },
 	{ "<leader>gf", ":Telescope git_files<CR>", desc = "Find [G]it [F]ile" },
-	{ "<leader>t", ":ToggleTerm<CR>", desc = "Open [T]erminal" },
+	--{ "<leader>t", ":ToggleTerm<CR>", desc = "Open [T]erminal" },
 
 	-- Telescope keymaps
 	{ "<leader>ff", telescope.find_files, desc = "[F]ind [F]iles" },
