@@ -43,7 +43,8 @@ return {
 							if luasnip.expandable() then
 								luasnip.expand()
 							else
-								cmp.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true })
+								cmp.mapping.confirm({ select = false })
+								fallback()
 							end
 						else
 							fallback()
