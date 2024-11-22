@@ -4,8 +4,9 @@ return {
 	event = { "BufReadPre", "BufNewFile" },
 	keys = {
 		{ "<leader>t", "<cmd>Trouble diagnostics toggle<cr>", { desc = "[T]rouble diagnostics" } },
-		{ "<leader>tq", "<cmd>Trouble quickfix toggle<cr>", { desc = "Open a quickfix" } },
-		{ "<leader>tl", "<cmd>Trouble loclist toggle<cr>", { desc = "[T]rouble [L]ocation list" } },
+		-- FIX: - These collide with todo-comment keymaps.
+		--{ "<leader>tq", "<cmd>Trouble quickfix toggle<cr>", { desc = "Open a quickfix" } },
+		--{ "<leader>tl", "<cmd>Trouble loclist toggle<cr>", { desc = "[T]rouble [L]ocation list" } },
 	},
 
 	opts = {},
