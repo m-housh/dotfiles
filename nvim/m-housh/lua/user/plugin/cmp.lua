@@ -32,19 +32,26 @@ return {
 			mapping = cmp.mapping.preset.insert({
 				["<C-k>"] = cmp.mapping.select_prev_item(), -- previous suggestion
 				["<C-j>"] = cmp.mapping.select_next_item(), -- next suggestion
-				["<C-Space>"] = cmp.mapping.complete(), -- show completion suggestions
+				["<C-Space>"] = cmp.mapping.confirm({
+					behavior = cmp.ConfirmBehavior.Insert,
+					select = true,
+				}), -- select completion, this makes it so it doesn't auto complete when suggesting.
 				["<C-e>"] = cmp.mapping.abort(), -- close completion window
-				["<CR>"] = cmp.mapping(function(fallback)
-					if cmp.visible() then
-						if luasnip.expandable() then
-							luasnip.expand()
+				["<CR>"] = cmp.mapping({
+					i = function(fallback)
+						if cmp.visible() then
+							if luasnip.expandable() then
+								luasnip.expand()
+							else
+								cmp.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true })
+							end
 						else
-							cmp.confirm({ select = true })
+							fallback()
 						end
-					else
-						fallback()
-					end
-				end),
+					end,
+					s = cmp.mapping.confirm({ select = true }),
+					c = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
+				}),
 				-- TODO:
 				-- The next two mappings are also implemented in the LuaSnip configuration,
 				-- as <C-j> and <C-k> do they actually need to be here??
