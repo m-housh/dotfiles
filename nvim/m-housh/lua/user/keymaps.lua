@@ -3,17 +3,10 @@ vim.g.maplocalleader = " "
 
 local keymap = vim.keymap.set
 local default_options = { noremap = true, silent = true }
-local telescope = require("telescope.builtin")
 local wk = require("which-key")
 
 local wk_add = function(mode, keymaps)
 	wk.add(keymaps, { mode = mode, silent = true })
-end
-
-local find_files = function(dir)
-	return function()
-		telescope.find_files({ cwd = dir, hidden = true, no_ignore = true })
-	end
 end
 
 --------------------------------------------------------------------------------
@@ -41,20 +34,6 @@ wk_add("n", {
 	{ "J", ":move .+1<CR>==", desc = "Move line down" },
 	{ "K", ":move .-2<CR>==", desc = "Move line up" },
 
-	-- Git
-	{ "<leader>gg", ":LazyGit<CR>", desc = "Open [G]it" },
-	{ "<leader>gf", ":Telescope git_files<CR>", desc = "Find [G]it [F]ile" },
-	--{ "<leader>t", ":ToggleTerm<CR>", desc = "Open [T]erminal" },
-
-	-- Telescope keymaps
-	{ "<leader>ff", telescope.find_files, desc = "[F]ind [F]iles" },
-	{ "<leader>fg", telescope.live_grep, desc = "[F]ind [G]rep" },
-	{ "<leader>fb", telescope.buffers, desc = "[F]ind [B]uffers" },
-	{ "<leader>fh", telescope.help_tags, desc = "[F]ind [H]elp" },
-	{ "<leader>fd", find_files("$DOTFILES"), desc = "[F]ind [D]otfiles" },
-	{ "<leader>fn", find_files("$DOTFILES/nvim/m-housh"), desc = "[F]ind [N]vim file" },
-	{ "<leader>fs", find_files("$DOTFILES/scripts/scripts"), desc = "[F]ind [S]cript" },
-	{ "<leader>fz", find_files("$DOTFILES/zsh/config"), desc = "[F]ind [Z]sh config file" },
 	{ "<leader>z", "<CMD>:ZenMode<CR>", desc = "[Z]en Mode" },
 })
 

@@ -77,6 +77,26 @@ return {
 			},
 		})
 
+		local map = function(keys, action, desc)
+			local opts = { silent = true, noremap = true, desc = desc }
+			vim.keymap.set("n", keys, action, opts)
+		end
+
+		local find_files = function(dir)
+			return function()
+				builtin.find_files({ cwd = dir, hidden = true, no_ignore = true })
+			end
+		end
+
 		vim.keymap.set("n", "<C-A-j>", builtin.jumplist, { silent = true, noremap = true, desc = "Open [J]ump List." })
+		map("<leader>ff", builtin.find_files, "[F]ind [F]iles")
+		map("<leader>fg", builtin.live_grep, "[F]ind [G]rep")
+		map("<leader>fb", builtin.buffers, "[F]ind [B]uffers")
+		map("<leader>fh", builtin.help_tags, "[F]ind [H]elp")
+		map("<leader>fd", find_files("$DOTFILES"), "[F]ind [D]otfiles")
+		map("<leader>fn", find_files("$DOTFILES/nvim/m-housh"), "[F]ind [N]vim file")
+		map("<leader>fs", find_files("$DOTFILES/scripts/scripts"), "[F]ind [S]cript")
+		map("<leader>fz", find_files("$DOTFILES/zsh/config"), "[F]ind [Z]sh config file")
+		map("<leader>gf", builtin.git_files, "Find [G]it [F]iles")
 	end,
 }

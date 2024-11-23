@@ -3,10 +3,9 @@ return {
 	dependencies = { "nvim-tree/nvim-web-devicons" },
 	event = { "BufReadPre", "BufNewFile" },
 	keys = {
-		{ "<leader>t", "<cmd>Trouble diagnostics toggle<cr>", { desc = "[T]rouble diagnostics" } },
-		-- FIX: - These collide with todo-comment keymaps.
-		--{ "<leader>tq", "<cmd>Trouble quickfix toggle<cr>", { desc = "Open a quickfix" } },
-		--{ "<leader>tl", "<cmd>Trouble loclist toggle<cr>", { desc = "[T]rouble [L]ocation list" } },
+		{ "<leader>d", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Trouble [D]iagnostics" } },
+		{ "<leader>dq", "<cmd>Trouble quickfix toggle<cr>", { desc = "Trouble [Q]uikfix." } },
+		{ "<leader>dl", "<cmd>Trouble loclist toggle<cr>", { desc = "Trouble [L]ocation list" } },
 	},
 
 	opts = {},
