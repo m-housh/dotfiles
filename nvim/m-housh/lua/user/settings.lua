@@ -3,6 +3,7 @@ local wo = vim.wo
 local fn = vim.fn
 
 vim.cmd.set("inccommand=split")
+o.filetype = "on"
 o.updatetime = 500 -- faster completion
 o.timeoutlen = 800 -- time to wait for a mapped sequence to complete (in milliseconds)
 o.ttimeoutlen = 300 -- Time in milliseconds to wait for a key code sequence to complete

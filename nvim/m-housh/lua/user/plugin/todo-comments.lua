@@ -8,7 +8,13 @@ return {
 	config = function()
 		local todos = require("todo-comments")
 
-		todos.setup({})
+		todos.setup({
+			keywords = {
+				-- Adds the important keyword, I primarily use this in markdown
+				-- documents to be able to jump and color appropriately.
+				FIX = { alt = { "IMPORTANT" } },
+			},
+		})
 
 		vim.keymap.set("n", "<leader>tq", "<CMD>Trouble todo toggle<CR>", { desc = "[T]odo [Q]uick fix list." })
 		vim.keymap.set("n", "<leader><leader>t", "<CMD>TodoTelescope<CR>", { desc = "[T]odo telescope list." })

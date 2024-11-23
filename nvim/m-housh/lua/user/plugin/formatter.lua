@@ -28,7 +28,7 @@ return {
 							"--stdin-filepath",
 							util.escape_path(util.get_current_buffer_file_path()),
 							"--print-width",
-							"80",
+							"100",
 							"--prose-wrap",
 							"always",
 							"--parser",
