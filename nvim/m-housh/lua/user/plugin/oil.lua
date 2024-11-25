@@ -9,6 +9,11 @@ return {
 			keymaps = {
 				["<C-h>"] = false,
 				["<M-h>"] = "actions.select_split",
+				["<C-v>"] = {
+					"actions.select",
+					opts = { vertical = true },
+					desc = "Open the entry in a vertical split",
+				},
 			},
 			view_options = {
 				is_hidden_file = function(name, _) -- second arg is bufnr, but not currently used.
