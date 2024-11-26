@@ -191,6 +191,7 @@ alias tka='tmux kill-server'            # kill tmux server and all sessions.
 alias ts='$SCRIPTS/tmux-sessionator'  # create new tmux session, fuzzy finding common locations.
 alias tss='$SCRIPTS/tmux-sessionator --choose'  # attach to an existing tmux session.
 alias tls='tmux list-sessions'          # list tmux sessions
+alias tks='tmux kill-session -t'        # kill tmux session
 alias temp='cd $(mktemp -d)'            # create a temporary directory and move into it.
 alias vi='nvim'                         # set vi to open neovim
 alias newf='"$SCRIPTS"/newx --function' # generate a new shell function
