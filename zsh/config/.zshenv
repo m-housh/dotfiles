@@ -26,8 +26,8 @@ export GITUSER="m-housh"
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
 # Directories
-export ANSIBLE_GEN_DIR="$GHREPOS/ansible/ansible-gen-playbook"
-export ANSIBLE_LOCAL="$GHREPOS/ansible"
+export ANSIBLE_LOCAL="$REPOS/ansible"
+export ANSIBLE_GEN_DIR="$ANSIBLE_LOCAL/ansible-gen-playbook"
 export ANSIBLE_MACOS_PLAYBOOK_DIR="$HOME/ansible-macos-playbook"
 export ARCHIVE="/Volumes/Archive"
 export BUCKET="/Volumes/Bucket"
