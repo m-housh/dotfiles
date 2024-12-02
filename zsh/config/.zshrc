@@ -124,9 +124,6 @@ zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 zsh_add_plugin "Aloxaf/fzf-tab"
 
-# Use fzf in history / search contexts.
-eval "$(fzf --zsh)"
-
 #------------------------------ completions ------------------------------
 # case insensitive path-completion 
 zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 
@@ -201,6 +198,10 @@ alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'      # set neovim to use my con
 alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'    # set neovim to use kickstart config.
 alias nvim-lazy='NVIM_APPNAME=lazy nvim'              # set neovim to use lazy config.
 alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"  # set wget history location.
+
+# NOTE: This needs to stay near the bottom, or it doesn't work properly.
+# Use fzf in history / search contexts.
+source <(fzf --zsh)
 
 #------------------------------ local configs ------------------------------
 
