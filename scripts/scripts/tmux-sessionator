@@ -78,7 +78,8 @@ fi
 
 # Create a session if it doesn't exist.
 if ! tmux has-session -t "$selected_name" 2> /dev/null; then
-  tmux new-session -ds "$selected_name" -c "$selected" -n "editor" "${EDITOR} ."
+  tmux new-session -ds "$selected_name" -c "$selected" -n "editor"
+  tmux send-keys -t editor 'n' Enter
   tmux new-window -d -n "terminal" -c "$selected"
 fi
 
