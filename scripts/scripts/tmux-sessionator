@@ -8,9 +8,11 @@ debug="${DEBUG}"
 
 declare -a paths=()
 declare chooseOpt=
+declare -a directory=()
 
 zparseopts -D -- \
-  {c,-choose}=chooseOpt
+  {c,-choose}=chooseOpt \
+  {d,-directory}:=directory
 
 #################### Helpers ####################
 
@@ -42,6 +44,7 @@ function setup_fuzzy_find_paths() {
 #################### MAIN ####################
 
 declare choose="${chooseOpt[-1]}"
+declare selected=
 
 if [[ -n $choose ]]; then
   debug_print "Choose from existing."
@@ -49,6 +52,14 @@ if [[ -n $choose ]]; then
     tmux list-sessions -F \#S | gum filter \
       --placeholder "Pick a session..."
   )
+elif [ ${#directory} -gt 0 ]; then
+  debug_print "Using directory option."
+  selected=${directory[-1]}
+  if [ "$selected" = "." ] || [ "$selected" = "" ]; then
+    selected="${PWD}"
+  fi
+  debug_print "Directory: $selected"
+
 elif [[ "$#" -eq 1 ]]; then
   debug_print "Using existing session: $1"
   selected=$1

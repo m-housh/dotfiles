@@ -9,37 +9,9 @@
 # the current working directory.
 
 function tns() {
-
-  local session_name=
-  local tmux_dir=
-
-  # parse the session, if based on the directory of the argument passed in.
-  # otherwise use the current directory.
-  [ -n "$1" ] && \
-    session_name=$(basename "$1" | tr . _) && \
-    tmux_dir="$1"
-
-  [ -z "$session_name" ] \
-    && session_name=$(basename "$PWD" | tr . _) && \
-    tmux_dir="$PWD"
-
-  tmux_running=$(pgrep tmux)
-
-  # check if tmux is not running / attached to a session.
-  # if not, then create a new session.
-  if [ -z $TMUX ] && [ -z $tmux_running ]; then
-    tmux new-session -s "$session_name" -c "$tmux_dir" && return 0
+  local directory=$1
+  if [ -n "$directory" ]; then
+    directory=${PWD}
   fi
-
-  # create a session if it doesn't exist, in the background, so
-  # that we can switch sessions.
-  if ! tmux has-session -t "$session_name" 2> /dev/null; then
-    tmux new-session -ds "$session_name" -c "$tmux_dir" -n "editor" "$EDITOR ."
-    tmux new-window -d -n "terminal" -c "$tmux_dir"
-  fi
-
-  # attach to the session or switch if it already exists.
-  [ -z $TMUX ] && \
-    tmux attach -t "$session_name" \
-  || tmux switch-client -t "$session_name"
+  tmux-sessionator --directory "$directory"
 }
