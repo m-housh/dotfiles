@@ -42,7 +42,7 @@ require("lazy").setup({
 	},
 
 	-- LSP, formatting, etc. --
-	{ "folke/neodev.nvim", opts = {} },
+	--{ "folke/neodev.nvim", opts = {} },
 }, {
 	checker = {
 		enabled = true,
