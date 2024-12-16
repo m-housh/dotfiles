@@ -48,6 +48,8 @@ function create_session() {
   tmux new-session -ds "$selected_name" -c "$selected" -n "editor"
   tmux send-keys -t editor 'n' Enter
   tmux new-window -d -n "terminal" -c "$selected"
+  tmux new-window -d -n 'files' -c "$selected"
+  tmux send-keys -t files 'yazi' Enter
 }
 
 #################### MAIN ####################
