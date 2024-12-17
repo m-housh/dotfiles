@@ -58,6 +58,9 @@ return {
 			opts.desc = "[G]oto [D]eclaration"
 			vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
 
+			opts.desc = "[G]oto [R]eferences"
+			vim.keymap.set("n", "gr", "<CMD>Telescope lsp_references<CR>", opts)
+
 			opts.desc = "LSP [C]ode [A]ction"
 			vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
 
