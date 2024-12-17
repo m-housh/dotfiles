@@ -73,7 +73,7 @@ fpath_prepend \
   "$(brew --prefix)/share/zsh/site-functions" \
   "$(brew --prefix)/share/zsh-completions" \
   "$ZDOTDIR/completions" \
-  "$HOME/.local/completions" \
+  "$HOME/.local/share/zsh/completions" \
   "$ZDOTDIR/functions"
 
 autoload -Uz $fpath[1]/*(.:t)
