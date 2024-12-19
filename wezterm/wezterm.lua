@@ -34,6 +34,8 @@ config.window_padding = {
 }
 config.window_close_confirmation = "NeverPrompt"
 --config.window_decorations = 'TITLE'
+-- Set higher fps
+config.max_fps = 120
 
 -- Tab Bar
 config.show_tabs_in_tab_bar = true
