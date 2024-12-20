@@ -7,16 +7,16 @@ vim.g.maplocalleader = " "
 --       file for projects.
 
 -- Common settings
-require("user.settings")
+require("config.settings")
 
 -- Auto commands
-require("user.autocmd")
+require("config.autocmd")
 
 -- Plugins
-require("user.plugins")
+require("config.lazy")
 
 -- Key maps
-require("user.keymaps")
+require("config.keymaps")
 
 -- Theme (must stay after plugins are loaded)
-require("user.theme")
+require("config.theme")
