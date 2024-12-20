@@ -1,7 +1,19 @@
 return {
 	"mhartington/formatter.nvim",
 	event = { "BufReadPre", "BufNewFile" },
-	config = function()
+	keys = {
+		{
+			"<leader>f",
+			":Format",
+			desc = "[F]ormat",
+		},
+		{
+			"<leader>F",
+			":FormatWrite",
+			desc = "[F]ormat write",
+		},
+	},
+	config = function(_, opts)
 		local util = require("formatter.util")
 		require("formatter").setup({
 			filetype = {
@@ -49,13 +61,6 @@ return {
 				},
 			},
 		})
-
-		-- Keymaps
-		local wk = require("which-key")
-		wk.add({
-			{ "<space>f", ":Format", desc = "[F]ormat" },
-			{ "<space>F", ":FormateWrite", desc = "[F]ormat write" },
-		}, { mode = "n", silent = true })
 
 		local augroup = vim.api.nvim_create_augroup
 		local autocmd = vim.api.nvim_create_autocmd
