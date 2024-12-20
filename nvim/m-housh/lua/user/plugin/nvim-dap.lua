@@ -31,6 +31,7 @@ end
 
 return {
 	"mfussenegger/nvim-dap",
+	--event = "VeryLazy",
 	dependencies = {
 		"wojciech-kulik/xcodebuild.nvim",
 	},

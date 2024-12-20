@@ -1,6 +1,7 @@
 return {
 	"L3MON4D3/LuaSnip",
 	version = "v2.*",
+	event = "VeryLazy",
 	config = function()
 		local ls = require("luasnip")
 		local types = require("luasnip.util.types")
@@ -17,7 +18,7 @@ return {
 			},
 		})
 		require("luasnip.loaders.from_vscode").lazy_load()
-		require("luasnip.loaders.from_lua").lazy_load({ paths = "~/.config/m-housh/lua/user/snippets/" })
+		require("luasnip.loaders.from_lua").lazy_load({ paths = vim.fn.stdpath("config") .. "/snippets" })
 
 		-- Keymaps
 		local opts = { silent = true }

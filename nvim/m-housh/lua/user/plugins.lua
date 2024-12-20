@@ -28,21 +28,12 @@ require("lazy").setup({
 		"christoomey/vim-tmux-navigator",
 		lazy = false,
 	},
-	--   {
-	--     "NMAC427/guess-indent.nvim",
-	--     opts = { }
-	--   },
 	{ "NoahTheDuke/vim-just", ft = { "just" } },
 	{
 		"chipsenkbeil/distant.nvim",
-		branch = "v0.3",
-		config = function()
-			require("distant"):setup()
-		end,
+		version = "v0.*",
+		event = "VeryLazy",
 	},
-
-	-- LSP, formatting, etc. --
-	--{ "folke/neodev.nvim", opts = {} },
 }, {
 	checker = {
 		enabled = true,
