@@ -1,5 +1,6 @@
 return {
 	"folke/todo-comments.nvim",
+	event = "VeryLazy",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 		"folke/trouble.nvim",
@@ -9,6 +10,9 @@ return {
 			-- Adds the important keyword, I primarily use this in markdown
 			-- documents to be able to jump and color appropriately.
 			FIX = { alt = { "IMPORTANT" } },
+
+			-- Adds mark keyword, used in swift.
+			NOTE = { alt = { "MARK" } },
 		},
 	},
 	keys = {
