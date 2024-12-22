@@ -12,12 +12,12 @@ local rep = require("luasnip.extras").rep
 -- Add snippets
 ls.add_snippets("swift", {
 	-- Add a dependency snippet.
-	s({ trig = "@d", desc = "Add a dependency." }, fmt("@Dependency(\\.{}) var {}", { i(1), rep(1) })),
+	s({ trig = "@Dep", desc = "Add a dependency." }, fmt("@Dependency(\\.{}) var {}", { i(1), rep(1) })),
 
 	-- Add a dependency client.
 	s(
 		{
-			trig = "@dc",
+			trig = "@DC",
 			desc = "Add a dependency client.",
 		},
 		fmt(

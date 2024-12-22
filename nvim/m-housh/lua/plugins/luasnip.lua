@@ -24,7 +24,7 @@ return {
 			end,
 		},
 	},
-	config = function(_, opts)
+	config = function()
 		local ls = require("luasnip")
 		ls.setup({
 			history = true,

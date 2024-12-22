@@ -3,8 +3,8 @@ return {
 		"neovim/nvim-lspconfig",
 		event = { "BufReadPre", "BufNewFile" },
 		dependencies = {
-			"hrsh7th/cmp-nvim-lsp",
-			--"saghen/blink.cmp",
+			-- "hrsh7th/cmp-nvim-lsp",
+			"saghen/blink.cmp",
 			{ "antosha417/nvim-lsp-file-operations", config = true },
 			"williamboman/mason.nvim",
 			"williamboman/mason-lspconfig.nvim",
@@ -37,9 +37,9 @@ return {
 				automatic_installation = true,
 			})
 			local lspconfig = require("lspconfig")
-			local cmp_nvim_lsp = require("cmp_nvim_lsp")
-			local capabilities = cmp_nvim_lsp.default_capabilities()
-			--local capabilities = require("blink.cmp").get_lsp_capabilities()
+			-- local cmp_nvim_lsp = require("cmp_nvim_lsp")
+			-- local capabilities = cmp_nvim_lsp.default_capabilities()
+			local capabilities = require("blink.cmp").get_lsp_capabilities()
 			local opts = { noremap = true, silent = true }
 			local on_attach = function(_, bufnr)
 				opts.buffer = bufnr
