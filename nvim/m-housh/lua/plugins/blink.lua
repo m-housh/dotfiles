@@ -2,7 +2,7 @@
 return {
 	{
 		"saghen/blink.cmp",
-		enabled = true,
+		enabled = false,
 		dependencies = {
 			-- "rafamadriz/friendly-snippets",
 			{ "L3MON4D3/LuaSnip", version = "v2.*" },
@@ -49,6 +49,13 @@ return {
 			},
 		},
 		opts_extend = { "sources.default" },
-		keymap = { preset = "default" },
+		keymap = {
+			preset = "default",
+
+			["<Tab>"] = {},
+			["<S-Tab>"] = {},
+			["<C-b>"] = { "snippet_backward", "fallback" },
+			["<C-f>"] = { "snippet_forward", "fallback" },
+		},
 	},
 }
