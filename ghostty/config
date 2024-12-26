@@ -1,0 +1,17 @@
+theme = catppuccin-mocha
+
+confirm-close-surface = false
+
+font-size = 18
+font-family = "Inconsolata Nerd Font"
+font-thicken = true
+
+# HACK: to open as large as possible.
+window-height = 1000
+window-width = 1000
+
+copy-on-select = true
+quit-after-last-window-closed = true
+macos-auto-secure-input = true
+
+keybind = super+shift+t=toggle_quick_terminal
