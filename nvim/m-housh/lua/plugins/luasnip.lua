@@ -23,6 +23,16 @@ return {
 				end
 			end,
 		},
+		{
+			"<C-n>",
+			mode = { "i", "s" },
+			function()
+				local ls = require("luasnip")
+				if ls.choice_active() then
+					ls.change_choice(1)
+				end
+			end,
+		},
 	},
 	config = function()
 		local ls = require("luasnip")

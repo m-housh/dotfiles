@@ -34,6 +34,13 @@ require("lazy").setup({
 		version = "v0.*",
 		event = "VeryLazy",
 	},
+	{
+		"echasnovski/mini.ai",
+		version = "*",
+		config = function()
+			require("mini.ai").setup({})
+		end,
+	},
 }, {
 	checker = {
 		enabled = true,

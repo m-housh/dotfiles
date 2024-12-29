@@ -2,15 +2,10 @@ theme = catppuccin-mocha
 
 confirm-close-surface = false
 
-font-size = 18
-font-family = "Inconsolata Nerd Font"
-font-thicken = true
+font-size = 15
+font-thicken = false
 
-# HACK: to open as large as possible.
-window-height = 1000
-window-width = 1000
-window-padding-x = 4,2
-window-padding-y = 8,2
+window-save-state = always
 
 # NOTE: This setting removes tabs, rounded borders, and window controls.
 #       Also makes some of the below macos-titlebar-* things not matter, but
@@ -24,5 +19,6 @@ macos-auto-secure-input = true
 macos-non-native-fullscreen = visible-menu
 macos-titlebar-style = transparent
 macos-titlebar-proxy-icon = hidden
+macos-icon = custom-style
 
 keybind = super+shift+t=toggle_quick_terminal

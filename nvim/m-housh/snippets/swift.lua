@@ -11,13 +11,23 @@ local fmt = require("luasnip.extras.fmt").fmt
 local rep = require("luasnip.extras").rep
 -- Add snippets
 ls.add_snippets("swift", {
+
+	-- Logging
+	s(
+		{ trig = "logg", desc = "Log a message" },
+		fmt('logger.{}("{}")', {
+			i(1),
+			i(2),
+		})
+	),
+
 	-- Add a dependency snippet.
-	s({ trig = "@Dep", desc = "Add a dependency." }, fmt("@Dependency(\\.{}) var {}", { i(1), rep(1) })),
+	s({ trig = "@dep", desc = "Add a dependency." }, fmt("@Dependency(\\.{}) var {}", { i(1), rep(1) })),
 
 	-- Add a dependency client.
 	s(
 		{
-			trig = "@DC",
+			trig = "@dc",
 			desc = "Add a dependency client.",
 		},
 		fmt(
