@@ -41,6 +41,20 @@ require("lazy").setup({
 			require("mini.ai").setup({})
 		end,
 	},
+	{
+		"vhyrro/luarocks.nvim",
+		priority = 1001, -- this plugin needs to run before anything else
+		opts = {
+			rocks = { "magick" },
+		},
+	},
+	{
+		"MeanderingProgrammer/render-markdown.nvim",
+		-- dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.nvim" }, -- if you use the mini.nvim suite
+		dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.icons" }, -- if you use standalone mini plugins
+		-- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+		opts = {},
+	},
 }, {
 	checker = {
 		enabled = true,
@@ -48,6 +62,9 @@ require("lazy").setup({
 	},
 	change_detection = {
 		notify = false,
+	},
+	rocks = {
+		hererocks = true, -- recommended if you do not have global installation of Lua 5.1.
 	},
 })
 

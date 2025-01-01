@@ -3,6 +3,7 @@ return {
 	enabled = true,
 	event = "VeryLazy",
 	dependencies = {
+		"MeanderingProgrammer/render-markdown.nvim",
 		"hrsh7th/cmp-nvim-lsp",
 		"hrsh7th/cmp-buffer", -- source for text in buffer
 		"hrsh7th/cmp-path", -- source for file system paths
@@ -76,6 +77,7 @@ return {
 			sources = cmp.config.sources({
 				{ name = "nvim_lsp" },
 				{ name = "luasnip" }, -- snippets
+				{ name = "render-markdown" }, -- markdown
 				{ name = "buffer" }, -- text within current buffer
 				{ name = "path" }, -- file system paths
 			}),
