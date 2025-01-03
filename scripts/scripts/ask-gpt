@@ -1,0 +1,115 @@
+#!/bin/zsh
+#
+# Ask chat-gpt a question and view the output.
+
+local api_key="${OPENAI_API_KEY}"
+local debug="${DEBUG}"
+
+function usage() {
+  cat << EOF
+
+  Ask chat-gpt a question and view the output.
+
+  Example usage:
+
+    ask-gpt 'Who are you?'
+
+    # Send output to a file:
+    ask-gpt --print 'Who are you' > /tmp/gpt.md
+
+  Usage: ask-gpt [-k <key>] [-m <model>] [-p] [-j] [-h] question
+
+  Options:
+    -k | --key :    Use api key (default: environment variable 'OPENAI_API_KEY')
+    -m | --model:   Specify the chat-gpt model (default is 'gpt-4o-mini')
+    -j | --json:    Print the full json output to stdout.
+    -p | --print:   Print the output to stdout in markdown format.
+    -h | --help:    Show usage.
+
+  Include debug output:
+
+  DEBUG=1 ask-gpt 'Who are you?'
+
+EOF
+}
+
+######################### Helpers #########################
+
+function debug_print {
+  if [ ! -z "$debug" ]; then
+    echo "$1"
+  fi
+}
+
+function makeGptInput {
+  echo $(jq --null-input \
+    --arg model "$1" \
+    --arg question "$2" \
+   '{ "model": $model, "messages": [{"role": "system", "content": "You are such a helpful assistant!" }, {"role": "user", "content": $question}] }')
+}
+
+function getGptOutput {
+  echo "$1" | jq '.["choices"][0]["message"]["content"]'
+}
+
+function askGpt {
+  local key=$1
+  local input=$2
+
+  echo $(curl "https://api.openai.com/v1/chat/completions" \
+    -sS \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $key" \
+    -d "$input")
+}
+
+######################### MAIN #########################
+zparseopts -D -E -F -- \
+  {h,-help}=help \
+  {k,-key}:=key \
+  {m,-model}=model \
+  {j,-json}=json \
+  {p,-print}=printOutput
+
+# Check if help was specified and show usage.
+[ ! -z "$help" ] && usage && exit 0
+
+local question="$1"
+# Ensure there is a question / first argument.
+[ -z "$question" ] && print "No question found." && usage && exit 1
+
+# parse the api key.
+if [ ! -z "$key" ]; then
+  api_key="${key[-1]}"
+  debug_print "Using custom passed in key."
+fi
+
+# Fail if we did not find an api key.
+[ -z "$api_key" ] && echo "No api key found." && usage && exit 1
+
+# Set default model if not specified.
+if [ -z "$model" ]; then
+  model="gpt-4o-mini"
+fi
+debug_print "Model: $model"
+
+# Generate the input for chat-gpt.
+local input="$(makeGptInput $model $question)"
+debug_print "Input: $input"
+
+# Get the chat-gpt output.
+local output="$(askGpt $api_key $input)"
+debug_print "Full ouptput: $(echo $output | jq '.[]')"
+
+# If json option is specified, then send full output to stdout and exit.
+[ ! -z "$json" ] && echo "$output" | jq '.[]' && exit 0
+
+# parse the output message.
+local parsedOutput="$(getGptOutput $output)"
+
+# Show the output based on options passed in.
+if [ -z "$printOutput" ]; then
+  echo "# $question\n$parsedOutput" | gum format | gum pager
+else
+  echo "# $question\n$parsedOutput" | gum format
+fi
