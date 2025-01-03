@@ -4,6 +4,7 @@ return {
 	event = "VeryLazy",
 	dependencies = {
 		"MeanderingProgrammer/render-markdown.nvim",
+		"folke/lazydev.nvim",
 		"hrsh7th/cmp-nvim-lsp",
 		"hrsh7th/cmp-buffer", -- source for text in buffer
 		"hrsh7th/cmp-path", -- source for file system paths
@@ -75,6 +76,7 @@ return {
 			}),
 			-- sources for autocompletion
 			sources = cmp.config.sources({
+				{ name = "lazydev", group_index = 0 },
 				{ name = "nvim_lsp" },
 				{ name = "luasnip" }, -- snippets
 				{ name = "render-markdown" }, -- markdown
