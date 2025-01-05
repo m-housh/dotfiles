@@ -4,6 +4,7 @@
 
 local api_key="${OPENAI_API_KEY}"
 local debug="${DEBUG}"
+local outputFile="/tmp/output.json"
 
 function usage() {
   cat << EOF
@@ -45,11 +46,18 @@ function makeGptInput {
   echo $(jq --null-input \
     --arg model "$1" \
     --arg question "$2" \
-   '{ "model": $model, "messages": [{"role": "system", "content": "You are such a helpful assistant!" }, {"role": "user", "content": $question}] }')
+   '{
+     "model": $model,
+     "messages": [
+      { "role": "system", "content": "You are such a helpful assistant!" },
+      { "role": "developer", "content": "You message data is escaped properly to parse as JSON, including escaping newline characters." },
+      { "role": "user", "content": $question }
+     ]
+    }')
 }
 
 function getGptOutput {
-  echo "$1" | jq '.["choices"][0]["message"]["content"]'
+  echo "$1" | jq -r '.choices[].message.content'
 }
 
 function askGpt {
@@ -99,17 +107,23 @@ debug_print "Input: $input"
 
 # Get the chat-gpt output.
 local output="$(askGpt $api_key $input)"
-debug_print "Full ouptput: $(echo $output | jq '.[]')"
+
+# TODO: Remove.
+echo "$output" > "$outputFile"
+
+debug_print "Full ouptput: $(echo $output | jq '.')"
 
 # If json option is specified, then send full output to stdout and exit.
-[ ! -z "$json" ] && echo "$output" | jq '.[]' && exit 0
+[ ! -z "$json" ] && (echo "$output" | jq '.') && exit 0
 
 # parse the output message.
 local parsedOutput="$(getGptOutput $output)"
 
+echo "$parsedOutput"
+
 # Show the output based on options passed in.
-if [ -z "$printOutput" ]; then
-  echo "# $question\n$parsedOutput" | gum format | gum pager
-else
-  echo "# $question\n$parsedOutput" | gum format
-fi
+# if [ -z "$printOutput" ]; then
+#   echo "# $question\n$parsedOutput" | gum format | gum pager
+# else
+#   echo "# $question\n$parsedOutput" | gum format
+# fi
