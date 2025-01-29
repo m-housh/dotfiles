@@ -205,6 +205,7 @@ alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"  # set wget history locat
 # NOTE: This needs to stay near the bottom, or it doesn't work properly.
 # Use fzf in history / search contexts.
 source <(fzf --zsh)
+source <(kubectl completion zsh)
 
 #------------------------------ local configs ------------------------------
 

@@ -69,7 +69,7 @@ return {
 				--vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
 
 				opts.desc = "[R]eload or start LSP"
-				vim.keymap.set("n", "<leader>rl", ":LspRestart | :LspStart<CR>", opts)
+				vim.keymap.set({ "n", "x" }, "<leader>rl", ":LspRestart | :LspStart<CR>", opts)
 
 				opts.desc = "Goto previous diagnostic"
 				vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
