@@ -66,7 +66,8 @@ path_prepend \
   "$GOPATH/bin" \
   "$XDG_DATA_HOME/bin" \
   "$HOME/.local/bin" \
-  "$SCRIPTS"
+  "$SCRIPTS" \
+  "$HOME/.local/pnpm"
 
 # last arg will be first in $FPATH
 fpath_prepend \
@@ -215,3 +216,11 @@ source <(kubectl completion zsh)
 #       I tried sourcing them in the the `.zshenv` files, but did not work.
 _source_if "$ZDOTDIR/.zshrc-local"
 _source_if "$LOCAL_ENV"
+
+# pnpm
+export PNPM_HOME="/Users/michael/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
