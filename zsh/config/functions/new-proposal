@@ -1,0 +1,13 @@
+#!/bin/zsh
+
+prefix=$(date '+%y.%m.%d')
+name=$(gum input --placeholder="Enter customer name...")
+
+if [ -z "$name" ]; then
+  echo "Name should not be blank." && exit 1
+fi
+
+cleanedName="${name%% *}${name##* }"
+directory="$PROPOSALS/$prefix.$cleanedName"
+mkdir "$directory"
+echo "$directory"
