@@ -216,6 +216,7 @@ source <(kubectl completion zsh)
 #       I tried sourcing them in the the `.zshenv` files, but did not work.
 _source_if "$ZDOTDIR/.zshrc-local"
 _source_if "$LOCAL_ENV"
+<<<<<<< HEAD
 
 # pnpm
 export PNPM_HOME="/Users/michael/.local/share/pnpm"
@@ -224,3 +225,9 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+# The following lines have been added by Docker Desktop to enable Docker CLI completions.
+fpath=(/Users/michael/.docker/completions $fpath)
+autoload -Uz compinit
+compinit
+# End of Docker CLI completions
