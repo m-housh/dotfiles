@@ -216,7 +216,6 @@ source <(kubectl completion zsh)
 #       I tried sourcing them in the the `.zshenv` files, but did not work.
 _source_if "$ZDOTDIR/.zshrc-local"
 _source_if "$LOCAL_ENV"
-<<<<<<< HEAD
 
 # pnpm
 export PNPM_HOME="/Users/michael/.local/share/pnpm"
