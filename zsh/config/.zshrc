@@ -230,3 +230,4 @@ fpath=(/Users/michael/.docker/completions $fpath)
 autoload -Uz compinit
 compinit
 
+eval "$(ssh-agent -s)" 1>/dev/null
