@@ -230,7 +230,3 @@ fpath=(/Users/michael/.docker/completions $fpath)
 autoload -Uz compinit
 compinit
 
-# End of Docker CLI completions
-gpgconf --launch gpg-agent
-export SSH_AUTH_SOCK=~/.gnupg/S.gpg-agent.ssh
-
