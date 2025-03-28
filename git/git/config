@@ -6,7 +6,7 @@
 [user]
 	name = Michael Housh
 	email = mhoush@houshhomeenergy.com
-	signingkey = mhoush@houshhomeenergy.com
+	signingkey = 14A20BF5!
 
 [commit]
 	gpgsign = true
@@ -27,3 +27,4 @@
 	required = true
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
+
