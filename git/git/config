@@ -5,8 +5,8 @@
   defaultBranch = main
 [user]
 	name = Michael Housh
-	email = mhoush@houshhomeenergy.com
-	signingkey = 14A20BF5!
+	email = michael@mhoush.com
+	signingkey = 0x90D3EB6274D5B7CF
 
 [commit]
 	gpgsign = true

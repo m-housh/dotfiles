@@ -175,9 +175,10 @@ alias gs='git status'                   # git status quickly
 alias hn='hugo new'                     # generate a hugo site
 alias hnc='hugo new content'            # generate new hugo site content quickly
 alias j='just'                          # run justfile's quickly.
-alias l='ls -lahH --color=auto'         # better ls command.
+alias l='eza --long --git --group --links --icons'                # better ls command.
 alias lfs='ls -lahH --color=auto "$ZDOTDIR/functions"'    # List functions.
-alias ls='ls --color'
+alias ls='eza --long --git --group --links --icons'
+alias lt='eza --long --git --group --links --icons --tree'
 alias pass='gopass'
 alias p='gopass'                        # run the pass command quickly.
 alias pf='pass fzf'                     # fuzzy find a password quickly and copy selection to clipboard.
@@ -230,4 +231,20 @@ fpath=(/Users/michael/.docker/completions $fpath)
 autoload -Uz compinit
 compinit
 
-eval "$(ssh-agent -s)" 1>/dev/null
+#eval "$(ssh-agent -s)" 1>/dev/null
+
+########################################
+# Set things up for using gpg-agent
+
+export GPG_TTY=$(tty)
+
+function use-gpg-agent-for-ssh {
+    SOCK="$( gpgconf --list-dirs agent-ssh-socket )"
+    if [[ -n "${SOCK:-}" ]]
+    then
+        unset SSH_AGENT_PID
+        export SSH_AUTH_SOCK="$SOCK"
+    fi
+}
+
+use-gpg-agent-for-ssh
