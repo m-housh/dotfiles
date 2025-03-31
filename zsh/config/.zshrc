@@ -203,6 +203,8 @@ alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'      # set neovim to use my con
 alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'    # set neovim to use kickstart config.
 alias nvim-lazy='NVIM_APPNAME=lazy nvim'              # set neovim to use lazy config.
 alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"  # set wget history location.
+# GPG Yubikey restart relearn when switching keys and stubbed.
+alias yubikeyrestart='gpg-connect-agent killagent /bye && gpg-connect-agent "scd serialno" "learn --force" /bye && gpg --card-status'
 
 # NOTE: This needs to stay near the bottom, or it doesn't work properly.
 # Use fzf in history / search contexts.
