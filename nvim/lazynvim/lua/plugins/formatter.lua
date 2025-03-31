@@ -6,9 +6,7 @@ return {
       markdown = {
         "prettier",
         prepend_args = {
-          "--print-width", "80",
-          "--prose-wrap", "always",
-          "--parser", "markdown",
+          "--config", "~/.prettierrc.yaml"
         },
       },
       swift = { "swiftformat" },
