@@ -6,12 +6,9 @@ return {
       markdown = {
         "prettier",
         prepend_args = {
-          "--print-width",
-          "100",
-          "--prose-wrap",
-          "always",
-          "--parser",
-          "markdown",
+          "--print-width", "100",
+          "--prose-wrap", "always",
+          "--parser", "markdown",
         },
       },
       swift = { "swiftformat" },

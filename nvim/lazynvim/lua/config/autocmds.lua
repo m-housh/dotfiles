@@ -8,7 +8,7 @@ createCmd("BufEnter", {
   pattern = { "*.md", "*.markdown", "*.txt", "*.tex" },
   group = spellGroup,
   callback = function(_)
-    vim.cmd.setlocal("textwidth=80")
+    vim.cmd.setlocal("textwidth=100")
     vim.cmd.setlocal("spell spelllang=en_us")
   end,
 })
