@@ -6,7 +6,7 @@ return {
       markdown = {
         "prettier",
         prepend_args = {
-          "--print-width", "100",
+          "--print-width", "80",
           "--prose-wrap", "always",
           "--parser", "markdown",
         },

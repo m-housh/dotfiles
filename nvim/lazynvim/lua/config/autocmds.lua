@@ -4,25 +4,25 @@ local spellGroup = vim.api.nvim_create_augroup("SpellGroup", defaultGroupOptions
 local createCmd = vim.api.nvim_create_autocmd
 
 -- Spell check
-createCmd("BufEnter", {
-  pattern = { "*.md", "*.markdown", "*.txt", "*.tex" },
-  group = spellGroup,
-  callback = function(_)
-    vim.cmd.setlocal("textwidth=100")
-    vim.cmd.setlocal("spell spelllang=en_us")
-  end,
-})
+-- createCmd("BufEnter", {
+--   pattern = { "*.md", "*.markdown", "*.txt", "*.tex" },
+--   group = spellGroup,
+--   callback = function(_)
+--     vim.cmd.setlocal("textwidth=100")
+--     vim.cmd.setlocal("spell spelllang=en_us")
+--   end,
+-- })
 
 -- Markdown
-createCmd("BufWritePost", {
-  pattern = { "*.md", "*.markdown" },
-  group = markdownGroup,
-  callback = function(_)
-    local cursor = vim.fn.getpos(".")
-    vim.cmd("FormatWrite")
-    vim.fn.setpos(".", cursor)
-  end,
-})
+-- createCmd("BufWritePost", {
+--   pattern = { "*.md", "*.markdown" },
+--   group = markdownGroup,
+--   callback = function(_)
+--     local cursor = vim.fn.getpos(".")
+--     vim.cmd("FormatWrite")
+--     vim.fn.setpos(".", cursor)
+--   end,
+-- })
 
 -- Go
 createCmd("BufWritePre", {
