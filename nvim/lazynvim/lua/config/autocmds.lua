@@ -34,6 +34,7 @@ createCmd("BufWritePre", {
   group = vim.api.nvim_create_augroup("GoFormat", defaultGroupOptions),
 })
 
+-- GoPass
 vim.api.nvim_exec2(
   [[
   autocmd BufNewFile,BufRead /private/**/gopass** setlocal noswapfile nobackup noundofile shada=""
