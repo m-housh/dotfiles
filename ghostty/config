@@ -10,7 +10,7 @@ window-save-state = always
 # NOTE: This setting removes tabs, rounded borders, and window controls.
 #       Also makes some of the below macos-titlebar-* things not matter, but
 #       will take affect if this is set to true.
-window-decoration = false
+window-decoration = true
 
 copy-on-select = true
 quit-after-last-window-closed = true

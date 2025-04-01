@@ -20,6 +20,6 @@ function n() {
   #     && return 0
   # fi
 
-  nvim "$1"
+  nvim "$@"
 }
 
