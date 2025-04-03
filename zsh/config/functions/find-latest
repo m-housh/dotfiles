@@ -1,0 +1,7 @@
+#!/bin/zsh
+
+# Find the last modified file in a directory.
+function find-latest() {
+  local dir=$1
+  echo "$(find $dir -maxdepth 1 -mindepth 1 -type f -ctime 30 | sort -nr | head -1)"
+}

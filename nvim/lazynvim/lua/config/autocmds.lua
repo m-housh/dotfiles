@@ -15,15 +15,15 @@ createCmd("BufEnter", {
 })
 
 -- Markdown
-createCmd("BufWritePost", {
-  pattern = { "*.md", "*.markdown" },
-  group = markdownGroup,
-  callback = function(_)
-    local cursor = vim.fn.getpos(".")
-    vim.cmd("FormatWrite")
-    vim.fn.setpos(".", cursor)
-  end,
-})
+-- createCmd("BufWritePost", {
+--   pattern = { "*.md", "*.markdown" },
+--   group = markdownGroup,
+--   callback = function(_)
+--     -- local cursor = vim.fn.getpos(".")
+--     vim.cmd("FormatWrite")
+--     -- vim.fn.setpos(".", cursor)
+--   end,
+-- })
 
 -- Go
 createCmd("BufWritePre", {

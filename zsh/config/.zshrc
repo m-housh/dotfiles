@@ -164,6 +164,7 @@ alias d='docker'                        # run docker commands quickly
 alias dc='docker compose'               # run docker-compose commands quickly
 alias dv='dirs -v'                      # list directory info
 alias essh='edit-ssh-config'            # edit ssh config quickly
+alias fl='find-latest'                  # Find the last modified file in a directory.
 alias g='git'                           # access git commands quickly
 alias ga='git add'                      # add files to git quickly
 alias gcb='git checkout -b'             # checkout a new git branch, creating if needed.

@@ -14,3 +14,7 @@ wc
 HVAC
 dehumidification
 ansible
+orchestrator
+ethernet
+unifi
+wildcard
