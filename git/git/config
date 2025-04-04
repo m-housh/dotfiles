@@ -1,8 +1,10 @@
 [core]
   excludesfile = ~/.config/git/gitignore
 	ignorecasse = false
+
 [init]
   defaultBranch = main
+
 [user]
 	name = Michael Housh
 	email = michael@mhoush.com
@@ -10,21 +12,56 @@
 
 [commit]
 	gpgsign = true
+
 [tag]
 	gpgSign = true
+  sort = version:refname
 
 [color]
 	ui = true
+
 [credential]
 	helper = gopass
 
 [credential "https://git.housh.dev"]
 	username = michael
+
 [push]
+  default = simple
 	autoSetupRemote = true
+  followTags = true
+
+[fetch]
+  prune = true
+  #pruneTags = true
+  #all = true
+
+[pull]
+  rebase = true
+
 [filter "lfs"]
 	process = git-lfs filter-process
 	required = true
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
 
+[column]
+  ui = auto
+
+[branch]
+  sort = committerdate
+
+[diff]
+  algorithm = histogram
+  colorMoved = plain
+  mnemonicPrefix = true
+  renames = true
+
+[rerere]
+  enabled = true
+  autoupdate = true
+
+[rebase]
+  autoSquash = true
+  autoStash = true
+  updateRefs = true

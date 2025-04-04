@@ -6,6 +6,11 @@ return {
       hidden = true,
       ignored = true
     },
+    image = {
+      doc = {
+        enabled = true,
+      },
+    },
     dashboard = {
       row = nil,
       col = nil,
