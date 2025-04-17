@@ -38,6 +38,7 @@ return {
         clangd = {},
         dockerls = {},
         gopls = {},
+        harper_ls = {},
         jsonls = {},
         lua_ls = {
           settings = {
