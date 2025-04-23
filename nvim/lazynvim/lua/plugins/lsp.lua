@@ -9,6 +9,7 @@ return {
         "clangd",
         "marksman",
         "shfmt",
+        "tinymist",
       },
     },
   },
