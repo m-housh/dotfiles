@@ -61,6 +61,11 @@ return {
         },
         marksman = {},
         sourcekit = {},
+        tinymist = {
+          settings = {
+            formatterMode = "typstyle",
+          },
+        },
         yamlls = {},
       },
       setup = {
