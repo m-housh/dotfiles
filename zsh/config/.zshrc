@@ -249,5 +249,6 @@ function use-gpg-agent-for-ssh {
         export SSH_AUTH_SOCK="$SOCK"
     fi
 }
-
 use-gpg-agent-for-ssh
+
+eval "$(direnv hook zsh)"

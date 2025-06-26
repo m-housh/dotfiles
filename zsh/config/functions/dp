@@ -1,0 +1,12 @@
+#!/bin/zsh
+
+function dp() {
+  [ -z "$1" ] && echo "Must supply temperature" && return 1
+  [ -z "$2" ] && echo "Must supply relative humidity" && return 1
+
+  local temperature=$1
+  local humidity=$2
+
+  /opt/homebrew/bin/psychrometrics dew-point --dry-bulb "$temperature" --relative-humidity "$humidity"
+
+}
