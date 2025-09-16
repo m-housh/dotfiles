@@ -67,7 +67,8 @@ path_prepend \
   "$XDG_DATA_HOME/bin" \
   "$HOME/.local/bin" \
   "$SCRIPTS" \
-  "$HOME/.local/pnpm"
+  "$HOME/.local/pnpm" \
+  "$HOME/.cargo/bin"
 
 # last arg will be first in $FPATH
 fpath_prepend \
