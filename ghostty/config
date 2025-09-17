@@ -1,8 +1,8 @@
-theme = catppuccin-mocha
+theme = Catppuccin Mocha
 
 confirm-close-surface = false
 
-font-size = 15
+font-size = 18
 font-thicken = false
 
 window-save-state = always
