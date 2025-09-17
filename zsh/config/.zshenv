@@ -84,6 +84,9 @@ export ANSIBLE_HOME="$XDG_CONFIG_HOME/ansible"
 export ANSIBLE_VAULT_PASSWORD_FILE="$SCRIPTS/vault-gopass-client"
 export DEFAULT_VAULT_PASSWORD_FILE="$SCRIPTS/vault-gopass-client"
 
+# Rust
+export CARGO_HOME="$XDG_DATA_HOME/cargo"
+
 # Tmux-Sessionator path.
 export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$REPOS:$ANSIBLE_LOCAL:$GHREPOS:$HVACIOTREPOS"
 

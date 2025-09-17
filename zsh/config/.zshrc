@@ -68,7 +68,7 @@ path_prepend \
   "$HOME/.local/bin" \
   "$SCRIPTS" \
   "$HOME/.local/pnpm" \
-  "$HOME/.cargo/bin"
+  "$CARGO_HOME/bin"
 
 # last arg will be first in $FPATH
 fpath_prepend \
