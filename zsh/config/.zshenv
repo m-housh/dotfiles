@@ -102,4 +102,7 @@ export GPG_TTY=$(tty)
 # Starship Prompt
 export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
 
+# Zoxide
+export _ZO_DATA_DIR="$XDG_DATA_HOME"
+
 [ -f "$LOCAL_ENV" ] && source "$LOCAL_ENV"

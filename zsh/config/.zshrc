@@ -252,4 +252,5 @@ function use-gpg-agent-for-ssh {
 }
 use-gpg-agent-for-ssh
 
-eval "$(direnv hook zsh)"
+command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init --cmd cd zsh)"
