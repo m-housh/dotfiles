@@ -114,6 +114,7 @@ setopt aliases
 setopt auto_pushd                 # Push the current directory on the stack.
 setopt pushd_ignore_dups          # Ignore duplicates in stack
 setopt pushd_silent               # Do not print stack after pushd or popd.
+setopt CORRECT                    # Offers corrections on misspelled commands.
 
 bindkey -v                        # Enable vi mode
 export KEYTIMEOUT=1               # Switch between vim mode quicker.
