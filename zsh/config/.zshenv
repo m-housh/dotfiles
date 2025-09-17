@@ -104,5 +104,6 @@ export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
 
 # Zoxide
 export _ZO_DATA_DIR="$XDG_DATA_HOME"
+unset _ZO_ECHO
 
 [ -f "$LOCAL_ENV" ] && source "$LOCAL_ENV"
