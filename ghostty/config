@@ -22,3 +22,11 @@ macos-titlebar-proxy-icon = hidden
 macos-icon = custom-style
 
 keybind = super+shift+t=toggle_quick_terminal
+
+# Splits
+keybind = super+j=goto_split:down
+keybind = super+h=goto_split:left
+keybind = super+k=goto_split:up
+keybind = super+l=goto_split:right
+keybind = super+shift+j=goto_split:previous
+keybind = super+shift+k=goto_split:next
