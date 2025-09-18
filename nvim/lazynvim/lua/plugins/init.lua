@@ -7,5 +7,8 @@ return {
       indent = { enabled = false },
     },
   },
-
+  {
+    "christoomey/vim-tmux-navigator",
+    lazy = false,
+  },
 }

@@ -1,0 +1,5 @@
+#!/bin/zsh
+
+function gpgreset() {
+  gpgconf --kill all && gpgconf --launch all
+}
