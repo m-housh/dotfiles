@@ -5,3 +5,5 @@
 - Add tmux-powerline linking to `dots` cli manager.
 - Clean up zet commands, maybe make a gum / fzf filter script.
 - Update README to reflect ansible installation
+- Update ansible to do gpg installation.
+- Update ansible to include sketchybar.
