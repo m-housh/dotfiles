@@ -19,7 +19,7 @@ export VISUAL=nvim
 export EDITOR_PREFIX=nvim
 #export VIMINIT='source $MYVIMRC'
 #export MYVIMRC="$HOME/.vim/vimrc"
-export NVIM_APPNAME="m-housh"
+#export NVIM_APPNAME="m-housh"
 
 # Git
 export GITUSER="m-housh"

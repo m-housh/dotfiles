@@ -11,12 +11,52 @@
 
 _source_if() { test -r "$1" && source "$1" || return 0 }
 
+# few terminal keybinds
+bindkey -e
+
+typeset -A key
+
+key[Home]=${terminfo[khome]}
+key[End]=${terminfo[kend]}
+key[Insert]=${terminfo[kich1]}
+key[Delete]=${terminfo[kdch1]}
+key[Up]=${terminfo[kcuu1]}
+key[Down]=${terminfo[kcud1]}
+key[Left]=${terminfo[kcub1]}
+key[Right]=${terminfo[kcuf1]}
+key[PageUp]=${terminfo[kpp]}
+key[PageDown]=${terminfo[knp]}
+
+# setup key accordingly
+[[ -n "${key[Home]}"    ]]  && bindkey  "${key[Home]}"    beginning-of-line
+[[ -n "${key[End]}"     ]]  && bindkey  "${key[End]}"     end-of-line
+[[ -n "${key[Insert]}"  ]]  && bindkey  "${key[Insert]}"  overwrite-mode
+[[ -n "${key[Delete]}"  ]]  && bindkey  "${key[Delete]}"  delete-char
+[[ -n "${key[Up]}"      ]]  && bindkey  "${key[Up]}"      up-line-or-history
+[[ -n "${key[Down]}"    ]]  && bindkey  "${key[Down]}"    down-line-or-history
+[[ -n "${key[Left]}"    ]]  && bindkey  "${key[Left]}"    backward-char
+[[ -n "${key[Right]}"   ]]  && bindkey  "${key[Right]}"   forward-char
+
+# Finally, make sure the terminal is in application mode, when zle is
+# active. Only then are the values from $terminfo valid.
+if [[ -n ${terminfo[smkx]} ]] && [[ -n ${terminfo[rmkx]} ]]; then
+    function zle-line-init () {
+        echoti smkx
+    }
+    function zle-line-finish () {
+        echoti rmkx
+    }
+    zle -N zle-line-init
+    zle -N zle-line-finish  
+fi
+
+zle -N fake-enter; bindkey "^X^H" fake-enter
+
 #------------------------------ exports ------------------------------
 autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
-
 # Colors
 autoload -Uz colors && colors
 
@@ -59,8 +99,6 @@ fpath_prepend() {
 # last arg will be first in $PATH
 path_prepend \
   "/usr/local/bin" \
-  "/opt/homebrew/bin" \
-  "/opt/homebrew/sbin" \
   "$HOME/.local/share/gem/bin" \
   "$GOROOT/bin" \
   "$GOPATH/bin" \
@@ -68,12 +106,11 @@ path_prepend \
   "$HOME/.local/bin" \
   "$SCRIPTS" \
   "$HOME/.local/pnpm" \
-  "$CARGO_HOME/bin"
+  "$CARGO_HOME/bin" \
+  "$HOME/.local/bin"
 
 # last arg will be first in $FPATH
 fpath_prepend \
-  "$(brew --prefix)/share/zsh/site-functions" \
-  "$(brew --prefix)/share/zsh-completions" \
   "$ZDOTDIR/completions" \
   "$HOME/.local/share/zsh/completions" \
   "$ZDOTDIR/functions"
@@ -213,7 +250,7 @@ alias z='zoxide'
 # NOTE: This needs to stay near the bottom, or it doesn't work properly.
 # Use fzf in history / search contexts.
 source <(fzf --zsh)
-source <(kubectl completion zsh)
+#source <(kubectl completion zsh)
 
 #------------------------------ local configs ------------------------------
 
