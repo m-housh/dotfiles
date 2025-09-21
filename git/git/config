@@ -3,7 +3,7 @@
 	ignorecasse = false
 
 [init]
-  defaultBranch = main
+	defaultBranch = main
 
 [user]
 	name = Michael Housh
@@ -32,7 +32,7 @@
   followTags = true
 
 [fetch]
-  prune = true
+	prune = true
   #pruneTags = true
   #all = true
 

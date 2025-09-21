@@ -1,7 +1,7 @@
 [mounts]
-	path = /Users/michael/.local/share/password-store
+	path = /home/michael/.local/share/gopass/passwordstore
 [recipients]
-	hash = b73e3c328517ad0b8a03ab1ba113e117595d40ae355f1e42984a8f8144bafc4a
+	hash = 6a408ace969698b274c7c7580f7b0187e8aab4018ae06c5de895d69ae99b8b44
 [mounts "servers"]
 [recipients "homelab"]
 	hash = e4e019251bcd688aa1691b6b4363a9798593f4aed464afb63d11149ea771b4e0
