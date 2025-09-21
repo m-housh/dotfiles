@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# Workspace to hide everything in
+HIDE_WS="special:hidden"
+
+# File to store original workspace ID
+STATE_FILE="/tmp/hypr_hide_state"
+
+# Get current workspace ID
+CUR_WS=$(hyprctl -j activeworkspace | jq -r '.id')
+
+# Check if we're currently hidden
+if [[ -f "$STATE_FILE" ]]; then
+  # Restore windows
+  ORIG_WS=$(cat "$STATE_FILE")
+  for win in $(hyprctl -j clients | jq -r '.[] | select(.workspace.name | contains("$HIDE_WS")) | .address'); do
+    hyprctl dispatch movetoworkspace "$ORIG_WS,address:$win"
+    hyprctl dispatch workspace "$ORIG_WS"
+  done
+  rm "$STATE_FILE"
+else
+  # Hide all windows (move to special hidden workspace)
+  for win in $(hyprctl -j clients | jq -r ".[] | select(.workspace.id == $CUR_WS) | .address"); do
+    hyprctl dispatch movetoworkspace "$HIDE_WS,address:$win"
+    hyprctl dispatch togglespecialworkspace "$HIDE_WS"
+  done
+  rm "$STATE_FILE"
+  echo "$CUR_WS" >"$STATE_FILE"
+fi

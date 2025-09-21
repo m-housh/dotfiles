@@ -17,6 +17,7 @@ export TERM=xterm-256color
 export EDITOR=nvim
 export VISUAL=nvim
 export EDITOR_PREFIX=nvim
+export MANPAGER="bat"
 #export VIMINIT='source $MYVIMRC'
 #export MYVIMRC="$HOME/.vim/vimrc"
 #export NVIM_APPNAME="m-housh"
