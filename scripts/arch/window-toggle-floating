@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# Float's a window, setting it's height and width and centering.
+
+# The percentage of the screen size for the floating window.
+WIDTH_PERCENT=80
+HEIGHT_PERCENT=80
+
+floating=$(hyprctl activewindow -j | jq '.floating')
+
+if [ "$floating" = "true" ]; then
+  hyprctl dispatch togglefloating
+else
+  monitor=$(hyprctl monitors -j | jq '.[] | select(.focused == true)')
+  mw=$(echo "$monitor" | jq '.width')
+  mh=$(echo "$monitor" | jq '.height')
+
+  neww=$((mw * $WIDTH_PERCENT / 100))
+  newh=$((mh * $HEIGHT_PERCENT / 100))
+
+  hyprctl dispatch togglefloating \
+    && hyprctl dispatch resizeactive exact $neww $newh \
+    && hyprctl dispatch centerwindow 
+fi

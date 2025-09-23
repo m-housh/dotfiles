@@ -1,0 +1,11 @@
+[Unit]
+Description=Hyprland lid handler using evdev
+After=graphical.target
+
+[Service]
+ExecStart=%h/.local/bin/lid.sh
+Restart=always
+
+[Install]
+WantedBy=default.target
+
