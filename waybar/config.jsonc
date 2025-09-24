@@ -18,14 +18,13 @@
     "mpd",
     "idle_inhibitor",
     "pulseaudio",
+    "tray",
     "network",
     "cpu",
     "memory",
     "temperature",
     "backlight",
     "battery",
-    "battery#bat2",
-    "tray",
     "custom/power",
   ],
   "hyprland/workspaces": {
@@ -51,13 +50,6 @@
     //   "4": [],
     //   "5": [],
     // },
-  },
-  "sway/scratchpad": {
-    "format": "{icon} {count}",
-    "show-empty": false,
-    "format-icons": ["", ""],
-    "tooltip": true,
-    "tooltip-format": "{app}: {title}",
   },
   "mpd": {
     "format": "{stateIcon} {consumeIcon}{randomIcon}{repeatIcon}{singleIcon}{artist} - {album} - {title} ({elapsedTime:%M:%S}/{totalTime:%M:%S}) ⸨{songPosition}|{queueLength}⸩ {volume}% ",
@@ -104,7 +96,7 @@
     // "timezone": "America/New_York",
     "tooltip-format": "<tt><small>{calendar}</small></tt>",
     // "format-alt": "{:%Y-%m-%d}",
-    "format": "<b>󰭦  {:%D - %H:%M}</b>",
+    "format": "󰭦  {:%D - %H:%M}",
     "calendar": {
       "mode": "year",
       "mode-mon-col": 3,
@@ -153,9 +145,6 @@
     // "format-good": "", // An empty format will hide the module
     // "format-full": "",
     "format-icons": ["", "", "", "", ""],
-  },
-  "battery#bat2": {
-    "bat": "BAT2",
   },
   "power-profiles-daemon": {
     "format": "{icon}",
@@ -215,7 +204,7 @@
     // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
   },
   "custom/power": {
-    "format": "⏻ ",
+    "format": "⏻",
     "tooltip": false,
     "menu": "on-click",
     "menu-file": "$HOME/.config/waybar/power_menu.xml", // Menu file in resources folder
