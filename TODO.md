@@ -7,3 +7,8 @@
 - Update README to reflect ansible installation
 - Update ansible to do gpg installation.
 - Update ansible to include sketchybar.
+
+# Arch Todos
+
+- Separate scripts that are used for configurations / store them somewhere
+  aside from `~/.local/bin`

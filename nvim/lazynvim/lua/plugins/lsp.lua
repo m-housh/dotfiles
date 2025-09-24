@@ -22,7 +22,6 @@ return {
         "dockerfile",
         "editorconfig",
         "ini",
-        "json",
         "jq",
         "latex",
         "make",
@@ -54,10 +53,10 @@ return {
                 library = vim.api.nvim_get_runtime_file("", true),
               },
               telemetry = {
-                enable = false
-              }
+                enable = false,
+              },
             },
-          }
+          },
         },
         marksman = {},
         sourcekit = {},
@@ -74,9 +73,9 @@ return {
         end,
         sourcekit = function(_, opts)
           opts.cmd = {
-            vim.trim(vim.fn.system("xcrun -f sourcekit-lsp")) or nil
+            vim.trim(vim.fn.system("xcrun -f sourcekit-lsp")) or nil,
           }
-        end
+        end,
       },
     },
   },
