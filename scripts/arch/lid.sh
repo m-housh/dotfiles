@@ -1,6 +1,13 @@
 #!/bin/bash
 
-INTERNAL="eDP-1"           # or eDP-1, check with `hyprctl monitors`
+INTERNAL="eDP-1" # check with `hyprctl monitors`
+
+# Check lid event handler with:
+#
+# grep -A5 -i lid /proc/bus/input/devices
+#
+# The event is contained in the H: Handlers=kbd event<N>
+#
 DEVICE="/dev/input/event0" # replace with your lid event device
 
 evtest --grab "$DEVICE" |

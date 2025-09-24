@@ -25,7 +25,6 @@ return {
         "jq",
         "latex",
         "make",
-        "swift",
       },
     },
   },
