@@ -1,171 +1,128 @@
 @define-color foreground #cdd6f4;
 @define-color background rgba(24, 24, 37, 0.7);
+@define-color skyblue #89dceb;
+@define-color blue #89b4fa;
+@define-color red #f38ba8;
+@define-color yellow #f9e2af;
 
 * {
-  font-family: JetBrains Mono;
+  font-family: JetbrainsMono Nerd Font;
   font-size: 15px;
-  border: none;
-  border-radius: 0;
   min-height: 0;
-  margin: 0;
-  padding: 0;
-  box-shadow: none;
-  text-shadow: none;
-  icon-shadow: none;
+  padding-right: 2px;
+  padding-left: 2px;
+  padding-bottom: 0px;
+}
+
+#waybar {
+  background: transparent;
   color: @foreground;
-  background-color: transparent;
+  margin: 0px;
 }
 
-#clock,
-#battery,
-#cpu,
-#memory,
-#disk,
-#temperature,
-#backlight,
-#network,
-#pulseaudio,
-#wireplumber,
-#custom-media,
-#tray,
-#mode,
-#idle_inhibitor,
-#scratchpad,
-#power-profiles-daemon,
-#mpd {
-  min-width: 12px;
-  min-height: 25px;
-  margin: 0 7.5px;
-}
-
-.modules-left {
-  padding: 4px;
-  margin: 2px 8px;
-  background-color: @background;
-  border-radius: 10;
-}
-
-.modules-right {
-  margin: 0 2px;
-}
-
-#clock {
-  background-color: @background;
-  margin: 2px 8px;
-  border-radius: 10;
-  padding: 0 8px;
+#workspaces {
+  border-radius: 10px;
+  background: @background;
+  margin-right: 5px;
+  margin-left: 1rem;
 }
 
 #workspaces button {
-  padding: 0 5px;
+  color: @foreground;
+  border-radius: 5px;
+  padding: 0.4rem;
 }
 
-#battery {
-  /* background-color: #ffffff; */
-  /* color: #000000; */
-  margin-right: 10px;
+#workspaces button.active {
+  color: @skyblue;
+  border-radius: 5px;
 }
 
-#battery.charging,
-#battery.plugged {
-  color: #ffffff;
-  background-color: #26a65b;
+#workspaces button:hover {
+  color: #85c1dc;
+  border-radius: 5px;
 }
 
-@keyframes blink {
-  to {
-    background-color: #ffffff;
-    color: #000000;
-  }
-}
-
-/* Using steps() instead of linear as a timing function to limit cpu usage */
-#battery.critical:not(.charging) {
-  background-color: #f53c3c;
-  color: #ffffff;
-  animation-name: blink;
-  animation-duration: 0.5s;
-  animation-timing-function: steps(12);
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-}
-
+#custom-music,
+#tray,
+#backlight,
+#clock,
+#battery,
+#pulseaudio,
+#network,
+#cpu,
+#memory,
+#custom-lock,
 #custom-power {
-  font-size: 23px;
+  background-color: @background;
+  padding: 0.5rem 1rem;
+  margin: 5px 0;
+  color: @foreground;
+  /* border-radius: 0px 5px 5px 0px; */
+}
+
+#clock {
+  color: @foreground;
+  border-radius: 5px;
+  margin-right: 1rem;
+  font-weight: 900;
 }
 
 #pulseaudio {
-  /* background-color: #f1c40f; */
-  /* color: #000000; */
+  color: @red;
+  border-radius: 10px 0px 0px 10px;
+  margin-left: 1rem;
 }
 
-#pulseaudio.muted {
-  background-color: #90b1b1;
-  color: #2a5c45;
+#tray {
+  color: @blue;
+  border-radius: 0px 10px 10px 0px;
+  margin-right: 1rem;
 }
 
-#wireplumber {
-  background-color: #fff0f5;
-  color: #000000;
+#cpu {
+  border-radius: 10px 0px 0px 10px;
 }
 
-#wireplumber.muted {
-  background-color: #f53c3c;
+#memory {
+  margin-right: 1rem;
+  border-radius: 0px 10px 10px 0px;
 }
 
-#custom-media {
-  background-color: #66cc99;
-  color: #2a5c45;
-  min-width: 100px;
+#battery {
+  border-radius: 10px 0px 0px 10px;
+  color: #a6d189;
 }
 
-/* #tray { */
-/*   background-color: red; */
-/* } */
-
-#tray > .passive {
-  -gtk-icon-effect: dim;
+#battery.charging {
+  color: #a6d189;
 }
 
-#tray > .needs-attention {
-  -gtk-icon-effect: highlight;
-  background-color: #eb4d4b;
+#battery.warning:not(.charging) {
+  color: #e78284;
 }
 
-#mpd {
-  background-color: #66cc99;
-  color: #2a5c45;
+#backlight {
+  color: #e5c890;
 }
 
-#mpd.disconnected {
-  background-color: #f53c3c;
+#custom-music {
+  color: #ca9ee6;
+  border-radius: 5px;
 }
 
-#mpd.stopped {
-  background-color: #90b1b1;
+#network {
+  margin-right: 1rem;
+  border-radius: 0px 10px 10px 0px;
 }
 
-#mpd.paused {
-  background-color: #51a37a;
+#custom-lock {
+  border-radius: 10px;
+  color: @yellow;
 }
 
-#privacy {
-  padding: 0;
-}
-
-#privacy-item {
-  padding: 0 5px;
-  color: white;
-}
-
-#privacy-item.screenshare {
-  /* background-color: #cf5700; */
-}
-
-#privacy-item.audio-in {
-  /* background-color: #1ca000; */
-}
-
-#privacy-item.audio-out {
-  /* background-color: #0069d4; */
+#custom-power {
+  margin-right: 1rem;
+  border-radius: 0px 5px 5px 0px;
+  color: #e78284;
 }
