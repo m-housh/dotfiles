@@ -10,5 +10,6 @@
 
 # Arch Todos
 
-- Separate scripts that are used for configurations / store them somewhere
-  aside from `~/.local/bin`
+- Separate scripts that are used for configurations / store them somewhere aside
+  from `~/.local/bin`
+- Remove system-d stuff (don't think it's needed).

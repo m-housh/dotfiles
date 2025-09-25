@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Moves all workspaces to the passed in monitor id, which can be useful when
+# connecting or disconnecting from a monitor.
+
+MONITOR=$1
+
+if [ ! $# = 1 ]; then
+  echo "Usage: mv-all-workspaces-to-monitor <monitor-id>"
+  exit 1
+fi
+
+hyprctl workspaces -j |
+  jq '.[] | select(.monitorID != "$MONITOR") | .id' |
+  xargs -I{} hyprctl dispatch moveworkspacetomonitor {} "$MONITOR" >/dev/null 2>&1

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+systemctl --user enable --now hyprpaper.service
+systemctl --user enable --now hypridle.service
+

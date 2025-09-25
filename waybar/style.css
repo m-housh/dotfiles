@@ -4,6 +4,8 @@
 @define-color blue #89b4fa;
 @define-color red #f38ba8;
 @define-color yellow #f9e2af;
+@define-color peach #fab387;
+@define-color lavender #b4befe;
 
 * {
   font-family: JetbrainsMono Nerd Font;
@@ -81,10 +83,12 @@
 }
 
 #cpu {
+  color: @lavender;
   border-radius: 10px 0px 0px 10px;
 }
 
 #memory {
+  color: @peach;
   margin-right: 1rem;
   border-radius: 0px 10px 10px 0px;
 }
