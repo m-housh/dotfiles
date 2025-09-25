@@ -52,7 +52,11 @@ yay -S --noconfirm \
   ttf-inconsolata-nerd
 
 # Application launcher
-yay -S --noconfirm walker elephant
+yay -S --noconfirm walker \
+  elephant \
+  elephant-calc \
+  elephant-symbols \
+  elephant-websearch
 
 # Bluetooth management
 yay -S --noconfirm blueberry-wayland
@@ -75,3 +79,6 @@ yay -S --noconfirm yazi nautilus
 
 # Email
 yay -S --noconfirm thunderbird
+
+# Text expander
+yay -S --noconfirm espanso-wayland-git
