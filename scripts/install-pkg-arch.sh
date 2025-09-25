@@ -2,10 +2,14 @@
 
 # Installs required packages / applications when setting up a new
 # arch linux with hyprland machine.
-#
-# TODO: I started this after a machine was already setup, so this may
-#       need to be revisited to ensure packages installed before this
-#       script started are included.
+
+if ! command -v yay >/dev/null 2>&1; then
+  sudo pacman -S --noconfirm --needed git base-devel
+  git clone https://aur.archlinux.org/yay.git ~/yay
+  cd ~/yay
+  makepkg -si
+  rm -rf ~/yay
+fi
 
 # Basics
 yay -S --noconfirm --needed \
