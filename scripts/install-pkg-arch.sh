@@ -32,10 +32,11 @@ yay -S --noconfirm --needed \
   nodejs \
   npm \
   nwg-look \
-  pcsc-controls \
+  pcsc-tools \
   starship \
   swaync \
   tmux \
+  yubikey-manger \
   zoxide \
   zsh
 
@@ -84,3 +85,6 @@ yay -S --noconfirm thunderbird
 
 # Text expander
 yay -S --noconfirm espanso-wayland-git
+
+# Yubikey support
+sudo sysetmctl enable --now pscsd.service
