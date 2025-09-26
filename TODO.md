@@ -13,3 +13,6 @@
 - Separate scripts that are used for configurations / store them somewhere aside
   from `~/.local/bin`
 - Remove system-d stuff (don't think it's needed).
+- Clipse didn't work when installed on a new machine when I try to use the
+  config in the dotfiles, but works if I use the default config. Need to explore
+  why.

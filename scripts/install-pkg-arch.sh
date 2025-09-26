@@ -28,6 +28,7 @@ yay -S --noconfirm --needed \
   hyprpaper \
   hyrpidle \
   hyprlock \
+  jq \
   neovim \
   nodejs \
   npm \
@@ -35,6 +36,7 @@ yay -S --noconfirm --needed \
   pcsc-tools \
   starship \
   swaync \
+  tree-sitter-cli \
   tmux \
   yubikey-manger \
   zoxide \
