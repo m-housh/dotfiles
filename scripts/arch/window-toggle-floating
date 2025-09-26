@@ -4,7 +4,7 @@
 
 # The percentage of the screen size for the floating window.
 WIDTH_PERCENT=80
-HEIGHT_PERCENT=80
+HEIGHT_PERCENT=40
 
 floating=$(hyprctl activewindow -j | jq '.floating')
 
@@ -14,11 +14,14 @@ else
   monitor=$(hyprctl monitors -j | jq '.[] | select(.focused == true)')
   mw=$(echo "$monitor" | jq '.width')
   mh=$(echo "$monitor" | jq '.height')
+  ms=$(echo "$monitor" | jq '.scale')
 
-  neww=$((mw * $WIDTH_PERCENT / 100))
-  newh=$((mh * $HEIGHT_PERCENT / 100))
+  echo "scale: $ms"
 
-  hyprctl dispatch togglefloating \
-    && hyprctl dispatch resizeactive exact $neww $newh \
-    && hyprctl dispatch centerwindow 
+  neww=$(echo "scale=6; (($mw / $ms) * $WIDTH_PERCENT / 100)" | bc)
+  newh=$(echo "scale=6; (($mh / $ms) * $HEIGHT_PERCENT / 100)" | bc)
+
+  hyprctl dispatch togglefloating &&
+    hyprctl dispatch resizeactive exact $neww $newh &&
+    hyprctl dispatch centerwindow
 fi

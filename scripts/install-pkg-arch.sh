@@ -16,6 +16,7 @@ yay -S --noconfirm --needed \
   asahi-desktop-meta \
   base-devel \
   bat \
+  bc \
   btop \
   catppuccin-gtk-theme-mocha \
   eza \
@@ -28,6 +29,8 @@ yay -S --noconfirm --needed \
   hyrpidle \
   hyprlock \
   neovim \
+  nodejs \
+  npm \
   nwg-look \
   pcsc-controls \
   starship \
@@ -55,8 +58,7 @@ yay -S --noconfirm \
 yay -S --noconfirm walker \
   elephant \
   elephant-calc \
-  elephant-symbols \
-  elephant-websearch
+  elephant-symbols
 
 # Bluetooth management
 yay -S --noconfirm blueberry-wayland

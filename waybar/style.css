@@ -11,9 +11,7 @@
   font-family: JetbrainsMono Nerd Font;
   font-size: 15px;
   min-height: 0;
-  padding-right: 2px;
-  padding-left: 2px;
-  padding-bottom: 0px;
+  margin: 0px;
 }
 
 #waybar {
@@ -23,16 +21,16 @@
 }
 
 #workspaces {
-  border-radius: 10px;
   background: @background;
-  margin-right: 5px;
-  margin-left: 1rem;
+  border-radius: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-left: 0.4rem;
 }
 
 #workspaces button {
   color: @foreground;
   border-radius: 5px;
-  padding: 0.4rem;
 }
 
 #workspaces button.active {
@@ -123,6 +121,7 @@
 #custom-lock {
   border-radius: 10px;
   color: @yellow;
+  margin-right: 0.4rem;
 }
 
 #custom-power {
