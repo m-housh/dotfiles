@@ -63,3 +63,13 @@ createCmd("TextYankPost", {
     vim.highlight.on_yank()
   end,
 })
+
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+  pattern = "*",
+  callback = function(args)
+    local first_line = vim.api.nvim_buf_get_lines(args.buf, 0, 1, false)[1] or ""
+    if first_line:match("^#!.*zsh") then
+      vim.bo[args.buf].filetype = "bash"
+    end
+  end,
+})

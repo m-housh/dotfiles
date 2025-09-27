@@ -1,0 +1,5 @@
+#!/bin/zsh
+
+wl-copy --clear && \
+  rm ~/.local/share/clipse/clipboard_history.json >/dev/null 2>&1
+

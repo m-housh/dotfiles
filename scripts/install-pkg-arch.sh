@@ -23,6 +23,7 @@ yay -S --noconfirm --needed \
   fastfetch \
   fzf \
   git \
+  git-lfs \
   github-cli \
   gum \
   hyprpaper \
