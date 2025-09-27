@@ -1,7 +1,7 @@
 {
   "allowDuplicates": false,
   "historyFile": "$XDG_DATA_HOME/clipse/clipboard_history.json",
-  "maxHistory": 100,
+  "maxHistory": 50,
   "logFile": "$XDG_DATA_HOME/clipse/clipse.log",
   "themeFile": "custom_theme.json",
   "tempDir": "$XDG_DATA_HOME/clipse/tmp_files",
@@ -33,4 +33,3 @@
     "heightCut": 2
   }
 }
-

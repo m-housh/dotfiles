@@ -23,7 +23,7 @@ quit-after-last-window-closed-delay = 5m
 # macos-titlebar-proxy-icon = hidden
 # macos-icon = custom-style
 
-keybind = super+shift+t=toggle_quick_terminal
+keybind = ctrl+shift+t=toggle_quick_terminal
 
 # Splits
 keybind = super+j=goto_split:down

@@ -9,7 +9,7 @@ createCmd("BufEnter", {
     -- HACK: Set filetype to markdown for '.md' files.
     -- Not sure why it doesn't detect these as markdown files, but this fixes the issue.
     vim.cmd.setlocal("filetype=markdown")
-    vim.cmd.setlocal("textwidth=80")
+    vim.cmd.setlocal("textwidth=120")
     vim.cmd.setlocal("spell spelllang=en_us")
   end,
 })
@@ -64,6 +64,7 @@ createCmd("TextYankPost", {
   end,
 })
 
+-- Force zsh scripts to use bash syntax hyighlighting.
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = "*",
   callback = function(args)

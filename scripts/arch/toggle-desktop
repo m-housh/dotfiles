@@ -13,7 +13,7 @@ CUR_WS=$(hyprctl -j activeworkspace | jq -r '.id')
 if [[ -f "$STATE_FILE" ]]; then
   # Restore windows
   ORIG_WS=$(cat "$STATE_FILE")
-  for win in $(hyprctl -j clients | jq -r '.[] | select(.workspace.name | contains("$HIDE_WS")) | .address'); do
+  for win in $(hyprctl -j clients | jq -r ".[] | select(.workspace.name | contains(\"$HIDE_WS\")) | .address"); do
     hyprctl dispatch movetoworkspace "$ORIG_WS,address:$win"
     hyprctl dispatch workspace "$ORIG_WS"
   done
