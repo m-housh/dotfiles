@@ -6,6 +6,7 @@
 @define-color yellow #f9e2af;
 @define-color peach #fab387;
 @define-color maroon #eba0ac;
+@define-color green #a6e3a1;
 
 * {
   font-family: JetbrainsMono Nerd Font;
@@ -93,15 +94,15 @@
 
 #battery {
   border-radius: 10px 0px 0px 10px;
-  color: #a6d189;
-}
-
-#battery.charging {
-  color: #a6d189;
+  color: @green;
 }
 
 #battery.warning:not(.charging) {
-  color: #e78284;
+  color: @yellow;
+}
+
+#battery.critical:not(.charging) {
+  color: @red;
 }
 
 #backlight {

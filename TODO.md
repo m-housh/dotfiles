@@ -12,7 +12,18 @@
 
 - Separate scripts that are used for configurations / store them somewhere aside
   from `~/.local/bin`
-- Remove system-d stuff (don't think it's needed).
 - Clipse didn't work when installed on a new machine when I try to use the
   config in the dotfiles, but works if I use the default config. Need to explore
-  why.
+  why (current thoughts are it has to do with creating the
+  clipboard_history.json file and not letting clipse do it automatically).
+- Set sddm login theme, currently it doesn't allow me to echo values into the
+  /etc/sddm.conf file, also need to edit the theme in
+  `/usr/share/sddm/themes/catppuccin-mocha/theme.conf` to use the wallpaper as a
+  background image.
+  - Note: The background needs to be copied into the theme's background
+    directory. It didn't seem to work when I just set the path to somewhere in
+    my home directory.
+- Add script to generate yubikey authentication using the pam-u2f module
+  [documentation](https://wiki.archlinux.org/title/Universal_2nd_Factor).
+  - Note: that the directory this is stored in MUST be ~/.config/Yubico (I tried
+    using ~/.config/yubico and it didn't work)

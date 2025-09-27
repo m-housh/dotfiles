@@ -13,6 +13,7 @@ ln -sfv ~/.dotfiles/systemd ~/.config
 ln -sfv ~/.dotfiles/tree-sitter ~/.config
 ln -sfv ~/.dotfiles/walker ~/.config
 ln -sfv ~/.dotfiles/waybar ~/.config
+ln -sfv ~/.dotfiles/yubico ~/.config
 
 # Espanso
 espanso service stop

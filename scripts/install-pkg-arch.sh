@@ -19,6 +19,7 @@ yay -S --noconfirm --needed \
   bc \
   btop \
   catppuccin-gtk-theme-mocha \
+  sddm-theme-catppuccin \
   eza \
   fastfetch \
   fzf \
@@ -34,6 +35,7 @@ yay -S --noconfirm --needed \
   nodejs \
   npm \
   nwg-look \
+  pam-u2f \
   pcsc-tools \
   starship \
   swaync \
