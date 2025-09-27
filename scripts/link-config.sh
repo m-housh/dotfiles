@@ -1,5 +1,22 @@
 #!/bin/bash
 
+function copy() {
+  local item=$1
+  local dest=${2:-~/.config}
+
+  if [ -d "$item" ]; then
+    cp -Rfv "$item" "$dest"
+  else
+    cp -fv "$item" "$dest"
+  fi
+}
+
+gpgs=(
+  "gpg/gpg.conf"
+  "gpg/gpg-agent.conf"
+  "gpg/scdaemon.conf"
+)
+
 ln -sfv ~/.dotfiles/clipse ~/.config
 ln -sfv ~/.dotfiles/eza ~/.config
 ln -sfv ~/.dotfiles/ghostty ~/.config
