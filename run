@@ -7,8 +7,6 @@
 # or all scripts in the runs directory.
 #
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-
 if [ -z "$DEV_ENV" ]; then
   echo "env var DEV_ENV needs to be present"
   exit 1
@@ -68,7 +66,7 @@ run() {
 
 log "RUN: env: $env -- grep: $grep"
 
-runs_dir=$(find $script_dir/runs -mindepth 1 -maxdepth 1 -executable)
+runs_dir=$(find $DEV_ENV/runs -mindepth 1 -maxdepth 1 -executable)
 
 for s in $runs_dir; do
   if basename $s | grep -vq "$grep"; then

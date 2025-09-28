@@ -2,8 +2,6 @@
 
 # Generates a new run file or webapp file.
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-
 if [ -z "$DEV_ENV" ]; then
   echo "env var DEV_ENV needs to be present"
   exit 1
@@ -29,7 +27,7 @@ done
 log() { echo "$1"; }
 
 generate-new-run() {
-  local dest="$script_dir/runs/$file"
+  local dest="$DEV_ENV/runs/$file"
   if [ -f "$dest" ]; then
     log "file exists: $dest"
     exit 1
@@ -45,7 +43,7 @@ generate-new-run() {
 
 generate-new-webapp() {
 
-  local dest="$script_dir/webapps/$file"
+  local dest="$DEV_ENV/env/webapps/$file"
 
   if [[ ! $dest =~ \.json$ ]]; then
     dest="$dest.json"
