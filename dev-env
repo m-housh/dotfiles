@@ -12,6 +12,12 @@ if [ -z "$XDG_CONFIG_HOME" ]; then
   XDG_CONFIG_HOME=$HOME/.config
 fi
 
+if [ -z "$XDG_DATA_HOME" ]; then
+  echo "no xdg data home"
+  echo "using ~/.local/share"
+  XDG_DATA_HOME=$HOME/.local/share
+fi
+
 if [ -z "$DEV_ENV" ]; then
   echo "env var DEV_ENV needs to be present"
   exit 1
@@ -114,7 +120,12 @@ copy $DEV_ENV/env/.tmux.conf $HOME/.tmux.conf
 mkdir $HOME/.gnupg
 copy_files $DEV_ENV/env/.gnupg $HOME/.gnupg
 
+# Wallpapers
+mkdir $HOME/wallpapers
+copy_files $DEV_ENV/assets/wallpapers $HOME/wallpapers
+
 copy $DEV_ENV/dev-env $HOME/.local/scripts/dev-env
 
 systemctl --user daemon-reload
 hyprctl reload
+exec zsh -l

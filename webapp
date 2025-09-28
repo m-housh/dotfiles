@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+
+# Installs or uninstalls webapps based on the spec in the './webapps' directory.
+#
+# This is used when setting up a new machine.
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+if [ -z "$DEV_ENV" ]; then
+  echo "env var DEV_ENV needs to be present"
+  exit 1
+fi
+
+if [ -z "$XDG_DATA_HOME" ]; then
+  echo "no xdg data home"
+  echo "using ~/.local/share"
+  XDG_DATA_HOME=~/.local/share
+fi
+
+grep=""
+dry_run="0"
+uninstall="0"
+
+while [[ $# -gt 0 ]]; do
+  echo "ARG: \"$1\""
+
+  # Handle a --dry or --dry-run argument
+  if [[ "$1" =~ ^--dry ]]; then
+    dry_run="1"
+  # Handle an --uninstall argument
+  elif [[ "$1" =~ ^--u ]]; then
+    uninstall="1"
+  # Handle an --install argument (default)
+  elif [[ ! "$1" =~ ^--i ]]; then
+    grep="$1"
+  fi
+  shift
+done
+
+log() {
+  if [[ $dry_run == "1" ]]; then
+    echo "[DRY_RUN]: $1"
+  else
+    echo "$1"
+  fi
+}
+
+install() {
+  local file=$(cat $1)
+  local script="${script_dir}/env/.local/scripts/install-webapp"
+
+  if [[ ! -x $script ]]; then
+    log "Failed to find install web app script."
+    exit 1
+  fi
+
+  # Install local icons if needed
+  mkdir -p $XDG_DATA_HOME/applications/icons
+  for i in $(find $script_dir/assets/icons -mindepth 1 -maxdepth 1 -type f); do
+    if [[ ! -f $XDG_DATA_HOME/applications/icons/$i ] && [ $dry_run == "0" ]]; then
+      cp $i $XDG_DATA_HOME/applications/icons
+    fi
+  done
+
+  log "Installing webapp from spec: $1"
+
+  if [[ $dry_run == "0" ]]; then
+    $script \
+      --name $(echo $file | jq -r '.name') \
+      --url $(echo $file | jq -r '.url') \
+      --icon $(echo $file | jq -r '.icon') \
+      --exec $(echo $file | jq -r '.exec') \
+      --mime $(echo $file | jq -r '.mime')
+  fi
+}
+
+uninstall() {
+  local file=$(cat $1)
+  local script="${script_dir}/env/.local/scripts/uninstall-webapp"
+
+  if [[ ! -x $script ]]; then
+    log "Failed to find uninstall web app script."
+    exit 1
+  fi
+
+  log "Uninstalling webapp from spec: $1"
+
+  if [[ $dry_run == "0" ]]; then
+    $script $(echo $file | jq -r '.name')
+  fi
+}
+
+############################## MAIN ##############################
+
+log "WEBAPP: -- grep: $grep"
+
+apps_dir=$(find $script_dir/webapps -mindepth 1 -maxdepth 1 -type f)
+
+for s in $apps_dir; do
+  if basename $s | grep -vq "$grep"; then
+    log "grep \"$grep\" filtered out $s"
+    continue
+  fi
+
+  if [[ $uninstall == "1" ]]; then
+    uninstall $s
+  else
+    install $s
+  fi
+done

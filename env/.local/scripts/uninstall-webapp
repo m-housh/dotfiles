@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# Uninstall's a web app, including it's icon.
+
+app_dir="$HOME/.local/share/applications"
+file="$1"
+
+if [[ -z "$file" ]]; then
+  echo -e "Must supplye a web app name to uninstall.\n\n"
+  echo "Usage: uninstall-webapp <name | path>"
+  exit 1
+fi
+
+file="$(basename $file)"
+if [[ ! $file =~ \.desktop$ ]]; then
+  file="$file.desktop"
+fi
+
+desktop="$app_dir/$file"
+
+if [[ ! -f "$desktop" ]]; then
+  echo "No webapp found @: $desktop"
+  exit 1
+fi
+
+icon=$(cat $desktop | grep "Icon")
+icon="${icon/#Icon=/}"
+
+echo "Removing Application: $desktop"
+rm -rf "$desktop"
+
+echo "Removing Icon: $icon"
+rm -rf "$icon" >/dev/null 2>&1
