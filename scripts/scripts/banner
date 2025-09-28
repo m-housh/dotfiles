@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -e
-
-message="${1:-m-housh}"
-font="${2:-puffy}"
-
-echo "${message}" | figlet -c -f "${font}"

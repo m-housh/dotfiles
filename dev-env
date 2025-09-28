@@ -31,11 +31,13 @@ log() {
 
 log "env: $DEV_ENV"
 
+# Removes a destination directory and copies all files to the destination.
 update_files() {
   log "copying over files from: $1"
   pushd $1 &>/dev/null
   (
-    configs=$(find . -mindepth 1 -maxdepth 1 -type d)
+    # Copy everything except systemd folder, it needs treated differently.
+    configs=$(find . -mindepth 1 -maxdepth 1 -name "systemd" -prune -o -type d -print)
     for c in $configs; do
       directory=${2%/}/${c#./}
       log "    removing: rm -rf $directory"
@@ -54,6 +56,7 @@ update_files() {
   popd &>/dev/null
 }
 
+# Removes a destination file and copies a single file to the destination.
 copy() {
   log "removing: $2"
   if [[ $dry_run == "0" ]]; then
@@ -65,16 +68,27 @@ copy() {
   fi
 }
 
+# Copy all files from a directory into another directory.
+copy_files() {
+  for f in $(find $1 -mindepth 1 -maxdepth 1 -type f); do
+    copy $f "$2/$(basename $f)"
+  done
+}
+
 update_files $DEV_ENV/env/.config $XDG_CONFIG_HOME
 update_files $DEV_ENV/env/.local $HOME/.local
-#
+
+# Systemd.
+mkdir -p $XDG_CONFIG_HOME/systemd/user
+copy_files $DEV_ENV/env/.config/systemd/user $XDG_CONFIG_HOME/systemd/user
+
 # copy $DEV_ENV/tmux-sessionizer/tmux-sessionizer $HOME/.local/scripts/tmux-sessionizer
 copy $DEV_ENV/env/.zshenv $HOME/.zshenv
 copy $DEV_ENV/env/.tmux.conf $HOME/.tmux.conf
 
+# GPG
 mkdir $HOME/.gnupg
-rm $HOME/.gnupg/gpg.conf >/dev/null 1>&2 && copy $DEV_ENV/env/.gnupg/gpg.conf $HOME/.gnupg/gpg.conf
-rm $HOME/.gnupg/gpg-agent.conf >/dev/null 1>&2 && copy $DEV_ENV/env/.gnupg/gpg-agent.conf $HOME/.gnupg/gpg-agent.conf
-rm $HOME/.gnupg/scdaemon.conf >/dev/null 1>&2 && copy $DEV_ENV/env/.gnupg/scdaemon.conf $HOME/.gnupg/scdaemon.conf
+copy_files $DEV_ENV/env/.gnupg $HOME/.gnupg
 
+systemctl --user daemon-reload
 hyprctl reload

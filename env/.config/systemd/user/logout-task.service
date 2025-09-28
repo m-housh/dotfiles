@@ -5,7 +5,7 @@ Before=exit.target
 
 [Service]
 Type=oneshot
-ExecStart=%h/.local/bin/clear-clipboard-history
+ExecStart=%h/.local/scripts/clear-clipboard-history
 
 [Install]
 WantedBy=exit.target

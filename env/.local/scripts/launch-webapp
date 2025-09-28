@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Adapted from https://github.com/basecamp/omarchy/tree/master?tab=readme-ov-file
+#
+browser="chromium.desktop"
+
+exec setsid uwsm app -- $(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1) --app="$1" "${@:2}"

@@ -1,9 +1,0 @@
-#!/bin/sh
-
-if [ "$(uname -n)" = "Michaels-Mac-mini.local" ]; then
-  echo "Removing derived data folders"
-  rm -r /Volumes/Bucket/Library/Developer/Xcode/DerivedData
-else
-  echo "Removing derived data folders"
-  rm -r ~/Library/Developer/Xcode/DerivedData/*
-fi
