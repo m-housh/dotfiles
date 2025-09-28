@@ -1,5 +1,0 @@
-#!/bin/bash
-
-hyprctl clients -j | \
-  jq '.[] | .address' | \
-  xargs -I{} hyprctl dispatch closewindow address:{}

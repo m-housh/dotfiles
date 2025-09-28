@@ -1,8 +1,0 @@
-#!/bin/bash
-
-#wl-copy --clear >/dev/null 2>&1 && \
-if [ -n "$WAYLAND_DISPLAY" ]; then
-  wl-copy --clear
-fi
-
-rm ~/.local/share/clipse/clipboard_history.json >/dev/null 2>&1
