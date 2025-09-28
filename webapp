@@ -4,8 +4,6 @@
 #
 # This is used when setting up a new machine.
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-
 if [ -z "$DEV_ENV" ]; then
   echo "env var DEV_ENV needs to be present"
   exit 1
@@ -46,8 +44,8 @@ log() {
 }
 
 install() {
-  local file=$1
-  local script="${script_dir}/env/.local/scripts/install-webapp"
+  local file=$DEV_ENV/env/webapps/$(basename $1)
+  local script="$DEV_ENV/env/.local/scripts/install-webapp"
 
   if [[ ! -x $script ]]; then
     log "Failed to find install web app script."
@@ -56,13 +54,13 @@ install() {
 
   # Install local icons if needed
   mkdir -p $XDG_DATA_HOME/applications/icons
-  for i in $(find $script_dir/assets/icons -mindepth 1 -maxdepth 1 -type f); do
+  for i in $(find $DEV_ENV/env/icons -mindepth 1 -maxdepth 1 -type f); do
     if [[ ! -f $XDG_DATA_HOME/applications/icons/$i ]] && [[ $dry_run == "0" ]]; then
       cp $i $XDG_DATA_HOME/applications/icons
     fi
   done
 
-  log "Installing webapp from spec: $1"
+  log "Installing webapp from spec: $file"
 
   if [[ $dry_run == "0" ]]; then
     $script --file $file
@@ -70,17 +68,18 @@ install() {
 }
 
 uninstall() {
-  local script="${script_dir}/env/.local/scripts/uninstall-webapp"
+  local file=$DEV_ENV/env/webapps/$(basename $1)
+  local script="$DEV_ENV/env/.local/scripts/uninstall-webapp"
 
   if [[ ! -x $script ]]; then
     log "Failed to find uninstall web app script."
     exit 1
   fi
 
-  log "Uninstalling webapp from spec: $1"
+  log "Uninstalling webapp from spec: $file"
 
   if [[ $dry_run == "0" ]]; then
-    $script --file $1
+    $script --file $file
   fi
 }
 
@@ -88,7 +87,7 @@ uninstall() {
 
 log "WEBAPP: -- grep: $grep"
 
-apps_dir=$(find $script_dir/webapps -mindepth 1 -maxdepth 1 -type f)
+apps_dir=$(find $DEV_ENV/env/webapps -mindepth 1 -maxdepth 1 -type f)
 
 for s in $apps_dir; do
   if basename $s | grep -vq "$grep"; then

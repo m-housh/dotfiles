@@ -122,7 +122,7 @@ copy_files $DEV_ENV/env/.gnupg $HOME/.gnupg
 
 # Wallpapers
 mkdir $HOME/wallpapers
-copy_files $DEV_ENV/assets/wallpapers $HOME/wallpapers
+copy_files $DEV_ENV/env/wallpapers $HOME/wallpapers
 
 copy $DEV_ENV/dev-env $HOME/.local/scripts/dev-env
 
