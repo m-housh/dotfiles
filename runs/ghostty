@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Flags get passed in from the run script, but if
+# ran directly the default is going to be to install.
+
+yay "${1:-"-S --noconfirm --needed"}" ghostty

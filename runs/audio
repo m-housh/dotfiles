@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+yay ${1:-"-S --noconfirm"} pipewire \
+  pavucontrol \
+  wireplumber \
+  pipewire-jack \
+  pipewire-pulse \
+  blueberry-wayland
