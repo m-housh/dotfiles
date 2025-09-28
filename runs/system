@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+yay ${1:-"-S --noconfirm"} catppuccin-gtk-theme-mocha \
+  sddm-theme-catppuccin \
+  nwg-look \
+  wl-clipboard \
+  pam-u2f \
+  pcsc-tools \
+  swaync \
+  yubikey-manger

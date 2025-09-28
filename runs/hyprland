@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+yay ${1:-"-S --noconfirm"} hyprland hyprpaper hyrpidle hyprlock \
+  bc # used for some scripts.

@@ -8,35 +8,21 @@ if ! command -v yay >/dev/null 2>&1; then
   rm -rf ~/yay
 fi
 
-# Basics
+# Packages
 yay -S --noconfirm --needed \
-  asahi-desktop-meta \
-  bat \
-  bc \
-  catppuccin-gtk-theme-mocha \
-  sddm-theme-catppuccin \
   eza \
   fastfetch \
   fzf \
   git-lfs \
   gum \
-  hyprpaper \
-  hyrpidle \
-  hyprlock \
   jq \
   neovim \
   nodejs \
   npm \
-  nwg-look \
-  pam-u2f \
-  pcsc-tools \
   starship \
-  swaync \
   tldr \
   tmux \
   tree-sitter-cli \
-  wl-clipboard \
-  yubikey-manger \
   zoxide \
   zsh
 
