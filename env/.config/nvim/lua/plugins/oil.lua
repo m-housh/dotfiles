@@ -15,13 +15,15 @@ return {
         desc = "Open the entry in a vertical split",
       },
       view_options = {
+        show_hidden = true,
         is_hidden_file = function(name, _) -- second arg is bufnr, but not currently used.
           -- Don't show .DS_Store in output.
-          local is_ds_store = name ~= ".DS_Store"
-          return not is_ds_store
+          -- local is_ds_store = name ~= ".DS_Store"
+          -- return not is_ds_store
+          return false
         end,
       },
-    }
+    },
   },
   keys = {
     -- Show the parent directory in current window.
@@ -29,8 +31,10 @@ return {
     -- Open parent directory in floating window.
     {
       "<space>-",
-      function() require("oil").toggle_float() end,
-      desc = "Open parent directory in floating window."
+      function()
+        require("oil").toggle_float()
+      end,
+      desc = "Open parent directory in floating window.",
     },
   },
 }
