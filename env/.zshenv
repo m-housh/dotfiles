@@ -27,31 +27,14 @@ export GITUSER="m-housh"
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
 # Directories
-export ARCHIVE="/Volumes/Archive"
-export BUCKET="/Volumes/Bucket"
-export REPOS="/Volumes/Bucket/Repos"
-export DRIVE="/Volumes/Personal-Drive"
-
-export ANSIBLE_LOCAL="$REPOS/ansible"
-export ANSIBLE_GEN_DIR="$ANSIBLE_LOCAL/ansible-gen-playbook"
-export ANSIBLE_MACOS_PLAYBOOK_DIR="$HOME/ansible-macos-playbook"
-export CONSULTS="$DRIVE/Consults"
 export DOTFILES="$HOME/.dotfiles"
+export DEV_ENV="$HOME/.dotfiles"
 export DOCUMENTS="$HOME/Documents"
 export DOWNLOADS="$HOME/Downloads"
-export GHREPOS="$REPOS/github.com"
-export LOCAL_REPOS="$REPOS/local"
 export LOCAL_ENV="$XDG_DATA_HOME/zsh/env.zsh"
 export MYZSHRC="$ZDOTDIR/.zshrc"
-export NAP_CONFIG="$HOME/.config/nap/config.yaml"
-export PDFS="$HOME/Library/Mobile Documents/com~apple~Preview/Documents"
-export PROPOSALS="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work/Proposals"
-export SCREENSHOTS="$BUCKET/Pictures/Screenshots"
 export SCRIPTS="$HOME/.local/scripts"
-export SITES="$GHREPOS/sites"
 export SKELETONDIR="$DOTFILES/skeleton"
-export WORK="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Work"
-export ZETDIR="$GHREPOS/zets"
 
 # NPM
 export NPM_CONFIG_CACHE="$XDG_DATA_HOME/npm"
@@ -80,16 +63,11 @@ export PSQL_HISTORY="$XDG_DATA_HOME/psql_history"
 # Hashicorp/Vault
 export VAULT_ADDR="https://vault.housh.dev"
 
-# Ansible
-export ANSIBLE_HOME="$XDG_CONFIG_HOME/ansible"
-export ANSIBLE_VAULT_PASSWORD_FILE="$SCRIPTS/vault-gopass-client"
-export DEFAULT_VAULT_PASSWORD_FILE="$SCRIPTS/vault-gopass-client"
-
 # Rust
 export CARGO_HOME="$XDG_DATA_HOME/cargo"
 
 # Tmux-Sessionator path.
-export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$LOCAL_REPOS:$REPOS:$ANSIBLE_LOCAL:$GHREPOS:$HVACIOTREPOS"
+export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS"
 
 # Password-store
 export PASSWORD_STORE_DIR="$XDG_DATA_HOME/gopass/stores/root"
