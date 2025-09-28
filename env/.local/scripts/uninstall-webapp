@@ -3,7 +3,18 @@
 # Uninstall's a web app, including it's icon.
 
 app_dir="$HOME/.local/share/applications"
-file="$1"
+spec=""
+file=""
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 =~ "-f" ]] || [[ $1 =~ "--file" ]]; then
+    shift
+    file=$(jq -r '.name' $1)
+  else
+    file=$1
+  fi
+  shift
+done
 
 if [[ -z "$file" ]]; then
   echo -e "Must supplye a web app name to uninstall.\n\n"

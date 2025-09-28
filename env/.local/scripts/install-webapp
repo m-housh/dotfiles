@@ -8,7 +8,7 @@ Generates a '.desktop' file for a web application, so that it
 can act as a stand alone application and launched from an application
 launcher.
 
-USAGE: install-webapp [-n <name>] [-u <url>] [-i <icon>] [-e <exec-cmd>] [-m <mime-types>] [-h] [args...]
+USAGE: install-webapp [-n <name>] [-u <url>] [-i <icon>] [-e <exec-cmd>] [-m <mime-types>] [-f <file>] [-h] [args...]
 
 OPTIONS:
   -n | --name:        The name of the application.
@@ -16,6 +16,7 @@ OPTIONS:
   -i | --icon:        The icon for the application.
   -e | --exec:        Custom execution command (optional).
   -m | --mime-types:  MIME-types for the application (optional).
+  -f | --file:        Install from a spec in a json file.
   -h | --help:        Show usage information.
 
 EXAMPLES:
@@ -32,6 +33,10 @@ Calling the app with named arguments:
       --url "https://awesome.com" \\
       --icon "https://awesome.com/assets/icon.png"
 
+Using a json file as input:
+
+  $ install-webapp --file myapp.json
+
 It is also possible to use only positional arguments with out their key. They can be passed in the order as 
 they're listed.
 
@@ -47,6 +52,16 @@ can either be the full path to the file or a file name of an icon located in '~/
 Interactive sessions do not give the option to use a custom execution command or supply the
 MIME types, which are less frequently used options.
 
+If using a json spec file, all keys are the same as their option name, except for mime-types use 'mime_types' as the
+key in the json object. Although the 'exec' and 'mime_types' are not required in the spec file. An common json spec
+file example would look like:
+
+{
+  "name": "My Awesome App",
+  "url": "https://awesome.com",
+  "icon: "https://awesome.com/assets/icon.png"
+}
+
 EOF
 }
 
@@ -56,6 +71,7 @@ declare -a icon_ref
 declare -a custom_exec # Optional custom exec command
 declare -a mime_types  # Optional mime types
 declare -a help_flag
+declare -a file_mode
 declare INTERACTIVE_MODE=false
 
 zparseopts -D -F -K -- \
@@ -64,6 +80,7 @@ zparseopts -D -F -K -- \
   {i,-icon}:=icon_ref \
   {e,-exec}:=custom_exec \
   {m,-mime-types}:=mime_types \
+  {f,-file}:=file_mode \
   {h,-help}=help_flag
 
 [ ${#help_flag[@]} -gt 0 ] && usage && exit 0
@@ -74,6 +91,16 @@ zparseopts -D -F -K -- \
 [ -n "$3" ] && icon_ref+=("$3")
 [ -n "$4" ] && custom_exec+=("$4")
 [ -n "$5" ] && mime_types+=("$5")
+
+# If passed in a json spec file.
+if [[ -n "$file_mode" ]]; then
+  file=$(cat ${file_mode[-1]})
+  app_name+=$(echo $file | jq -r '.name')
+  app_url+=$(echo $file | jq -r '.url')
+  icon_ref+=$(echo $file | jq -r '.icon')
+  custom_exec+=$(echo $file | jq -r '.exec')
+  mime_types+=$(echo $file | jq -r '.mime_types')
+fi
 
 # Check if proper arguments were passed in. Start interactive mode if not.
 if [[ -z "$app_name[-1]" || -z "$app_url[-1]" || -z "$icon_ref[-1]" ]]; then
@@ -87,7 +114,9 @@ else
 fi
 
 # Ensure valid execution
-if [[ -z "$app_name[-1]" || -z "$app_url[-1]" || -z "$icon_ref[-1]" ]]; then
+if [[ -z "$app_name[-1]" || "$app_name[-1]" == "null" ||
+  -z "$app_url[-1]" || "$app_url[-1]" == "null" ||
+  -z "$icon_ref[-1]" || "$icon_ref[-1]" == "null" ]]; then
   echo "You must set app name, app URL, and icon URL!"
   exit 1
 fi
