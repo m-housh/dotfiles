@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Adapted from https://github.com/ThePrimeagen/dev/blob/master/run
+#
+# Runs scripts in the `./runs` directory, which will install or uninstall
+# packages.  It either runs a single script given an argument (filename in runs)
+# or all scripts in the runs directory.
+#
+
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 if [ -z "$DEV_ENV" ]; then
@@ -14,7 +21,6 @@ export DEV_ENV="$DEV_ENV"
 grep=""
 dry_run="0"
 uninstall="0"
-create="0"
 
 while [[ $# -gt 0 ]]; do
   echo "ARG: \"$1\""
@@ -25,9 +31,6 @@ while [[ $# -gt 0 ]]; do
   # Handle an --uninstall argument
   elif [[ "$1" =~ ^--u ]]; then
     uninstall="1"
-  # Handle an --uninstall argument
-  elif [[ "$1" =~ ^--c ]]; then
-    create="1"
   # Handle an --install argument (default)
   elif [[ ! "$1" =~ ^--i ]]; then
     grep="$1"
@@ -41,21 +44,6 @@ log() {
   else
     echo "$1"
   fi
-}
-
-generate-new-run() {
-  local file="$script_dir/runs/$1"
-  if [ -f "$file" ]; then
-    log "File exists: $file"
-    exit 1
-  fi
-
-  log "Creating new run: $file"
-
-  printf "#!/usr/bin/env bash\n\n" >$file
-  printf "yay \${1:-\"-S --noconfirm\"} # packages\n" >>$file
-
-  chmod +x $file
 }
 
 run() {
@@ -76,10 +64,7 @@ run() {
 
 }
 
-if [[ "$create" == "1" ]]; then
-  generate-new-run "$grep"
-  exit 0
-fi
+############################## MAIN ##############################
 
 log "RUN: env: $env -- grep: $grep"
 
