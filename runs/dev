@@ -32,8 +32,9 @@ yay -S --noconfirm --needed \
   pcsc-tools \
   starship \
   swaync \
-  tree-sitter-cli \
+  tldr \
   tmux \
+  tree-sitter-cli \
   wl-clipboard \
   yubikey-manger \
   zoxide \

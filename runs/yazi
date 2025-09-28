@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+yay ${1:-"-S --noconfirm"} yazi
