@@ -121,7 +121,7 @@ else
 fi
 
 # Use custom exec if provided, otherwise default behavior
-if [[ -n $CUSTOM_EXEC ]]; then
+if [[ -n $CUSTOM_EXEC ]] && [[ ! $CUSTOM_EXEC == "null" ]]; then
   EXEC_COMMAND="$CUSTOM_EXEC"
 else
   EXEC_COMMAND="${SCRIPTS:-$HOME/.local/scripts}/launch-webapp $APP_URL"
@@ -143,7 +143,7 @@ StartupNotify=true
 EOF
 
 # Add mime types if provided
-if [[ -n $MIME_TYPES ]]; then
+if [[ -n $MIME_TYPES ]] && [[ ! $MIME_TYPES == "null" ]]; then
   echo "MimeType=$MIME_TYPES" >>"$DESKTOP_FILE"
 fi
 

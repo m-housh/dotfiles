@@ -57,7 +57,7 @@ install() {
   # Install local icons if needed
   mkdir -p $XDG_DATA_HOME/applications/icons
   for i in $(find $script_dir/assets/icons -mindepth 1 -maxdepth 1 -type f); do
-    if [[ ! -f $XDG_DATA_HOME/applications/icons/$i ] && [ $dry_run == "0" ]]; then
+    if [[ ! -f $XDG_DATA_HOME/applications/icons/$i ]] && [[ $dry_run == "0" ]]; then
       cp $i $XDG_DATA_HOME/applications/icons
     fi
   done
@@ -70,7 +70,7 @@ install() {
       --url $(echo $file | jq -r '.url') \
       --icon $(echo $file | jq -r '.icon') \
       --exec $(echo $file | jq -r '.exec') \
-      --mime $(echo $file | jq -r '.mime')
+      --mime-types $(echo $file | jq -r '.mime_types')
   fi
 }
 
