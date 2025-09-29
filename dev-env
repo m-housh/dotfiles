@@ -127,6 +127,7 @@ copy_files $DEV_ENV/env/wallpapers $HOME/wallpapers
 
 # MISC
 mkdir $HOME/Pictures
+mkdir -p $XDG_DATA_HOME/clipse/tmp_files
 copy $DEV_ENV/dev-env $HOME/.local/scripts/dev-env
 
 systemctl --user daemon-reload
