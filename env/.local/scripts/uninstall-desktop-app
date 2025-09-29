@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+
+# Uninstalls '.desktop' applications, including their icon.
+#
+# This is primarily used for uninstalling web app's, if a
+# desktop app was installed via the package manager, then the
+# package manager should be used to uninstall the application.
+
+usage() {
+  cat <<EOF
+
+Uninstalls '.desktop' files, including their icons. Most commonly
+used for web applications, if an application was installed by a
+package manager, then it should be used to uninstall the application.
+
+Usage:
+
+  uninstall-desktop-app [OPTIONS] [FILE...]
+
+  OPTIONS:
+    --dry-run:    Perform but don't actually remove anything.
+    -h | --help:  Show the help page.
+
+If no files are supplied, then an interactive session will be
+started that allows you to choose the applications to remove.
+
+EOF
+}
+
+declare -a files
+interactive_mode="0"
+dry_run="0"
+help_flag="0"
+XDG_DATA_HOME=${XDG_DATA_HOME}
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 =~ ^--dry ]]; then
+    dry_run="1"
+  elif [[ $1 =~ ^-h ]] || [[ $1 =~ ^--h ]]; then
+    help_flag="1"
+  else
+    files+=("$1")
+  fi
+  shift
+done
+
+# Early out for help option.
+if [[ $help_flag == "1" ]]; then
+  usage
+  exit 0
+fi
+
+if [[ -z $XDG_DATA_HOME ]]; then
+  echo "xdg data home is not set"
+  echo "using: ~/.local/share"
+  XDG_DATA_HOME=$HOME/.local/share
+fi
+
+if [[ ${#files} == 0 ]]; then
+  interactive_mode="1"
+  files+=(
+    $(find $XDG_DATA_HOME/applications -mindepth 1 -maxdepth 1 -type f -name "*.desktop" -printf "%f\n" |
+      gum choose --no-limit --padding "2 4" --header "Choose desktop apps to remove:")
+  )
+fi
+
+log() {
+  if [[ $dry_run == "1" ]]; then
+    echo "[DRY RUN]: $1"
+  else
+    echo "$1"
+  fi
+}
+
+############################## MAIN ##############################
+
+for f in ${files[@]}; do
+
+  icon=""
+  log "ARG: $f"
+
+  # Handle a passed in webapp spec file.
+  if [[ $f =~ \.json$ ]]; then
+    name=$(jq -r ".name" $f)
+    f="$name.desktop"
+  fi
+
+  fname=${f##*/}
+  log "Uninstalling Desktop: $fname"
+  file="$XDG_DATA_HOME/applications/$fname"
+
+  if [[ ! -f $file ]]; then
+    log "[WARNING]: File didn't exist, skipping!"
+  else
+    # get the line in file that has the icon path.
+    icon_line=$(cat $file | grep "Icon")
+    # get just the file path.
+    icon=${icon_line/#Icon=/}
+
+    log "   removing icon: rm -rf $icon"
+    log "   removing desktop: rm -rf $file"
+
+    if [[ $dry_run == "0" ]]; then
+      rm -rf $icon
+      rm -rf $file
+    fi
+  fi
+
+done
+
+if [[ ${#files} -gt 0 ]]; then
+  # Refresh the database so that applcation luanchers, etc
+  # don't show the app still exists.
+  update-desktop-database $XDG_DATA_HOME/applications
+
+  if [[ $interactive_mode == "1" ]]; then
+    log "Done!"
+  fi
+fi
