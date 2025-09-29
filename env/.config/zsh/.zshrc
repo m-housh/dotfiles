@@ -170,7 +170,6 @@ alias ga='git add'                      # add files to git quickly
 alias gcb='git checkout -b'             # checkout a new git branch, creating if needed.
 alias gco='git checkout'                # checkout an already existing git branch
 alias gcm='git commit -a -m'            # commit files to git quickly
-alias gen='just --justfile "$ANSIBLE_GEN_DIR/justfile"' # generate template files / directories
 alias gp='git push'                     # push repo to git
 alias gs='git status'                   # git status quickly
 alias hn='hugo new'                     # generate a hugo site
@@ -182,9 +181,7 @@ alias ls='eza --long --git --group --links --icons --all'
 alias lt='eza --long --git --group --links --icons --tree'
 alias pass='gopass'
 alias p='gopass'                        # run the pass command quickly.
-alias pf='pass fzf'                     # fuzzy find a password quickly and copy selection to clipboard.
-alias pg='gopass show'                  # get an attribute of a password file quickly.
-alias pgc='gopass show --clip'          # get an attribute of a password file and copy to the clipboard.
+alias pc='gopass show --clip'          # get an attribute of a password file and copy to the clipboard.
 alias reload='exec zsh -l'              # reload the shell, useful when making changes.
 alias s='swift'                         # shorthand to access swift commands
 alias st='swift test'                   # swift test
@@ -223,7 +220,7 @@ _source_if "$ZDOTDIR/.zshrc-local"
 _source_if "$LOCAL_ENV"
 
 # pnpm
-export PNPM_HOME="/Users/michael/.local/share/pnpm"
+export PNPM_HOME="$XDG_DATA_HOME/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
