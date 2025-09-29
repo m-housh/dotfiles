@@ -12,6 +12,12 @@ end
 
 keymap("i", "jk", "<ESC>", default_options)
 
+local make_executable = function()
+  local file = vim.fn.expand("%:p")
+  vim.cmd("silent !chmod +x " .. file)
+  print("Made " .. file .. " executable")
+end
+
 --------------------------------------------------------------------------------
 -- Normal Mode
 --------------------------------------------------------------------------------
@@ -28,6 +34,7 @@ wk_add("n", {
   { "J", ":move .+1<CR>==", desc = "Move line down" },
   { "K", ":move .-2<CR>==", desc = "Move line up" },
 
+  { "<leader>x", make_executable, desc = "Make current file e[x]ecutable" },
   { "<leader>z", "<CMD>:ZenMode<CR>", desc = "[Z]en Mode" },
 })
 
@@ -43,4 +50,5 @@ function _G.set_terminal_keymaps()
   local opts = { buffer = 0 }
   keymap("t", "<esc>", [[<C-\><C-n>]], opts)
 end
+
 vim.cmd("autocmd! TermOpen term://* lua set_terminal_keymaps()")
