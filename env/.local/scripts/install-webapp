@@ -73,6 +73,13 @@ declare -a mime_types  # Optional mime types
 declare -a help_flag
 declare -a file_mode
 declare INTERACTIVE_MODE=false
+SCRIPTS="${SCRIPTS}"
+
+if [[ -z "$SCRIPTS" ]]; then
+  echo "SCRIPTS not set"
+  echo "using ~/.local/scripts"
+  SCRIPTS=$HOME/.local/scripts
+fi
 
 zparseopts -D -F -K -- \
   {n,-name}:=app_name \
