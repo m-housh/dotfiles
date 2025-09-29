@@ -98,6 +98,7 @@ copy_files() {
 
 ############################## MAIN ##############################
 
+# CONFIG
 update_dirs $DEV_ENV/env/.config $XDG_CONFIG_HOME
 update_dirs $DEV_ENV/env/.local $HOME/.local
 
@@ -124,6 +125,8 @@ copy_files $DEV_ENV/env/.gnupg $HOME/.gnupg
 mkdir $HOME/wallpapers
 copy_files $DEV_ENV/env/wallpapers $HOME/wallpapers
 
+# MISC
+mkdir $HOME/Pictures
 copy $DEV_ENV/dev-env $HOME/.local/scripts/dev-env
 
 systemctl --user daemon-reload
