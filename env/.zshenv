@@ -27,8 +27,8 @@ export GITUSER="m-housh"
 export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
 # Directories
-export DOTFILES="$HOME/.dotfiles"
-export DEV_ENV="$HOME/.dotfiles"
+export DOTFILES="$HOME/personal/dotfiles"
+export DEV_ENV="$HOME/personal/dotfiles"
 export DOCUMENTS="$HOME/Documents"
 export DOWNLOADS="$HOME/Downloads"
 export LOCAL_ENV="$XDG_DATA_HOME/zsh/env.zsh"
