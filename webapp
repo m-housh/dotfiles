@@ -54,7 +54,7 @@ install() {
 
   # Install local icons if needed
   mkdir -p $XDG_DATA_HOME/applications/icons
-  for i in $(find $DEV_ENV/env/icons -mindepth 1 -maxdepth 1 -type f); do
+  for i in $(find $DEV_ENV/env/.local/share/applications/icons -mindepth 1 -maxdepth 1 -type f); do
     if [[ ! -f $XDG_DATA_HOME/applications/icons/$i ]] && [[ $dry_run == "0" ]]; then
       cp $i $XDG_DATA_HOME/applications/icons
     fi

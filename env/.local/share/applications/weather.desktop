@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=Weather
+Comment=Get weather
+Exec=ghostty --class=com.ghostty.weather -e /home/michael/.local/scripts/get-weather
+Icon=/home/michael/.local/share/applications/icons/weather.png
+Terminal=false
+Type=Application
+StartupNotify=true
