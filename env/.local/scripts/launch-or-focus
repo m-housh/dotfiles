@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# Launch or focus a window based on a pattern contained within the
+# window class name.
+
+pattern=$1
+launchCmd=${@:2}
+
+if [[ -z $pattern ]]; then
+  echo "Error: Must supply a pattern to match the window class."
+  exit 1
+fi
+
+if [[ -z $launchCmd ]]; then
+  echo "Error: Must supply a launch command to match the window class."
+  exit 1
+fi
+
+address=$(hyprctl clients -j | jq -r ".[] | select(.class | contains(\"$pattern\")) | .address")
+
+echo "Pattern: $pattern"
+echo "Address: $address"
+
+if [[ -n $address ]]; then
+  hyprctl dispatch focuswindow "address:$address"
+else
+  eval exec $launchCmd
+fi
