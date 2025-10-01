@@ -8,7 +8,6 @@
 [user]
 	name = Michael Housh
 	email = michael@mhoush.com
-	signingkey = 0x90D3EB6274D5B7CF
 
 [commit]
 	gpgsign = true
