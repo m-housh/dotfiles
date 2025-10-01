@@ -1,17 +1,42 @@
 #!/usr/bin/env bash
 
 # Adapted from https://github.com/basecamp/omarchy/tree/master?tab=readme-ov-file
-#
-# Launch a web application, can handle "singleton" applications in special
-# workspaces using the '--special <name>' option, focus an existing window
-# matching the url using '--focus' option, or always launch a new instance
-# if only the url is passed in.
-#
+
+usage() {
+  cat <<EOF
+
+Launches a url as a web application.
+
+USAGE:
+
+  $ launch-webapp [OPTIONS] <url> [ARGS...]
+
+OPTIONS:
+
+  -f | --focus:            If a window exists matching the url's domain, focus it 
+                           instead of launching new window.
+  -s | --special <name>:   Launch in the special workspace name, or toggle the special 
+                           workspace.
+  -h | --help:             Show this help page.
+
+NOTES:
+
+Any extra arguments after the url get passed directly to the browser invocation.
+
+Using the '--special' flag is useful for apps that you want to have a "summoning" like behavior. 
+Upon first launch the application will be opened and the special workspace will be shown.  
+Calling it again will keep the application open in the special workspace but hide the workspace.
+Further calls will not open another instance of the application, but will toggle the visiblity
+of the special workspace.
+
+EOF
+}
 
 browser="chromium.desktop"
 special=""
 special_flag="0"
 focus_flag="0"
+help_flag="0"
 url=""
 args=()
 SCRIPTS="${SCRIPTS}"
@@ -29,6 +54,8 @@ while [[ $# -gt 0 ]]; do
     special=$1
   elif [[ $1 =~ ^--focus ]] || [[ $1 =~ ^-f ]]; then
     focus_flag="1"
+  elif [[ $1 =~ ^--help ]] || [[ $1 =~ ^-h ]]; then
+    help_flag="1"
   elif [[ -z $url ]]; then
     url=$1
   else
@@ -37,65 +64,83 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+# Early out if help flag was supplied.
+if [[ $help_flag == "1" ]]; then
+  usage && exit 0
+fi
+
 launch() {
   exec setsid uwsm app -- $(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1) --app="$1" "$2"
 }
 
+# Strips url down to just the domain, so that we can match window classes.
 pattern() {
   pattern=${url/#https:\/\//}
   pattern=${pattern/#http:\/\//}
-  pattern=${pattern%/*}
+  pattern=${pattern%%/*}
   echo $pattern
 }
 
 getWindowProp() {
-  echo $(hyprctl clients -j | jq -r ".[] | select((.class | contains(\"$(pattern)\"))) | .$1")
+  echo $(hyprctl clients -j | jq -r ".[] | select((.class | contains(\"$(pattern)\"))) | .$1" | head -n 1)
+}
+
+log() {
+  echo "[$($SCRIPTS/isosec)] - $1" >>/tmp/launch-webapp.log
+}
+
+fail() {
+  echo -e "\n\e[31m[Error]: $1\e[0m"
+  log "[Error]: $1"
 }
 
 handleSpecial() {
   local window_addr=$(getWindowProp address)
   local window_workspace=$(getWindowProp workspace.id)
+  local active_workspace=$(hyprctl activeworkspace -j | jq -r ".id")
   local special_workspace_id=$(hyprctl workspaces -j | jq -r ".[] | select(.name | contains(\"$special\")) | .id")
 
-  echo "Window: address: $window_addr workspace: $window_workspace"
-  echo "Special workspace: $special_workspace_id"
+  log "Window: address: $window_addr workspace: $window_workspace"
+  log "Special workspace: $special id: $special_workspace_id"
+  log "Active workspace: $active_workspace"
 
   # Check if we don't have a window address, or if the window is not on the expected special workspace.
   if [[ -z $window_addr ]] || ([[ -n $window_workspace ]] && [[ $window_workspace != $special_workspace_id ]]); then
-    echo "No window, launching..."
+    log "No window, launching..."
     hyprctl dispatch togglespecialworkspace $special
     launch $url $args
   else
-    echo "We have a window, toggling special workspace"
-    hyprctl dispatch togglespecialworkspace pass
+    log "We have a window, toggling special workspace"
+    hyprctl dispatch togglespecialworkspace $special
   fi
 }
 
+##################################################
+# MAIN
+##################################################
+
 if [[ -z $url ]]; then
-  # TODO: Usage message.
-  echo "Must supply a url."
-  exit 1
+  fail "Must supply a url." && usage && exit 1
 fi
 
 if [[ $special_flag == "1" ]]; then
-  echo "Handling special workspace..."
+  log "Handling special workspace..."
   if [[ -z $special ]]; then
-    echo "Must supply special workspace name."
-    exit 1
+    fail "Must supply special workspace name." && exit 1
   fi
-  handleSpecial
-  exit 0
+  handleSpecial && exit 0
 fi
 
 window_addr=""
 
 if [[ $focus_flag == "1" ]]; then
-  echo "Received focus flag, checking for window address."
+  log "Received focus flag, checking for window address."
   window_addr=$(getWindowProp address)
-  echo "addr: $window_addr"
+  log "Window address: $window_addr"
 fi
 
 if [[ -n $window_addr ]]; then
+  log "No window address launching..."
   hyprctl dispatch focuswindow "address:$window_addr"
   exit 0
 fi

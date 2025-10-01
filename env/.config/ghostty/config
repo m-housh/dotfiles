@@ -24,6 +24,7 @@ quit-after-last-window-closed-delay = 5m
 # macos-icon = custom-style
 
 keybind = ctrl+shift+t=toggle_quick_terminal
+keybind = ctrl+l=clear_screen
 
 # Splits
 keybind = super+j=goto_split:down
