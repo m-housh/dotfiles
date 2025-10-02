@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+usage() {
+  cat <<EOF
+
+Get weather information using wttr.in for the given location [default: Cincinnati].
+
+USAGE:
+  $ weather [OPTIONS] <location>
+
+OPTIONS:
+  
+  -i | --interactve:          Prompts user to quit or refresh, which keeps the terminal alive until user quits.
+  -l | --launch:              Launches the interactive option in a new ghostty terminal.
+  --window-class <name>:      Optional window class used only with launch command [default: com.ghostty.weather]
+  --window-padding-x <n>:     Optional window padding used only with launch command [default: 10]
+  -h | --help:                Show usage.
+
+EOF
+}
+
+location="Cincinnati"
+interactive_flag="0"
+launch_flag="0"
+should_continue="0"
+window_class="com.ghostty.weather"
+window_padding_x="10"
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 =~ ^-i ]] || [[ $1 =~ ^--interactive ]]; then
+    interactive_flag="1"
+  elif [[ $1 =~ ^-h ]] || [[ $1 =~ ^--help ]]; then
+    usage && exit 0
+  elif [[ $1 =~ ^-l ]] || [[ $1 =~ ^--launch ]]; then
+    launch_flag="1"
+  elif [[ $1 =~ ^--window-class ]]; then
+    shift
+    window_class=$1
+  elif [[ $1 =~ ^--window-padding-x ]]; then
+    shift
+    window_padding_x=$1
+  else
+    location=$1
+  fi
+  shift
+done
+
+get_weather() {
+  curl "wttr.in/$location"
+}
+
+##################################################
+# MAIN
+##################################################
+
+if [[ -z $location ]]; then
+  # Fail if we don't have a location.
+  echo -e "\n[ERROR]: Invalid location"
+  usage && exit 1
+elif [[ $launch_flag == "1" ]]; then
+  # Launch a new window and call this script with --interactive flag set, so the window stays open until the user quits.
+  ghostty --class=$window_class --window-padding-x=$window_padding_x \
+    --keybind="j=scroll_page_fractional:0.5" --keybind="k=scroll_page_fractional:-0.5" \
+    --keybind="q=quit" \
+    -e ${BASH_SOURCE[0]} --interactive
+
+elif [[ $interactive_flag == "1" ]]; then
+  # Interactive mode starts a loop until the user quits.  It prompts them to quit or refresh the weather results.
+  while [[ $should_continue == "0" ]]; do
+    echo "Fetching weather for: $location"
+    get_weather
+    # Set's should_continue to '0' if when user hits the quit option or '1' if the hit refresh.
+    should_continue=$(gum confirm "Weather: $location" --affirmative Refresh --negative Quit && echo "0" || echo "1")
+  done
+else
+  # Just show the weather in normal mode.
+  get_weather
+fi
