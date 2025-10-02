@@ -10,6 +10,7 @@ fi
 file=""
 run="0"
 webapp="0"
+script="0"
 
 while [[ $# -gt 0 ]]; do
   echo "Arg: \"$1\""
@@ -18,6 +19,8 @@ while [[ $# -gt 0 ]]; do
     run="1"
   elif [[ "$1" == "webapp" ]]; then
     webapp="1"
+  elif [[ "$1" == "script" ]]; then
+    script="1"
   else
     file="$1"
   fi
@@ -64,6 +67,20 @@ generate-new-webapp() {
 
 }
 
+generate-new-script() {
+  local dest="$DEV_ENV/env/.local/scripts/$file"
+  if [ -f "$dest" ]; then
+    log "file exists: $dest"
+    exit 1
+  fi
+
+  log "Creating new script: $dest"
+
+  printf "#!/usr/bin/env bash\n\n" >$dest
+  chmod +x $dest
+  echo $dest
+}
+
 ############################## MAIN ##############################
 
 if [[ -z "$file" ]]; then
@@ -75,7 +92,9 @@ if [[ $run == "1" ]]; then
   generate-new-run
 elif [[ $webapp == "1" ]]; then
   generate-new-webapp
+elif [[ $script == "1" ]]; then
+  generate-new-script
 else
-  log "Must supply either \"run\" or \"webapp\" option."
+  log "Must supply either \"run\", \"webapp\", or \"script\" option."
   exit 1
 fi
