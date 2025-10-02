@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 usage() {
   cat <<EOF
 
@@ -41,7 +43,7 @@ args=()
 addresses=()
 
 while [[ $# -gt 0 ]]; do
-  if [[ $1 =~ ^-a ]] || [[ $1 =~ ^--acitve-workspace ]]; then
+  if [[ $1 =~ ^-a ]] || [[ $1 =~ ^--active-workspace ]]; then
     active_workspace_flag="1"
   elif [[ $1 =~ ^--all ]]; then
     all_flag="1"
