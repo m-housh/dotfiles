@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+
+usage() {
+  cat <<EOF
+
+Show a table with details about the currently active windows. You can choose a window and perform
+an action depending on the option passed in.
+
+USAGE:
+
+  $ $(basename ${BASH_SOURCE[0]}) [OPTIONS]
+
+OPTIONS:
+
+  --launch:             Launch in a new terminal window, user will be prompted what to do with selected window.
+  -c | --clip:          Copy selected window's address to the system clipboard.
+  -x | --close:         Close the selected window.
+  -f | --focus:         Focus the selected window.
+  -i | --ignore:        Ignore the selected window.
+  --show-window-class:  Include window class in the table.
+  -h | --help:          Show this page.
+
+NOTES:
+
+If using the 'launch' option then flags passed after the '--launch' flag will be passed into the
+launched terminal, allowing you to launch with a specific mode turned on, any flags passed in prior to
+'--launch' will be ignored.
+
+EOF
+}
+
+window_class="com.ghostty.$(basename ${BASH_SOURCE[0]})"
+window_padding_x="10"
+
+clipboard_flag="0"
+close_flag="0"
+focus_flag="0"
+ignore_flag="0"
+launch_flag="0"
+show_window_class_flag="0"
+
+launch_args=()
+rows=()
+selected_value=""
+window_data=$(hyprctl clients -j | jq 'sort_by(.workspace.name)')
+
+while [[ $# -gt 0 ]]; do
+  if [[ $launch_flag == "1" ]]; then
+    launch_args+=("$1")
+  else
+    if [[ $1 =~ ^-c ]] || [[ $1 =~ ^--clip ]]; then
+      clipboard_flag="1"
+    elif [[ $1 =~ ^-x ]] || [[ $1 =~ ^--close ]]; then
+      close_flag="1"
+    elif [[ $1 =~ ^-f ]] || [[ $1 =~ ^--focus ]]; then
+      focus_flag="1"
+    elif [[ $1 =~ ^-h ]] || [[ $1 =~ ^--help ]]; then
+      usage && exit 0
+    elif [[ $1 =~ ^-i ]] || [[ $1 =~ ^--ignore ]]; then
+      ignore_flag="1"
+    elif [[ $1 =~ ^--launch ]]; then
+      launch_flag="1"
+    elif [[ $1 =~ ^--show-window-class ]]; then
+      show_window_class_flag="1"
+    fi
+  fi
+  shift
+done
+
+generate_rows() {
+
+  readarray -t addresses <<<"$(echo "$window_data" | jq -r '.[] | .address')"
+  readarray -t classes <<<$(echo "$window_data" | jq -r '.[] | .class')
+  readarray -t titles <<<$(echo "$window_data" | jq -r '.[] | .title')
+  readarray -t workspaces <<<$(echo "$window_data" | jq -r '.[] | .workspace.name')
+
+  # Zip into a new comma separated values
+  for i in "${!addresses[@]}"; do
+    if [[ $show_window_class_flag == "1" ]]; then
+      rows+=("${workspaces[i]}, ${titles[i]}, ${classes[i]}, ${addresses[i]}")
+    else
+      rows+=("${workspaces[i]}, ${titles[i]}, ${addresses[i]}")
+    fi
+  done
+}
+
+show_table_return_choice() {
+  local columns="Workspace, Title, Address"
+  local ret_column=3
+
+  if [[ $show_window_class_flag == "1" ]]; then
+    columns="Workspace, Title, Class, Address"
+    ret_column=4
+  fi
+  local ret=$(
+    printf '%s\n' "${rows[@]}" |
+      gum table --columns "$columns" --return-column $ret_column
+
+  )
+  # remove spaces and quotes from result.
+  ret=${ret//\"/}
+  ret=${ret// /}
+  echo "$ret"
+}
+
+ask_what_to_do_with_selection() {
+  choice=$(gum choose "Focus window" "Copy to clipboard" "Refresh" "Close window" "Quit")
+  echo "Choice: $choice"
+  if [[ $choice == "Quit" ]]; then
+    exit 0
+  elif [[ $choice == "Close window" ]]; then
+    close_flag="1"
+  elif [[ $choice == "Copy to clipboard" ]]; then
+    clipboard_flag="1"
+  elif [[ $choice == "Focus window" ]]; then
+    focus_flag="1"
+  elif [[ $choice == "Refresh" ]]; then
+    eval exec ${BASH_SOURCE[0]}
+    exit 0
+  fi
+}
+
+handle_selected_value() {
+  if [[ $ignore_flag == "1" ]]; then
+    echo "Ignore flag set, selection: '$selected_value'"
+    exit 0
+  elif [[ $clipboard_flag == "1" ]]; then
+    echo "Copying to clipboard, selection: $selected_value"
+    wl-copy $selected_value
+    exit 0
+  elif [[ $focus_flag == "1" ]]; then
+    echo "Focusing window, selection: $selected_value"
+    hyprctl dispatch focuswindow "address:$selected_value"
+    exit 0
+  elif [[ $close_flag == "1" ]]; then
+    echo "Closing window, selection: $selected_value"
+    hyprctl dispatch closewindow "address:$selected_value"
+    exit 0
+  fi
+  # TODO: Choose from list of what to do with the selected_value.
+  echo "No flag set, selection: '$selected_value'"
+}
+
+##################################################
+# MAIN
+##################################################
+
+if [[ $launch_flag == "1" ]]; then
+  ghostty --class="$window_class" --window-padding-x="$window_padding_x" \
+    --keybind="q=quit" \
+    -e "${BASH_SOURCE[0]}" "${launch_args[@]}"
+else
+  generate_rows
+  selected_value=$(show_table_return_choice)
+  if [[ -n $selected_value ]]; then
+    handle_selected_value
+    # If we got here then no flag was passed in initially on how to handle the
+    # selected window, so ask what they'd like to do.  Then handle it.
+    echo "Asking what to do with selction."
+    ask_what_to_do_with_selection
+
+    [[ -n $selected_value ]] && handle_selected_value
+    # If you make it here, We just give up... Don't start an endless loop.
+  fi
+fi
