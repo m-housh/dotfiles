@@ -4,8 +4,11 @@ matches:
   # Email Addresses
   - trigger: ":@hhe"
     replace: "mhoush@houshhomeenergy.com"
-  - trigger: ":@service"
+  - trigger: ":@w"
+    replace: "mhoush@houshhomeenergy.com"
+  - trigger: ":@ser"
     replace: "service@houshhomeenergy.com"
   - trigger: ":@me"
     replace: "michael@mhoush.com"
-
+  - trigger: ":@p"
+    replace: "michael@mhoush.com"

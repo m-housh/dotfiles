@@ -133,8 +133,8 @@ copy $DEV_ENV/dev-env $HOME/.local/scripts/dev-env
 mkdir -p $XDG_DATA_HOME/applications/icons
 copy_files $DEV_ENV/env/.local/share/applications $XDG_DATA_HOME/applications
 copy_files $DEV_ENV/env/.local/share/applications/icons $XDG_DATA_HOME/applications/icons
-# TODO: Copy icons
 
 systemctl --user daemon-reload
 hyprctl reload
+espanso service restart
 exec zsh -l
