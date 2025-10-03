@@ -67,7 +67,7 @@ export VAULT_ADDR="https://vault.housh.dev"
 export CARGO_HOME="$XDG_DATA_HOME/cargo"
 
 # Tmux-Sessionator path.
-export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS"
+export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$HOME/personal:$HOME/dev"
 
 # Password-store
 export PASSWORD_STORE_DIR="$XDG_DATA_HOME/gopass/stores/root"

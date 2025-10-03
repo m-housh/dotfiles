@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+usage() {
+  cat <<EOF
+
+Launch or focus / close a window based on pattern contained within the window
+class name. (Default is to focus the window).
+
+USAGE:
+
+  $ $(basename ${BASH_SOURCE[0]}) [OPTIONS] PATTERN [LAUNCH_CMD...]
+
+OPTIONS:
+
+  -f | --focus:     Focus the window matching the pattern, if it exists.
+  -c | --close:     Close the window matching the pattern, if it exists.
+  -h | --help:      Show this help page.
+
+EOF
+}
+
+action="focuswindow"
+pattern=""
+launch_cmd=()
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-c" ]] || [[ $1 == "--close" ]]; then
+    action="closewindow"
+  elif [[ $1 == "-f" ]] || [[ $1 == "--focus" ]]; then
+    action="focuswindow"
+  elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ -z $pattern ]]; then
+    pattern=$1
+  else
+    launch_cmd+=("$1")
+  fi
+  shift
+done
+
+if [[ -z $pattern ]]; then
+  echo "[ERROR]: Must supply a pattern to match the window class."
+  usage && exit 1
+elif [[ -z $launch_cmd ]]; then
+  echo "[ERROR]: Must supply a launch command to match the window class."
+  usage && exit 1
+fi
+
+address=$(hyprctl clients -j | jq -r ".[] | select(.class | contains(\"$pattern\")) | .address")
+
+echo "Pattern: $pattern"
+echo "Address: $address"
+
+if [[ -n $address ]]; then
+  echo "Found window, dispatching action: $action"
+  hyprctl dispatch $action "address:$address"
+else
+  echo "Launching..."
+  echo "'${launch_cmd[@]}'"
+  eval exec ${launch_cmd[@]}
+fi

@@ -29,7 +29,7 @@ launched terminal, allowing you to launch with a specific mode turned on, any fl
 EOF
 }
 
-window_class="com.ghostty.$(basename ${BASH_SOURCE[0]})"
+window_class="com.ghostty.window-table"
 window_padding_x="10"
 
 clipboard_flag="0"
@@ -94,7 +94,8 @@ show_table_return_choice() {
   fi
   local ret=$(
     printf '%s\n' "${rows[@]}" |
-      gum table --columns "$columns" --return-column $ret_column
+      fzf --footer="Workspace - Title - Address" --footer-label-pos=center
+    # gum table --columns "$columns" --return-column $ret_column
 
   )
   # remove spaces and quotes from result.
