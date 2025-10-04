@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+
+THIS=$(basename ${BASH_SOURCE[0]})
+
+usage() {
+  cat <<EOF
+
+A fuzzy finder to launch utility applications / scripts from a single menu.
+
+USAGE:
+
+  $ $THIS [OPTIONS]
+
+OPTIONS:
+
+  -c | --config <file>:      Set the location of the configuration file (default: XDG_CONFIG_HOME/utils-launcher/config.json)
+  -l | --launch:             Launches in a new terminal window.
+
+EOF
+}
+
+window_class="com.ghostty.$THIS"
+window_padding_x="2"
+
+config_file=""
+launch_flag="0"
+
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME}
+SCRIPTS=${SCRIPTS}
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-c" ]] || [[ $1 == "--config" ]]; then
+    shift
+    config_file="$1"
+  elif [[ $1 == "-l" ]] || [[ $1 == "--launch" ]]; then
+    launch_flag="1"
+  fi
+  shift
+done
+
+if [[ -z $XDG_CONFIG_HOME ]]; then
+  echo "XDG_CONFIG_HOME not set"
+  echo "using ~/.config"
+  XDG_CONFIG_HOME=$HOME/.config
+fi
+
+launch() {
+  ghostty --class=$window_class --window-padding-x=$window_padding_x \
+    --keybind="ctrl+c=quit" \
+    -e ${BASH_SOURCE[0]} --config $config_file
+}
+
+footer() {
+  cat <<'EOF'
+   __  ______________   _____
+  / / / /_  __/  _/ /  / ___/
+ / / / / / /  / // /   \__ \ 
+/ /_/ / / / _/ // /______/ / 
+\____/ /_/ /___/_____/____/  
+                             
+EOF
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+if [[ -z $config_file ]]; then
+  echo "No config file set."
+  echo "Using ~/.config/utils-launcher/config.json"
+  config_file="$XDG_CONFIG_HOME/utils-launcher/config.json"
+fi
+
+if [[ -z $SCRIPTS ]]; then
+  echo "SCRIPTS not set"
+  echo "using ~/.local/scripts"
+  SCRIPTS=$HOME/.local/scripts
+fi
+
+if [[ $launch_flag == "1" ]]; then
+  launch && exit 0
+fi
+
+if [[ ! -f $config_file ]]; then
+  echo "[ERROR]: no config file set" && exit 1
+fi
+
+file_data=$(cat $config_file)
+
+# Setup colors before calling fzf.
+[[ -f $SCRIPTS/catppuccin-colors ]] && source $SCRIPTS/catppuccin-colors
+sel=$(echo "$file_data" | jq -r '.[] | .name' | fzf --style=full --footer="$(footer)")
+
+echo "Selection: $sel"
+
+if [[ -n "$sel" ]]; then
+  # Load the exec command for the selection.
+  exec_cmd=$(echo $file_data | jq -r ".[] | select(.name == \"$sel\") | .exec")
+
+  echo "Exec: '$exec_cmd'"
+  if [[ -z $exec_cmd ]]; then
+    echo "[ERROR]: Command is empty." && exit 1
+  fi
+  eval exec uwsm app -- "$exec_cmd"
+else
+  echo "No selection."
+fi

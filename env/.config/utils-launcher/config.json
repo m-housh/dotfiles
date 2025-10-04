@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Install Web App",
+    "exec": "$SCRIPTS/hypr/install-webapp"
+  },
+  {
+    "name": "Uninstall Desktop App",
+    "exec": "$SCRIPTS/hypr/uninstall-desktop-app"
+  },
+  {
+    "name": "Active Window Table / Picker",
+    "exec": "$SCRIPTS/hypr/window-table"
+  },
+  {
+    "name": "Clear Clipboard History",
+    "exec": "$SCRIPTS/hypr/clear-clipboard-history && echo Done"
+  },
+  {
+    "name": "Restart waybar",
+    "exec": "$SCRIPTS/hypr/waybar-restart"
+  },
+  {
+    "name": "Toggle waybar",
+    "exec": "$SCRIPTS/hypr/toggle-waybar"
+  }
+]
