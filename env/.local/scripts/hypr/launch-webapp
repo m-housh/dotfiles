@@ -1,11 +1,11 @@
-#!/usr/bin/env bash
+# /usr/bin/env bash
 
 # Adapted from https://github.com/basecamp/omarchy/tree/master?tab=readme-ov-file
 
 usage() {
   cat <<EOF
 
-Launches a url as a web application. This script relys on the 'launch-or' script. This
+Launches a url as a web application. This script relys on the 'launch' script. This
 essentially just generates the pattern and launch command to pass into that script.
 
 USAGE:
@@ -92,5 +92,5 @@ echo "URL: $url"
 echo "Launch args: ${launch_args[@]}"
 echo "App args: ${app_args}"
 
-$SCRIPTS/launch "${launch_args[@]}" "$(pattern)" \
+$SCRIPTS/hypr/launch "${launch_args[@]}" "$(pattern)" \
   setsid uwsm app -- $(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1) --app="$url" "$app_args"

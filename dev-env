@@ -43,7 +43,11 @@ update_dirs() {
   pushd $1 &>/dev/null
   (
     # Copy everything except systemd, share, and zsh folders, they need treated differently.
-    configs=$(find . -mindepth 1 -maxdepth 1 -type d \( -name "systemd" -o -name "zsh" -o -name "share" \) -prune -o -type d -print)
+    configs=$(
+      find . -mindepth 1 -maxdepth 1 -type d \
+        \( -name "systemd" -o -name "zsh" -o -name "share" -o -name "scripts" \) \
+        -prune -o -type d -print
+    )
     for c in $configs; do
       directory=${2%/}/${c#./}
       log "    removing: rm -rf $directory"
@@ -102,6 +106,11 @@ copy_files() {
 update_dirs $DEV_ENV/env/.config $XDG_CONFIG_HOME
 update_dirs $DEV_ENV/env/.local $HOME/.local
 
+# SCRIPTS
+mkdir -p ~/.local/scripts >/dev/null 2>&1
+update_dirs $DEV_ENV/env/.local/scripts $HOME/.local/scripts
+copy_files $DEV_ENV/env/.local/scripts $HOME/.local/scripts
+
 # SYSTEMD
 mkdir -p $XDG_CONFIG_HOME/systemd/user >/dev/null 2>&1
 copy_files $DEV_ENV/env/.config/systemd/user $XDG_CONFIG_HOME/systemd/user
@@ -134,7 +143,9 @@ mkdir -p $XDG_DATA_HOME/applications/icons
 copy_files $DEV_ENV/env/.local/share/applications $XDG_DATA_HOME/applications
 copy_files $DEV_ENV/env/.local/share/applications/icons $XDG_DATA_HOME/applications/icons
 
-systemctl --user daemon-reload
-hyprctl reload
-espanso service restart
-exec zsh -l
+if [[ $dry_run == "0" ]]; then
+  systemctl --user daemon-reload
+  hyprctl reload
+  espanso service restart
+  exec zsh -l
+fi

@@ -160,7 +160,7 @@ fi
 if [[ -n $CUSTOM_EXEC ]] && [[ ! $CUSTOM_EXEC == "null" ]]; then
   EXEC_COMMAND="$CUSTOM_EXEC"
 else
-  EXEC_COMMAND="${SCRIPTS:-$HOME/.local/scripts}/launch-webapp $APP_URL"
+  EXEC_COMMAND="${SCRIPTS:-$HOME/.local/scripts}/hypr/launch-webapp $APP_URL"
 fi
 
 # Create application .desktop file

@@ -65,6 +65,7 @@ path_prepend \
   "$XDG_DATA_HOME/bin" \
   "$HOME/.local/bin" \
   "$SCRIPTS" \
+  "$SCRIPTS/hypr" \
   "$HOME/.local/pnpm" \
   "$CARGO_HOME/bin" \
   "$HOME/.local/bin"

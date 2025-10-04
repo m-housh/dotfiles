@@ -45,7 +45,7 @@ log() {
 
 install() {
   local file=$DEV_ENV/env/webapps/$(basename $1)
-  local script="$DEV_ENV/env/.local/scripts/install-webapp"
+  local script="$DEV_ENV/env/.local/scripts/hypr/install-webapp"
 
   if [[ ! -x $script ]]; then
     log "Failed to find install web app script."
@@ -69,7 +69,7 @@ install() {
 
 uninstall() {
   local file=$DEV_ENV/env/webapps/$(basename $1)
-  local script="$DEV_ENV/env/.local/scripts/uninstall-desktop-app"
+  local script="$DEV_ENV/env/.local/scripts/hypr/uninstall-desktop-app"
 
   if [[ ! -x $script ]]; then
     log "Failed to find uninstall web app script."
