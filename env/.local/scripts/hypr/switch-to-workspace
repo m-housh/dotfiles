@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+usage() {
+  cat <<EOF
+
+Switch to the given workspace. Toggling off a special workspaces if active window is on a
+special workspace.
+
+The builtin way in hyprland does not toggle off special workspaces, so the workspace just
+changes underneath the special workspace, whereas this script ensures that you switch to
+the workspace.
+
+USAGE:
+
+  $ $(basename ${BASH_SOURCE[0]}) [OPTIONS] <workspace>
+
+OPTIONS:
+
+  -h | --help:      Show this help page.
+
+EOF
+}
+
+target_workspace=""
+active_workspace=$(hyprctl activewindow -j | jq -r '.workspace.name')
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 =~ ^-h ]] || [[ $1 =~ ^--help ]]; then
+    usage && exit 0
+  else
+    target_workspace=$1
+  fi
+  shift
+done
+
+if [[ -z target_workspace ]]; then
+  echo "[ERROR]: Must supply a workpsace to switch to."
+  usage && exit 1
+fi
+
+# If active window is on a special workspace, then toggle the special workspace off.
+if [[ $active_workspace =~ ^special ]]; then
+  echo "Toggling special workspace: '$active_workspace'"
+  hyprctl dispatch togglespecialworkspace ${active_workspace#special:}
+
+  # Only toggle the special workspace if trying to switch to previous and we're currently
+  # on a special workspace.
+  if [[ $target_workspace == "previous" ]]; then
+    exit 0
+  fi
+fi
+
+echo "Switching to workspace: $target_workspace"
+hyprctl dispatch workspace $target_workspace
