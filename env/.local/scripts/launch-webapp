@@ -5,7 +5,8 @@
 usage() {
   cat <<EOF
 
-Launches a url as a web application.
+Launches a url as a web application. This script relys on the 'launch-or' script. This
+essentially just generates the pattern and launch command to pass into that script.
 
 USAGE:
 
@@ -13,7 +14,7 @@ USAGE:
 
 OPTIONS:
 
-  -f | --focus:            If a window exists matching the url's domain, focus it 
+  -f | --or-focus:         If a window exists matching the url's domain, focus it 
                            instead of launching new window.
   -s | --special <name>:   Launch in the special workspace name, or toggle the special 
                            workspace.
@@ -21,7 +22,13 @@ OPTIONS:
 
 NOTES:
 
-Any extra arguments after the url get passed directly to the browser invocation.
+Any extra arguments after '--' get passed directly to the browser invocation.
+  
+  $ launch-webapp https://example.com -- --some-random-flag-for-browser=1
+
+Any options passed in prior to the '--' get sent to the 'launch-or' script, so you can pass
+options that are not specifically shown here, but the ones shown would be the most commonly
+used, so they are documented here.
 
 Using the '--special' flag is useful for apps that you want to have a "summoning" like behavior. 
 Upon first launch the application will be opened and the special workspace will be shown.  
@@ -33,12 +40,9 @@ EOF
 }
 
 browser="chromium.desktop"
-special=""
-special_flag="0"
-focus_flag="0"
-help_flag="0"
 url=""
-args=()
+launch_args=()
+app_args=""
 SCRIPTS="${SCRIPTS}"
 
 if [[ -z $SCRIPTS ]]; then
@@ -49,29 +53,21 @@ fi
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^--special ]] || [[ $1 =~ ^-s ]]; then
-    shift
-    special_flag="1"
-    special=$1
-  elif [[ $1 =~ ^--focus ]] || [[ $1 =~ ^-f ]]; then
-    focus_flag="1"
+    launch_args+=("$1")
+    launch_args+=("$2")
+    shift # Second shift get's handled below
   elif [[ $1 =~ ^--help ]] || [[ $1 =~ ^-h ]]; then
-    help_flag="1"
-  elif [[ -z $url ]]; then
+    usage && exit 0
+  elif [[ -z $url ]] && [[ ! $1 =~ ^- ]]; then
     url=$1
+  elif [[ $1 == "--" ]]; then
+    shift
+    break
   else
-    args+=($1)
+    launch_args+=("$1")
   fi
   shift
 done
-
-# Early out if help flag was supplied.
-if [[ $help_flag == "1" ]]; then
-  usage && exit 0
-fi
-
-launch() {
-  exec setsid uwsm app -- $(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1) --app="$1" "$2"
-}
 
 # Strips url down to just the domain, so that we can match window classes.
 pattern() {
@@ -81,68 +77,20 @@ pattern() {
   echo $pattern
 }
 
-getWindowProp() {
-  echo $(hyprctl clients -j | jq -r ".[] | select((.class | contains(\"$(pattern)\"))) | .$1" | head -n 1)
-}
-
-log() {
-  echo "[$($SCRIPTS/isosec)] - $1" >>/tmp/launch-webapp.log
-}
-
-fail() {
-  echo -e "\n\e[31m[Error]: $1\e[0m"
-  log "[Error]: $1"
-}
-
-handleSpecial() {
-  local window_addr=$(getWindowProp address)
-  local window_workspace=$(getWindowProp workspace.id)
-  local active_workspace=$(hyprctl activeworkspace -j | jq -r ".id")
-  local special_workspace_id=$(hyprctl workspaces -j | jq -r ".[] | select(.name | contains(\"$special\")) | .id")
-
-  log "Window: address: $window_addr workspace: $window_workspace"
-  log "Special workspace: $special id: $special_workspace_id"
-  log "Active workspace: $active_workspace"
-
-  # Check if we don't have a window address, or if the window is not on the expected special workspace.
-  if [[ -z $window_addr ]] || ([[ -n $window_workspace ]] && [[ $window_workspace != $special_workspace_id ]]); then
-    log "No window, launching..."
-    hyprctl dispatch togglespecialworkspace $special
-    launch $url $args
-  else
-    log "We have a window, toggling special workspace"
-    hyprctl dispatch togglespecialworkspace $special
-  fi
-}
-
 ##################################################
 # MAIN
 ##################################################
 
 if [[ -z $url ]]; then
-  fail "Must supply a url." && usage && exit 1
+  echo "[ERROR]: Must supply a url." && usage && exit 1
 fi
 
-if [[ $special_flag == "1" ]]; then
-  log "Handling special workspace..."
-  if [[ -z $special ]]; then
-    fail "Must supply special workspace name." && exit 1
-  fi
-  handleSpecial && exit 0
-fi
+# Any left over args after "--"
+app_args="$@"
 
-window_addr=""
+echo "URL: $url"
+echo "Launch args: ${launch_args[@]}"
+echo "App args: ${app_args}"
 
-if [[ $focus_flag == "1" ]]; then
-  log "Received focus flag, checking for window address."
-  window_addr=$(getWindowProp address)
-  log "Window address: $window_addr"
-fi
-
-if [[ -n $window_addr ]]; then
-  log "No window address launching..."
-  hyprctl dispatch focuswindow "address:$window_addr"
-  exit 0
-fi
-
-launch $url $args
+$SCRIPTS/launch "${launch_args[@]}" "$(pattern)" \
+  setsid uwsm app -- $(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1) --app="$url" "$app_args"

@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+
+usage() {
+  cat <<EOF
+
+Launch or focus / close a window based on pattern contained within the window
+class name. (Default is to focus the window). 
+
+This is used in keybinds and by other scripts as a general entrypoint for managing applications.
+
+USAGE:
+
+  $ $(basename ${BASH_SOURCE[0]}) [OPTIONS] PATTERN [LAUNCH_CMD...]
+
+OPTIONS:
+
+  -f | --or-focus:           Focus the window matching the pattern, if it exists.
+  -c | --or-close:           Close the window matching the pattern, if it exists.
+  -s | --special <name>:     Launch or toggle a special workspace.
+  -h | --help:               Show this help page.
+
+NOTES:
+
+  Passing both a '--close' and '--focus' flag will result in an error if a window is found matching
+the pattern.
+
+  If the special option is passed then we will not attempt to close a window. If the script is
+invoked with the special option set, we check if there is a window matching the pattern, if there
+is and the currently active window is on the same workspace passed in to the special option, then
+we toggle the workspace closed.  This allows the same keybind to be used to launch an application
+in a special workspace as well as toggle the workspace closed.
+
+EOF
+}
+
+action="focuswindow"
+close_flag="0"
+focus_flag="0"
+launch_cmd=()
+pattern=""
+special_flag="0"
+special=""
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-c" ]] || [[ $1 == "--or-close" ]]; then
+    close_flag="1"
+    action="closewindow"
+  elif [[ $1 == "-f" ]] || [[ $1 == "--or-focus" ]]; then
+    focus_flag="1"
+    action="focuswindow"
+  elif [[ $1 == "-s" ]] || [[ $1 == "--special" ]]; then
+    shift
+    special_flag="1"
+    special=$1
+  elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ -z $pattern ]]; then
+    pattern=$1
+  else
+    launch_cmd+=("$1")
+  fi
+  shift
+done
+
+toggle_special() {
+  if [[ -z $special ]]; then
+    echo "[ERROR]: No name supplied for special workspace."
+    exit 1
+  fi
+  hyprctl dispatch togglespecialworkspace $special
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+if [[ -z $pattern ]]; then
+  echo "[ERROR]: Must supply a pattern to match the window class."
+  usage && exit 1
+elif [[ -z $launch_cmd ]]; then
+  echo "[ERROR]: Must supply a launch command to match the window class."
+  usage && exit 1
+fi
+
+# Get first window matching the pattern.
+address=$(hyprctl clients -j | jq -r ".[] | select(.class | contains(\"$pattern\")) | .address")
+
+echo "Pattern: $pattern"
+echo "Address: $address"
+
+# Check if we found a window address.
+if [[ -n $address ]]; then
+
+  # Get the workspace name of the active window.
+  active_window_workspace=$(hyprctl activewindow -j | jq -r '.workspace.name')
+  echo "Active window workspace: $active_window_workspace"
+
+  # Check if we have special flag and active window is on the special workspace.  If so
+  # we just toggle the special workspace.  This keeps "special" apps alive, but closes and / opens
+  # the special workspace when invoked.
+  if [[ $special_flag == "1" ]] && [[ $active_window_workspace =~ $special ]]; then
+    toggle_special && exit 0
+  fi
+
+  # Check if both close and focus flags were passed, so we don't do the
+  # wrong thing.
+  if [[ $focus_flag == "1" ]] && [[ $close_flag == "1" ]]; then
+    echo "[ERROR]: Both focus and close flag were passed."
+    exit 1
+  fi
+
+  # We didn't have the special flag, so dispatch the command (focus or close).
+  echo "Found window, dispatching action: $action"
+  hyprctl dispatch $action "address:$address"
+else
+  # We did not find an address matching the pattern.
+  #
+  # Toggle a special workspace, if applicable before launching.
+  if [[ $special_flag == "1" ]]; then
+    toggle_special
+  fi
+  echo "Launching..."
+  echo "'${launch_cmd[@]}'"
+  eval exec ${launch_cmd[@]}
+fi
