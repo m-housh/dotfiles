@@ -2,6 +2,8 @@
 
 # Adapted from https://github.com/basecamp/omarchy/tree/master?tab=readme-ov-file
 
+# TODO: Use bash and only allow options, not positional arguments to make easier.
+
 function usage() {
   cat <<EOF
 Generates a '.desktop' file for a web application, so that it
@@ -72,8 +74,12 @@ declare -a custom_exec # Optional custom exec command
 declare -a mime_types  # Optional mime types
 declare -a help_flag
 declare -a file_mode
+declare -a launch_flag
 declare INTERACTIVE_MODE=false
 SCRIPTS="${SCRIPTS}"
+
+window_class="com.ghostty.launch-webapp"
+window_padding_x="2"
 
 if [[ -z "$SCRIPTS" ]]; then
   echo "SCRIPTS not set"
@@ -88,9 +94,17 @@ zparseopts -D -F -K -- \
   {e,-exec}:=custom_exec \
   {m,-mime-types}:=mime_types \
   {f,-file}:=file_mode \
-  {h,-help}=help_flag
+  {h,-help}=help_flag \
+  {l,-launch}=launch_flag
 
 [ ${#help_flag[@]} -gt 0 ] && usage && exit 0
+
+if [[ ${#launch_flag[@]} -gt 0 ]]; then
+  ghostty --class=$window_class --window-padding-x=$window_padding_x \
+    --keybind="ctrl+c=quit" \
+    -e $SCRIPTS/hypr/install-webapp
+  exit 0
+fi
 
 # If passed in as positional arguments, without flags.
 [ -n "$1" ] && app_name+=("$1")
