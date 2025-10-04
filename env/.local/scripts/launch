@@ -16,15 +16,20 @@ OPTIONS:
 
   -f | --or-focus:           Focus the window matching the pattern, if it exists.
   -c | --or-close:           Close the window matching the pattern, if it exists.
+  -o | --focus-active-only:  Focus only if window is on active workspace, otherwise launch a new
+                             instance.
+  -x | --close-active-only:  Close only windows on active workspace matching the pattern.
   -s | --special <name>:     Launch or toggle a special workspace.
   -h | --help:               Show this help page.
 
 NOTES:
 
-  Passing both a '--close' and '--focus' flag will result in an error if a window is found matching
-the pattern.
+In general only one flag should be passed to determine the action mode.
 
-  If the special option is passed then we will not attempt to close a window. If the script is
+Passing both any of the close or focus flags together will result in an error if a window is found matching
+the pattern, if no window is found then one will still be launched without any errors.
+
+If the special option is passed then we will not attempt to close a window. If the script is
 invoked with the special option set, we check if there is a window matching the pattern, if there
 is and the currently active window is on the same workspace passed in to the special option, then
 we toggle the workspace closed.  This allows the same keybind to be used to launch an application
@@ -35,7 +40,9 @@ EOF
 
 action="focuswindow"
 close_flag="0"
+close_active_only_flag="0"
 focus_flag="0"
+focus_active_only_flag="0"
 launch_cmd=()
 pattern=""
 special_flag="0"
@@ -52,6 +59,14 @@ while [[ $# -gt 0 ]]; do
     shift
     special_flag="1"
     special=$1
+  elif [[ $1 == "-o" ]] || [[ $1 == "--focus-active-only" ]]; then
+    focus_flag="1"
+    focus_active_only_flag="1"
+    action="focuswindow"
+  elif [[ $1 == "-x" ]] || [[ $1 == "--close-active-only" ]]; then
+    close_flag="1"
+    close_active_only_flag="1"
+    action="closewindow"
   elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     usage && exit 0
   elif [[ -z $pattern ]]; then
@@ -70,6 +85,12 @@ toggle_special() {
   hyprctl dispatch togglespecialworkspace $special
 }
 
+launch_application() {
+  echo "Launching..."
+  echo "'${launch_cmd[@]}'"
+  eval exec ${launch_cmd[@]}
+}
+
 ################################################################################
 # MAIN
 ################################################################################
@@ -82,44 +103,63 @@ elif [[ -z $launch_cmd ]]; then
   usage && exit 1
 fi
 
-# Get first window matching the pattern.
-address=$(hyprctl clients -j | jq -r ".[] | select(.class | contains(\"$pattern\")) | .address")
-
 echo "Pattern: $pattern"
-echo "Address: $address"
+addresses=$(hyprctl clients -j | jq ".[] | select(.class | contains(\"$pattern\")) | .address")
 
-# Check if we found a window address.
-if [[ -n $address ]]; then
-
-  # Get the workspace name of the active window.
-  active_window_workspace=$(hyprctl activewindow -j | jq -r '.workspace.name')
-  echo "Active window workspace: $active_window_workspace"
-
-  # Check if we have special flag and active window is on the special workspace.  If so
-  # we just toggle the special workspace.  This keeps "special" apps alive, but closes and / opens
-  # the special workspace when invoked.
-  if [[ $special_flag == "1" ]] && [[ $active_window_workspace =~ $special ]]; then
-    toggle_special && exit 0
-  fi
-
-  # Check if both close and focus flags were passed, so we don't do the
-  # wrong thing.
-  if [[ $focus_flag == "1" ]] && [[ $close_flag == "1" ]]; then
-    echo "[ERROR]: Both focus and close flag were passed."
-    exit 1
-  fi
-
-  # We didn't have the special flag, so dispatch the command (focus or close).
-  echo "Found window, dispatching action: $action"
-  hyprctl dispatch $action "address:$address"
-else
-  # We did not find an address matching the pattern.
-  #
-  # Toggle a special workspace, if applicable before launching.
+# If no addresses, then launch the application.
+if [[ -z $addresses ]]; then
+  # Toggle special workspace if applicable.
   if [[ $special_flag == "1" ]]; then
     toggle_special
   fi
-  echo "Launching..."
-  echo "'${launch_cmd[@]}'"
-  eval exec ${launch_cmd[@]}
+  launch_application && exit 0
+fi
+
+active_window_workspace=$(hyprctl activewindow -j | jq -r '.workspace.name')
+
+# Check if we have special flag and active window is on the special workspace.  If so
+# we just toggle the special workspace.  This keeps "special" apps alive, but closes and / opens
+# the special workspace when invoked.
+if [[ $special_flag == "1" ]] && [[ $active_window_workspace =~ $special ]]; then
+  toggle_special && exit 0
+fi
+
+# Check if both close and focus flags were passed, so we don't do the
+# wrong thing.
+if [[ $focus_flag == "1" ]] && [[ $close_flag == "1" ]]; then
+  echo "[ERROR]: Both focus and close flag were passed."
+  exit 1
+fi
+
+for address in ${addresses[@]}; do
+  # Clean the address of quotes.
+  address=${address//\"/}
+  echo "Handling address: '$address'"
+
+  if [[ $focus_active_only_flag == "1" ]] || [[ $close_active_only_flag == "1" ]]; then
+    # get the workspace name for the address.
+    workspace=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$address\") | .workspace.name")
+
+    # check that the window is on the active workspace.
+    if [[ $active_window_workspace == $workspace ]]; then
+      echo "Performing action: '$action', on window: '$address'"
+      hyprctl dispatch $action "address:$address"
+      # early out if focusing a window.
+      [[ $focus_active_only_flag ]] && exit 0
+    else
+      # the window is not on the active workspace, so skip it.
+      echo "Skipping window: $address"
+    fi
+  else
+    # We don't have the focus_active_only_flag or close_active_only_flag set, so we perform
+    # the action on the window.
+    echo "Performing action: '$action', on window: '$address'"
+    hyprctl dispatch $action "address:$address"
+  fi
+done
+
+# If we made it here and focus_active_only_flag was set, then we did not
+# find a window on the active workspace, so we launch a new window.
+if [[ $focus_active_only_flag == "1" ]]; then
+  launch_application
 fi
