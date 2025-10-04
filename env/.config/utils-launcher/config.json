@@ -1,34 +1,34 @@
 [
   {
-    "name": "Install Web App",
+    "name": "App - install web app",
     "exec": "$SCRIPTS/hypr/install-webapp"
   },
   {
-    "name": "Uninstall Desktop App",
+    "name": "App - uninstall desktop app",
     "exec": "$SCRIPTS/hypr/uninstall-desktop-app"
   },
   {
-    "name": "Active Window Table / Picker",
-    "exec": "$SCRIPTS/hypr/window-table"
-  },
-  {
-    "name": "Clear Clipboard History",
+    "name": "Clipboard - clear history",
     "exec": "$SCRIPTS/hypr/clear-clipboard-history && echo Done"
   },
   {
-    "name": "Restart waybar",
-    "exec": "$SCRIPTS/hypr/waybar-restart"
+    "name": "Waybar - restart",
+    "exec": "$SCRIPTS/hypr/waybarctl --restart"
   },
   {
-    "name": "Toggle waybar",
-    "exec": "$SCRIPTS/hypr/toggle-waybar"
+    "name": "Waybar -- toggle",
+    "exec": "$SCRIPTS/hypr/waybarctl --toggle"
   },
   {
-    "name": "Close Windows - Active Workspace",
+    "name": "Windows - active window table / picker",
+    "exec": "$SCRIPTS/hypr/window-table"
+  },
+  {
+    "name": "Windows - close ALL in active workspace",
     "exec": "$SCRIPTS/hypr/close-windows --active-workspace"
   },
   {
-    "name": "Close Windows - ALL",
+    "name": "Windows - close ALL in all workspaces",
     "exec": "$SCRIPTS/hypr/close-windows --all"
   }
 ]

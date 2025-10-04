@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+THIS=$(basename ${BASH_SOURCE[0]})
+
+usage() {
+  cat <<EOF
+
+Waybar control manager.
+
+USAGE:
+  
+  $ $THIS [OPTION]
+
+OPTIONS:
+
+  -k | --kill:      Kill waybar 
+  -r | --restart:   Restart waybar.
+  -s | --start:     Start waybar.
+  -t | --toggle:    Toggle visibility of waybar.
+  -h | --help:      Show this help page.
+
+EOF
+}
+
+kill_flag="0"
+restart_flag="0"
+start_flag="0"
+toggle_flag="0"
+waybar_pid=$(pgrep -x waybar)
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-k" ]] || [[ $1 == "--kill" ]]; then
+    kill_flag="1"
+  elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
+    restart_flag="1"
+  elif [[ $1 == "-s" ]] || [[ $1 == "--start" ]]; then
+    start_flag="1"
+  elif [[ $1 == "-t" ]] || [[ $1 == "--toggle" ]]; then
+    toggle_flag="1"
+  elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  fi
+  shift
+done
+
+# Handle flags & state that need to kill the waybar process.
+if [[ $kill_flag == "1" ]] ||
+  [[ $restart_flag == "1" ]] ||
+  ([[ $toggle_flag == "1" ]] && [[ -n $waybar_pid ]]); then
+  pkill -x waybar
+fi
+
+# Handle flags & state that need to start the waybar process.
+if [[ $restart_flag == "1" ]] ||
+  ([[ $start_flag == "1" ]] && [[ -z $waybar_pid ]]) ||
+  ([[ $toggle_flag == "1" ]] && [[ -z $waybar_pid ]]); then
+  setsid uwsm app -- waybar >/dev/null 2>&1 &
+  sleep 1 # Sleep to allow it to start if running in a pop up terminal.
+fi
