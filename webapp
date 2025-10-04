@@ -63,7 +63,7 @@ install() {
   log "Installing webapp from spec: $file"
 
   if [[ $dry_run == "0" ]]; then
-    $script --file $file
+    $script --file $file --no-interactive
   fi
 }
 
