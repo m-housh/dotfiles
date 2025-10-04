@@ -44,6 +44,8 @@ rows=()
 selected_value=""
 window_data=$(hyprctl clients -j | jq 'sort_by(.workspace.name)')
 
+SCRIPTS=${SCRIPTS}
+
 while [[ $# -gt 0 ]]; do
   if [[ $launch_flag == "1" ]]; then
     launch_args+=("$1")
@@ -77,43 +79,42 @@ generate_rows() {
   # Zip into a new comma separated values
   for i in "${!addresses[@]}"; do
     if [[ $show_window_class_flag == "1" ]]; then
-      rows+=("${workspaces[i]}, ${titles[i]}, ${classes[i]}, ${addresses[i]}")
+      rows+=("${workspaces[i]} | ${titles[i]} | ${classes[i]} | ${addresses[i]}")
     else
-      rows+=("${workspaces[i]}, ${titles[i]}, ${addresses[i]}")
+      rows+=("${workspaces[i]} | ${titles[i]} | ${addresses[i]}")
     fi
   done
 }
 
 show_table_return_choice() {
-  local columns="Workspace, Title, Address"
-  local ret_column=3
+  local columns="Workspace | Title | Address"
 
   if [[ $show_window_class_flag == "1" ]]; then
-    columns="Workspace, Title, Class, Address"
-    ret_column=4
+    columns="Workspace | Title | Class | Address"
   fi
   local ret=$(
     printf '%s\n' "${rows[@]}" |
-      fzf --footer="Workspace - Title - Address" --footer-label-pos=center
-    # gum table --columns "$columns" --return-column $ret_column
+      fzf --footer="$columns"
 
   )
   # remove spaces and quotes from result.
   ret=${ret//\"/}
   ret=${ret// /}
+  # revove everything but the address portion.
+  ret=${ret##*|}
   echo "$ret"
 }
 
 ask_what_to_do_with_selection() {
-  choice=$(gum choose "Focus window" "Copy to clipboard" "Refresh" "Close window" "Quit")
+  choice=$(printf "Focus Window\nCopy to Clipboard\nRefresh Window List\nClose Window\nQuit" | fzf)
   echo "Choice: $choice"
   if [[ $choice == "Quit" ]]; then
     exit 0
-  elif [[ $choice == "Close window" ]]; then
+  elif [[ $choice == "Close Window" ]]; then
     close_flag="1"
-  elif [[ $choice == "Copy to clipboard" ]]; then
+  elif [[ $choice == "Copy to Clipboard" ]]; then
     clipboard_flag="1"
-  elif [[ $choice == "Focus window" ]]; then
+  elif [[ $choice == "Focus Window" ]]; then
     focus_flag="1"
   elif [[ $choice == "Refresh" ]]; then
     eval exec ${BASH_SOURCE[0]}
@@ -151,6 +152,12 @@ if [[ $launch_flag == "1" ]]; then
     --keybind="q=quit" \
     -e "${BASH_SOURCE[0]}" "${launch_args[@]}"
 else
+
+  # Load colors if they haven't been loaded already.
+  [[ -z ${FZF_DEFAULT_OPTS} ]] &&
+    [[ -f $SCRIPTS/catppuccin-colors ]] &&
+    source $SCRIPTS/catppuccin-colors
+
   generate_rows
   selected_value=$(show_table_return_choice)
   if [[ -n $selected_value ]]; then
@@ -162,5 +169,6 @@ else
 
     [[ -n $selected_value ]] && handle_selected_value
     # If you make it here, We just give up... Don't start an endless loop.
+    echo "Giving up without a selection."
   fi
 fi

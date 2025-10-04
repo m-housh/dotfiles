@@ -7,5 +7,5 @@ if [ -n "$WAYBAR_PID" ]; then
   kill "$WAYBAR_PID"
 else
   # start waybar in the background.
-  waybar &
+  setsid uwsm app -- waybar >/dev/null 2>&1 &
 fi

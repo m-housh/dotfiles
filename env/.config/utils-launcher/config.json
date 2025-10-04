@@ -22,5 +22,13 @@
   {
     "name": "Toggle waybar",
     "exec": "$SCRIPTS/hypr/toggle-waybar"
+  },
+  {
+    "name": "Close Windows - Active Workspace",
+    "exec": "$SCRIPTS/hypr/close-windows --active-workspace"
+  },
+  {
+    "name": "Close Windows - ALL",
+    "exec": "$SCRIPTS/hypr/close-windows --all"
   }
 ]
