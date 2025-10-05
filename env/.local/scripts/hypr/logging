@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+
+# Basic logging utility functions that can be used by scripts to log
+# to files.  This helps keep console clean for TUI's.  Will log
+# messages to all registered files, which allows each script to
+# declare their own logging file, but also print logs into parent
+# processes files, for ease of discovery.
+#
+# Supports warning and error flags.
+#
+# Errors and warnings get logged to the file and to the console.
+#
+#
+# EXAMPLE SETUP:
+#
+# source $SCRIPTS/hypr/logging
+# THIS=$(basename ${BASH_SOURCE[0]})
+#
+# # Setup logging file and label.
+# setup-logging "/tmp/$THIS.log" $THIS
+#
+# function log() {
+#   logging log --source ${BASH_SOURCE[0]} "$@"
+# }
+#
+# log "My log message."
+# log --warning "My warning message."
+# log --error "My error message."
+#
+
+LOG_FILE=(${LOG_FILE:-})
+LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-}
+LOG_LABEL=(${LOG_LABEL:-})
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+
+warn_flag="0"
+error_flag="0"
+
+__msg() {
+  if [[ -z "$@" ]]; then
+    echo -e "\e[31m[ERROR]:\e[0m No logs were supplied."
+    exit 1
+  fi
+  if [[ $warn_flag == "1" ]]; then
+    echo -e "\e[33m[WARN]:\e[0m $@"
+  elif [[ $error_flag == "1" ]]; then
+    echo -e "\e[31m[ERROR]:\e[0m $@"
+  else
+    echo "$@"
+  fi
+}
+
+__ensure_setup() {
+  if [[ -z $LOG_FILE ]] || [[ -z $LOG_INVOCATION_ID ]] || [[ -z $LOG_LABEL ]]; then
+    echo -e "\e[31m[ERROR]:\e[0m Logging is not properly setup."
+    echo "Perhaps you didn't call 'setup-logging' first."
+    print_logger_env && exit 1
+  fi
+}
+
+logging() {
+  __ensure_setup
+
+  # Reset flags
+  log_flag="0"
+  warn_flag="0"
+  error_flag="0"
+  source_file=""
+  args=()
+
+  while [[ $# -gt 0 ]]; do
+    if [[ $1 == "-w" ]] || [[ $1 =~ ^--warn ]]; then
+      log_flag="1"
+      warn_flag="1"
+    elif [[ $1 == "-e" ]] || [[ $1 =~ ^--error ]]; then
+      log_flag="1"
+      error_flag="1"
+    elif [[ $1 == "-s" ]] || [[ $1 =~ ^--source ]]; then
+      shift
+      source_file="$1"
+    elif [[ $1 == "log" ]]; then
+      log_flag="1"
+    else
+      args+=("$1")
+    fi
+    shift
+  done
+
+  if [[ -z $source_file ]]; then
+    echo -e "\e[31m[ERROR]:\e[0m Must supply the source file the logs originate from."
+    exit 1
+  fi
+
+  if [[ -z $args ]]; then
+    echo -e "\e[31m[ERROR]:\e[0m No log message supplied."
+    exit 1
+  fi
+
+  msg=""
+  # Loop over log files logging message to each file.
+  for i in "${!LOG_FILE[@]}"; do
+    prefix="[id: $LOG_INVOCATION_ID][time: $($SCRIPTS/isosec)][label: ${LOG_LABEL[i]}][source: $source_file] : "
+    msg="$prefix $(__msg ${args[@]})"
+    echo "$msg" >>${LOG_FILE[i]}
+  done
+
+  # Also log errors and warning messages to the console.
+  if [[ $error_flag == "1" ]] || [[ $warn_flag == "1" ]]; then
+    echo "${msg##* : }"
+  fi
+}
+
+setup-logging() {
+  LOG_FILE+=("$1")
+  LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-$RANDOM}
+  if [[ -n "$LOG_LABEL" ]]; then
+    LOG_LABEL+=("${LOG_LABEL[@]}=>$2")
+  else
+    LOG_LABEL+=("$2")
+  fi
+  export LOG_FILE
+  export LOG_LABEL
+  export LOG_INVOCATION_ID
+}
+
+print_logger_env() {
+  echo "LOG_FILE: ${LOG_FILE[@]}"
+  echo "LOG_INVOCATION_ID: $LOG_INVOCATION_ID"
+  echo "LOG_LABEL: ${LOG_LABEL[@]}"
+}
+
+export -f setup-logging
+export -f logging
+export -f print_logger_env

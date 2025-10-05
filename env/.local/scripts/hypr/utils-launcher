@@ -26,6 +26,8 @@ config_file=""
 launch_flag="0"
 
 rows=()
+invocation_id=${RANDOM}
+LOG_FILE=${LOG_FILE:-/tmp/$THIS.log}
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME}
 SCRIPTS=${SCRIPTS}
 
@@ -39,9 +41,13 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+log() {
+  echo "[$invocation_id]:[$($SCRIPTS/isosec)]:[$THIS]: $1" >>$LOG_FILE
+}
+
 if [[ -z $XDG_CONFIG_HOME ]]; then
-  echo "XDG_CONFIG_HOME not set"
-  echo "using ~/.config"
+  log "XDG_CONFIG_HOME not set"
+  log "using ~/.config"
   XDG_CONFIG_HOME=$HOME/.config
 fi
 
@@ -76,14 +82,14 @@ generate_rows() {
 ################################################################################
 
 if [[ -z $config_file ]]; then
-  echo "No config file set."
-  echo "Using ~/.config/utils-launcher/config.json"
+  log "No config file set."
+  log "Using ~/.config/utils-launcher/config.json"
   config_file="$XDG_CONFIG_HOME/utils-launcher/config.json"
 fi
 
 if [[ -z $SCRIPTS ]]; then
-  echo "SCRIPTS not set"
-  echo "using ~/.local/scripts"
+  log "SCRIPTS not set"
+  log "using ~/.local/scripts"
   SCRIPTS=$HOME/.local/scripts
 fi
 
@@ -92,7 +98,7 @@ if [[ $launch_flag == "1" ]]; then
 fi
 
 if [[ ! -f $config_file ]]; then
-  echo "[ERROR]: no config file set" && exit 1
+  log "[ERROR]: no config file set" && exit 1
 fi
 
 file_data=$(cat $config_file)
@@ -101,8 +107,6 @@ file_data=$(cat $config_file)
 [[ -f $SCRIPTS/catppuccin-colors ]] && source $SCRIPTS/catppuccin-colors
 
 generate_rows "$file_data"
-# sel=$(echo "$file_data" | jq -r '.[] | .name' | fzf --style=full --footer="$(footer)")
-echo "ROWS: ${rows[@]}"
 sel=$(
   printf "%s\n" "${rows[@]}" |
     fzf --style=full --footer="$(footer)" --with-nth=2 --delimiter='|' \
@@ -110,17 +114,17 @@ sel=$(
       --preview='printf "\nName: {2}\nExec: {1}"'
 )
 
-echo "Selection: $sel"
+log "Selection: $sel"
 
 if [[ -n "$sel" ]]; then
-  # Load the exec command for the selection.
-  exec_cmd=$(echo $file_data | jq -r ".[] | select(.name == \"$sel\") | .exec")
+  # Parse the exec command for the selection.
+  exec_cmd=${sel%%|*}
 
-  echo "Exec: '$exec_cmd'"
+  log "Exec: '$exec_cmd'"
   if [[ -z $exec_cmd ]]; then
-    echo "[ERROR]: Command is empty." && exit 1
+    log "[ERROR]: Command is empty." && exit 1
   fi
   eval exec uwsm app -- "$exec_cmd"
 else
-  echo "No selection."
+  log "No selection."
 fi

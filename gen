@@ -40,29 +40,30 @@ generate_run() {
   local dest="$DEV_ENV/runs/$file"
   fail_if_exists $dest
   log "Creating new run: $dest"
-  printf "#!/usr/bin/env bash\n\n" >$dest
-  printf "yay \${1:-\"-S --noconfirm\"} # packages\n" >>$dest
+  cat >"$dest" <<'EOF'
+#!/usr/bin/env bash
 
+yay ${1:-"-S --noconfirm"} # packages
+
+EOF
   chmod +x $dest
 }
 
 generate_webapp() {
-
   local dest="$DEV_ENV/env/webapps/$file"
-
+  # Check that the destination ends with '.json', fix if not.
   if [[ ! $dest =~ \.json$ ]]; then
     dest="$dest.json"
   fi
-
   fail_if_exists $dest
-
   log "Creating new webapp: $dest"
-
-  printf "{\n" >$dest
-  printf "  \"name\": \"My App\",\n" >>$dest
-  printf "  \"url\": \"https://example.com\",\n" >>$dest
-  printf "  \"icon\": \"https://icon.com\"\n" >>$dest
-  printf "}" >>$dest
+  cat >"$dest" <<'EOF'
+{
+  "name": "My App",
+  "url": "https://example.com",
+  "icon": "https://icon.com"
+}
+EOF
 
 }
 
@@ -70,7 +71,29 @@ generate_script() {
   local dest="$DEV_ENV/env/.local/scripts/$file"
   fail_if_exists $dest
   log "Creating new script: $dest"
-  printf "#!/usr/bin/env bash\n\n" >$dest
+  cat >"$dest" <<'EOF'
+#!/usr/bin/env bash
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename $THIS_FILE)
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "/tmp/THIS.log" "$THIS"
+
+log "Starting $THIS..."
+
+EOF
   chmod +x $dest
   echo $dest
 }
