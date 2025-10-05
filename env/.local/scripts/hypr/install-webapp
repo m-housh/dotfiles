@@ -2,7 +2,8 @@
 
 # Adapted from https://github.com/basecamp/omarchy/tree/master?tab=readme-ov-file
 
-THIS=$(basename ${BASH_SOURCE[0]})
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename "$THIS_FILE")
 
 function usage() {
   cat <<EOF
@@ -88,20 +89,8 @@ launch_flag="0"
 interactive_flag="0" # This is an internal flag, to not log some things when launch is used.
 interactive_mode=false
 no_interactive_flag="0"
-SCRIPTS="${SCRIPTS}"
+SCRIPTS="${SCRIPTS:-$HOME/.local/scripts}"
 XDG_DATA_HOME=${XDG_DATA_HOME}
-
-if [[ -z "$SCRIPTS" ]]; then
-  echo "SCRIPTS not set"
-  echo "using ~/.local/scripts"
-  SCRIPTS=$HOME/.local/scripts
-fi
-
-if [[ -z "$XDG_DATA_HOME" ]]; then
-  echo "XDG_DATA_HOME not set"
-  echo "using ~/.local/share"
-  XDG_DATA_HOME=$HOME/.local/share
-fi
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
@@ -138,15 +127,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 log() {
-  if [[ $dry_run == "1" ]]; then
-    echo -e "\e[34m[DRY_RUN]=>\e[0m $1"
-  else
-    echo -e "$1"
-  fi
-}
-
-log_error() {
-  log "\e[31m[ERROR]:\e[0m $1"
+  logging log --source "$THIS_FILE" "$@"
 }
 
 launch() {
@@ -164,7 +145,7 @@ check_properties() {
 
 load_from_file() {
   if [[ ! -f $1 ]]; then
-    log_error "File '$1' is not found or readable." && exit 1
+    log --error "File '$1' is not found or readable." && exit 1
   fi
   file=$(cat $1)
   app_name=$(echo $file | jq -r '.name // ""')
@@ -213,7 +194,7 @@ set_icon_ref() {
       if curl -sL -o "$icon_path" "$icon_ref"; then
         icon_path="$icon_dir/$app_name.png"
       else
-        log_error "Failed to download icon." && exit 1
+        log --error "Failed to download icon." && exit 1
       fi
     fi
   else
@@ -254,6 +235,17 @@ EOF
 # MAIN
 ################################################################################
 
+# Setup logging file and label
+source "$SCRIPTS/hypr/logging"
+setup-logging "/tmp/$THIS.log" "$THIS"
+export LOG_ENABLE_DRY_RUN="$dry_run"
+
+if [[ -z "$XDG_DATA_HOME" ]]; then
+  log "XDG_DATA_HOME not set"
+  log "using ~/.local/share"
+  XDG_DATA_HOME=$HOME/.local/share
+fi
+
 if [[ $launch_flag == "1" ]]; then
   launch && exit 0
 fi
@@ -268,7 +260,7 @@ if [[ "$?" == "1" ]]; then
 
   # Check if the '--no-interactive' flag was passed and exit with error.
   [[ $no_interactive_flag == "1" ]] &&
-    log_error "Required properties not set and '--no-interactive' flag was passed." &&
+    log --error "Required properties not set and '--no-interactive' flag was passed." &&
     exit 1
 
   # Only log this if not in interactive mode.
@@ -281,7 +273,7 @@ if [[ "$?" == "1" ]]; then
   check_properties
   if [[ "$?" == "1" ]]; then
     # Exit if they were not set during interactive mode.
-    log_error "You must set app name, app URL, and icon URL!" && exit 1
+    log --error "You must set app name, app URL, and icon URL!" && exit 1
   fi
 
   # Set flag that we are in interactive mode.

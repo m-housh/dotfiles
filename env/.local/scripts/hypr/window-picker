@@ -24,7 +24,7 @@ uses_supplied_footer="0"
 fzf_opts=()
 rows=()
 window_data=$(hyprctl clients -j | jq 'sort_by(.workspace.id)')
-SCRIPTS=${SCRIPTS}
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^--footer ]]; then
@@ -35,10 +35,6 @@ while [[ $# -gt 0 ]]; do
   fi
   shift
 done
-
-if [[ -z $SCRIPTS ]]; then
-  SCRIPTS=$HOME/.local/scripts
-fi
 
 footer() {
   cat <<'EOF'

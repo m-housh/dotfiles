@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-THIS=$(basename ${BASH_SOURCE[0]})
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename $THIS_FILE)
 
 usage() {
   cat <<EOF

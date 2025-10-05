@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename "$THIS_FILE")
+
 usage() {
   cat <<EOF
 
 Close window(s) by address or pattern mode.
 
 USAGE:
-  $ $(basename ${BASH_SOURCE[0]}) [OPTIONS] [MODE] [ARG...]
+  $ $THIS [OPTIONS] [MODE] [ARG...]
 
 MODE:
   --all:                      Close all windows in all workspaces, any arguments are ignored.
@@ -41,6 +44,7 @@ dry_run_flag="0"
 special_flag="0"
 args=()
 addresses=()
+SCRIPTS="${SCRIPTS:-$HOME/.local/scripts}"
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^-a ]] || [[ $1 =~ ^--active-workspace ]]; then
@@ -62,11 +66,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 log() {
-  if [[ $dry_run_flag == "1" ]]; then
-    echo "[DRY RUN]: $1"
-  else
-    echo "$1"
-  fi
+  logging log --source "$THIS_FILE" "$@"
 }
 
 _select_addresses() {
@@ -92,9 +92,14 @@ get_special_addresses() {
 close() {
   log "Closing window address: $1"
   if [[ $dry_run_flag == "0" ]]; then
-    hyprctl dispatch closewindow "address:$1"
+    hyprctl dispatch closewindow "address:$1" >/dev/null 2>&1
   fi
 }
+
+# Setup logging file and label
+source "$SCRIPTS/hypr/logging"
+setup-logging "/tmp/$THIS.log" "$THIS"
+export LOG_ENABLE_DRY_RUN="$dry_run_flag"
 
 if [[ $active_workspace_flag == "1" ]]; then
   # Set addresses to active workspace windows.
@@ -123,7 +128,7 @@ else
 fi
 
 if [[ ${#addresses} == 0 ]]; then
-  log "No windows found."
+  log --warning "No windows found."
   exit 0
 fi
 

@@ -1,6 +1,8 @@
-# /usr/bin/env bash
+#! /usr/bin/env bash
 
 # Adapted from https://github.com/basecamp/omarchy/tree/master?tab=readme-ov-file
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename "$THIS_FILE")
 
 usage() {
   cat <<EOF
@@ -10,7 +12,7 @@ essentially just generates the pattern and launch command to pass into that scri
 
 USAGE:
 
-  $ launch-webapp [OPTIONS] <url> [ARGS...]
+  $ $THIS [OPTIONS] <url> [ARGS...]
 
 OPTIONS:
 
@@ -43,13 +45,7 @@ browser="chromium.desktop"
 url=""
 launch_args=()
 app_args=""
-SCRIPTS="${SCRIPTS}"
-
-if [[ -z $SCRIPTS ]]; then
-  echo "scripts directory not set"
-  echo "using ~/.local/scripts"
-  SCRIPTS=~/.local/scripts
-fi
+SCRIPTS="${SCRIPTS:-$HOME/.local/scripts}"
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^--special ]] || [[ $1 =~ ^-s ]]; then
@@ -77,20 +73,28 @@ pattern() {
   echo $pattern
 }
 
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
 ##################################################
 # MAIN
 ##################################################
 
+# setup logging file and label
+source "$SCRIPTS/hypr/logging"
+setup-logging "/tmp/$THIS.log" "$THIS"
+
 if [[ -z $url ]]; then
-  echo "[ERROR]: Must supply a url." && usage && exit 1
+  log --error "Must supply a url." && usage && exit 1
 fi
 
 # Any left over args after "--"
 app_args="$@"
 
-echo "URL: $url"
-echo "Launch args: ${launch_args[@]}"
-echo "App args: ${app_args}"
+log "URL: $url"
+log "Launch args: ${launch_args[@]}"
+log "App args: ${app_args}"
 
 $SCRIPTS/hypr/launch "${launch_args[@]}" "$(pattern)" \
   setsid uwsm app -- $(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1) --app="$url" "$app_args"

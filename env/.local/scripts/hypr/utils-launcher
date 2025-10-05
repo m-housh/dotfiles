@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-THIS=$(basename ${BASH_SOURCE[0]})
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename $THIS_FILE)
 
 usage() {
   cat <<EOF
@@ -27,7 +28,6 @@ launch_flag="0"
 
 rows=()
 invocation_id=${RANDOM}
-LOG_FILE=${LOG_FILE:-/tmp/$THIS.log}
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME}
 SCRIPTS=${SCRIPTS}
 
@@ -42,14 +42,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 log() {
-  echo "[$invocation_id]:[$($SCRIPTS/isosec)]:[$THIS]: $1" >>$LOG_FILE
+  logging log --source "$THIS_FILE" "$@"
 }
-
-if [[ -z $XDG_CONFIG_HOME ]]; then
-  log "XDG_CONFIG_HOME not set"
-  log "using ~/.config"
-  XDG_CONFIG_HOME=$HOME/.config
-fi
 
 launch() {
   ghostty --class=$window_class --window-padding-x=$window_padding_x \
@@ -80,6 +74,16 @@ generate_rows() {
 ################################################################################
 # MAIN
 ################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "/tmp/$THIS.log" "$THIS"
+
+if [[ -z $XDG_CONFIG_HOME ]]; then
+  log "XDG_CONFIG_HOME not set"
+  log "using ~/.config"
+  XDG_CONFIG_HOME=$HOME/.config
+fi
 
 if [[ -z $config_file ]]; then
   log "No config file set."

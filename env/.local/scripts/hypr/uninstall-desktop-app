@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
-# Uninstalls '.desktop' applications, including their icon.
-#
-# This is primarily used for uninstalling web app's, if a
-# desktop app was installed via the package manager, then the
-# package manager should be used to uninstall the application.
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename "$THIS_FILE")
 
 usage() {
   cat <<EOF
@@ -15,11 +12,12 @@ package manager, then it should be used to uninstall the application.
 
 Usage:
 
-  uninstall-desktop-app [OPTIONS] [FILE...]
+  $ $THIS [OPTIONS] [FILE...]
 
-  OPTIONS:
-    --dry-run:    Perform but don't actually remove anything.
-    -h | --help:  Show the help page.
+OPTIONS:
+
+  --dry-run:    Perform but don't actually remove anything.
+  -h | --help:  Show the help page.
 
 If no files are supplied, then an interactive session will be
 started that allows you to choose the applications to remove.
@@ -32,27 +30,31 @@ interactive_mode="0"
 dry_run="0"
 help_flag="0"
 XDG_DATA_HOME=${XDG_DATA_HOME}
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^--dry ]]; then
     dry_run="1"
   elif [[ $1 =~ ^-h ]] || [[ $1 =~ ^--h ]]; then
-    help_flag="1"
+    usage && exit 0
   else
     files+=("$1")
   fi
   shift
 done
 
-# Early out for help option.
-if [[ $help_flag == "1" ]]; then
-  usage
-  exit 0
-fi
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+############################## MAIN ##############################
+
+source "$SCRIPTS/hypr/logging"
+setup-logging "/tmp/$THIS.log" "$THIS"
 
 if [[ -z $XDG_DATA_HOME ]]; then
-  echo "xdg data home is not set"
-  echo "using: ~/.local/share"
+  log "xdg data home is not set"
+  log "using: ~/.local/share"
   XDG_DATA_HOME=$HOME/.local/share
 fi
 
@@ -64,16 +66,6 @@ if [[ ${#files} == 0 ]]; then
       gum choose --no-limit --padding "2 4" --header "Choose desktop apps to remove:" --selected-prefix="✗ ")
   )
 fi
-
-log() {
-  if [[ $dry_run == "1" ]]; then
-    echo "[DRY RUN]: $1"
-  else
-    echo "$1"
-  fi
-}
-
-############################## MAIN ##############################
 
 for f in ${files[@]}; do
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename "$THIS_FILE")
+
 usage() {
   cat <<EOF
 
@@ -12,7 +15,7 @@ the workspace.
 
 USAGE:
 
-  $ $(basename ${BASH_SOURCE[0]}) [OPTIONS] <workspace>
+  $ $THIS [OPTIONS] <workspace>
 
 OPTIONS:
 
@@ -23,6 +26,7 @@ EOF
 
 target_workspace=""
 active_workspace=$(hyprctl activewindow -j | jq -r '.workspace.name')
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^-h ]] || [[ $1 =~ ^--help ]]; then
@@ -33,15 +37,22 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+source "$SCRIPTS/hypr/logging"
+setup-logging "/tmp/$THIS.log" "$THIS"
+
 if [[ -z target_workspace ]]; then
-  echo "[ERROR]: Must supply a workpsace to switch to."
+  log --error "Must supply a workpsace to switch to."
   usage && exit 1
 fi
 
 # If active window is on a special workspace, then toggle the special workspace off.
 if [[ $active_workspace =~ ^special ]]; then
-  echo "Toggling special workspace: '$active_workspace'"
-  hyprctl dispatch togglespecialworkspace ${active_workspace#special:}
+  log "Toggling special workspace: '$active_workspace'"
+  hyprctl dispatch togglespecialworkspace ${active_workspace#special:} >/dev/null 2>&1
 
   # Only toggle the special workspace if trying to switch to previous and we're currently
   # on a special workspace.
@@ -50,5 +61,5 @@ if [[ $active_workspace =~ ^special ]]; then
   fi
 fi
 
-echo "Switching to workspace: $target_workspace"
-hyprctl dispatch workspace $target_workspace
+log "Switching to workspace: $target_workspace"
+hyprctl dispatch workspace $target_workspace >/dev/null 2>&1

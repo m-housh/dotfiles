@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename "$THIS_FILE")
+
 usage() {
   cat <<EOF
 
@@ -10,7 +13,7 @@ This is used in keybinds and by other scripts as a general entrypoint for managi
 
 USAGE:
 
-  $ $(basename ${BASH_SOURCE[0]}) [OPTIONS] PATTERN [LAUNCH_CMD...]
+  $ $THIS [OPTIONS] PATTERN [LAUNCH_CMD...]
 
 OPTIONS:
 
@@ -47,6 +50,7 @@ launch_cmd=()
 pattern=""
 special_flag="0"
 special=""
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 == "-c" ]] || [[ $1 == "--or-close" ]]; then
@@ -77,17 +81,26 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+# Redirects all output of hyprctl dispatch commands.
+hypr_dispatch() {
+  hyprctl dispatch "$@" >/dev/null 2>&1
+}
+
 toggle_special() {
   if [[ -z $special ]]; then
-    echo "[ERROR]: No name supplied for special workspace."
+    log --error " No name supplied for special workspace."
     exit 1
   fi
-  hyprctl dispatch togglespecialworkspace $special
+  hypr_dispatch togglespecialworkspace $special
 }
 
 launch_application() {
-  echo "Launching..."
-  echo "'${launch_cmd[@]}'"
+  log "Launching..."
+  log "'${launch_cmd[@]}'"
   eval exec ${launch_cmd[@]}
 }
 
@@ -95,15 +108,19 @@ launch_application() {
 # MAIN
 ################################################################################
 
+# Setup logging file and label
+source "$SCRIPTS/hypr/logging"
+setup-logging "/tmp/$THIS.log" "$THIS"
+
 if [[ -z $pattern ]]; then
-  echo "[ERROR]: Must supply a pattern to match the window class."
+  log --error "Must supply a pattern to match the window class."
   usage && exit 1
 elif [[ -z $launch_cmd ]]; then
-  echo "[ERROR]: Must supply a launch command to match the window class."
+  log --error "Must supply a launch command to match the window class."
   usage && exit 1
 fi
 
-echo "Pattern: $pattern"
+log "Pattern: $pattern"
 addresses=$(hyprctl clients -j | jq ".[] | select(.class | contains(\"$pattern\")) | .address")
 
 # If no addresses, then launch the application.
@@ -127,14 +144,14 @@ fi
 # Check if both close and focus flags were passed, so we don't do the
 # wrong thing.
 if [[ $focus_flag == "1" ]] && [[ $close_flag == "1" ]]; then
-  echo "[ERROR]: Both focus and close flag were passed."
+  log --error "Both focus and close flag were passed."
   exit 1
 fi
 
 for address in ${addresses[@]}; do
   # Clean the address of quotes.
   address=${address//\"/}
-  echo "Handling address: '$address'"
+  log "Handling address: '$address'"
 
   if [[ $focus_active_only_flag == "1" ]] || [[ $close_active_only_flag == "1" ]]; then
     # get the workspace name for the address.
@@ -142,19 +159,19 @@ for address in ${addresses[@]}; do
 
     # check that the window is on the active workspace.
     if [[ $active_window_workspace == $workspace ]]; then
-      echo "Performing action: '$action', on window: '$address'"
-      hyprctl dispatch $action "address:$address"
+      log "Performing action: '$action', on window: '$address'"
+      hypr_dispatch $action "address:$address"
       # early out if focusing a window.
       [[ $focus_active_only_flag ]] && exit 0
     else
       # the window is not on the active workspace, so skip it.
-      echo "Skipping window: $address"
+      log "Skipping window: $address"
     fi
   else
     # We don't have the focus_active_only_flag or close_active_only_flag set, so we perform
     # the action on the window.
-    echo "Performing action: '$action', on window: '$address'"
-    hyprctl dispatch $action "address:$address"
+    log "Performing action: '$action', on window: '$address'"
+    hypr_dispatch $action "address:$address"
   fi
 done
 

@@ -31,6 +31,9 @@
 LOG_FILE=(${LOG_FILE:-})
 LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-}
 LOG_LABEL=(${LOG_LABEL:-})
+# Run in dry run mode, which just prints to the console and does
+# not log to the files.
+LOG_ENABLE_DRY_RUN=${LOG_ENABLE_DRY_RUN:-"0"}
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 warn_flag="0"
@@ -96,17 +99,23 @@ logging() {
     exit 1
   fi
 
-  msg=""
-  # Loop over log files logging message to each file.
-  for i in "${!LOG_FILE[@]}"; do
-    prefix="[id: $LOG_INVOCATION_ID][time: $($SCRIPTS/isosec)][label: ${LOG_LABEL[i]}][source: $source_file] : "
-    msg="$prefix $(__msg ${args[@]})"
-    echo "$msg" >>${LOG_FILE[i]}
-  done
+  msg="$(__msg ${args[@]})"
 
-  # Also log errors and warning messages to the console.
-  if [[ $error_flag == "1" ]] || [[ $warn_flag == "1" ]]; then
-    echo "${msg##* : }"
+  if [[ $LOG_ENABLE_DRY_RUN == "0" ]]; then
+    # Loop over log files logging message to each file.
+    for i in "${!LOG_FILE[@]}"; do
+      prefix="[id: $LOG_INVOCATION_ID][time: $($SCRIPTS/isosec)][label: ${LOG_LABEL[i]}][source: $source_file] : "
+      m="$prefix $msg"
+      echo -e "$m" >>${LOG_FILE[i]}
+    done
+
+    # Also log errors and warning messages to the console.
+    if [[ $error_flag == "1" ]] || [[ $warn_flag == "1" ]]; then
+      echo -e "$msg"
+    fi
+  else
+    # Dry run mode, so just log to the console
+    echo -e "\e[34m[DRY RUN]:\e[0m $msg"
   fi
 }
 

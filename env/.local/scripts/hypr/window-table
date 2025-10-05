@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename $THIS_FILE)
+
 usage() {
   cat <<EOF
 
@@ -9,7 +12,7 @@ There are no required options for this script to work.
 
 USAGE:
 
-  $ $(basename ${BASH_SOURCE[0]}) [OPTIONS]
+  $ $THIS [OPTIONS]
 
 OPTIONS:
 
@@ -50,7 +53,7 @@ show_window_class_flag="0"
 launch_args=()
 selected_value=""
 
-SCRIPTS=${SCRIPTS}
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 while [[ $# -gt 0 ]]; do
   if [[ $launch_flag == "1" ]]; then
@@ -93,6 +96,10 @@ action_footer() {
 EOF
 }
 
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
 show_table_return_choice() {
   local opts=()
   if [[ $show_window_class_flag == "1" ]]; then
@@ -115,7 +122,7 @@ ask_what_to_do_with_selection() {
     printf "%s\n" "${choices[@]}" |
       fzf --style=full --footer="$(action_footer)" --header="What should we do with the selected window?"
   )
-  echo "Choice: $choice"
+  log "Choice: $choice"
   if [[ $choice == "Quit" ]]; then
     exit 0
   elif [[ $choice == "Close window" ]]; then
@@ -135,6 +142,12 @@ ask_what_to_do_with_selection() {
   fi
 }
 
+# Prevent hyprctl dispatch calls from printing to the console.
+hypr_dispatch() {
+  hyprctl dispatch "$@" >/dev/null 2>&1
+  return $?
+}
+
 move_to_workspace() {
   local workspace_id=""
 
@@ -146,7 +159,7 @@ move_to_workspace() {
   fi
 
   if [[ -z $move_to_workspace_name ]]; then
-    echo "[ERROR]: No workspace set to move window to."
+    log --error "No workspace set to move window to."
     exit 1
   fi
 
@@ -158,7 +171,7 @@ move_to_workspace() {
   fi
 
   if [[ -z $workspace_id ]]; then
-    echo "[ERROR]: No workspace id found for: '$move_to_workspace_name'"
+    log --error "No workspace id found for: '$move_to_workspace_name'"
     exit 1
   fi
 
@@ -167,36 +180,40 @@ move_to_workspace() {
     action="movetoworkspacesilent"
   fi
 
-  echo "Moving window: '$selected_value' to workspace: '$workspace_id'"
-  hyprctl dispatch $action "$workspace_id,address:$selected_value"
+  log "Moving window: '$selected_value' to workspace: '$workspace_id'"
+  hypr_dispatch $action "$workspace_id,address:$selected_value"
 }
 
 handle_selected_value() {
   if [[ $ignore_flag == "1" ]]; then
-    echo "Ignore flag set, selection: '$selected_value'"
+    log "Ignore flag set, selection: '$selected_value'"
     exit 0
   elif [[ $clipboard_flag == "1" ]]; then
-    echo "Copying to clipboard, selection: $selected_value"
+    log "Copying to clipboard, selection: $selected_value"
     wl-copy $selected_value
     exit 0
   elif [[ $focus_flag == "1" ]]; then
-    echo "Focusing window, selection: $selected_value"
-    hyprctl dispatch focuswindow "address:$selected_value"
+    log "Focusing window, selection: $selected_value"
+    hypr_dispatch focuswindow "address:$selected_value"
     exit 0
   elif [[ $close_flag == "1" ]]; then
-    echo "Closing window, selection: $selected_value"
-    hyprctl dispatch closewindow "address:$selected_value"
+    log "Closing window, selection: $selected_value"
+    hypr_dispatch closewindow "address:$selected_value"
     exit 0
   elif [[ $move_flag == "1" ]] || [[ $move_silent_flag == "1" ]]; then
     move_to_workspace && exit 0
   fi
   # TODO: Choose from list of what to do with the selected_value.
-  echo "No flag set, selection: '$selected_value'"
+  log "No flag set, selection: '$selected_value'"
 }
 
 ##################################################
 # MAIN
 ##################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "/tmp/$THIS.log" "$THIS"
 
 if [[ $launch_flag == "1" ]]; then
   ghostty --class="$window_class" --window-padding-x="$window_padding_x" \
@@ -214,11 +231,11 @@ else
     handle_selected_value
     # If we got here then no flag was passed in initially on how to handle the
     # selected window, so ask what they'd like to do.  Then handle it.
-    echo "Asking what to do with selction."
+    log "Asking what to do with selction."
     ask_what_to_do_with_selection
 
     [[ -n $selected_value ]] && handle_selected_value
     # If you make it here, We just give up... Don't start an endless loop.
-    echo "Giving up without a selection."
+    log "Giving up without a selection."
   fi
 fi
