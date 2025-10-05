@@ -93,9 +93,9 @@ fi
 
 sel=$(
   printf "%s\n" "${rows[@]}" |
-    fzf --style=full "${fzf_opts[@]}" \
-      --delimiter='|' --with-nth=4 --preview-label='[ Workspace Stats ]' \
-      --preview='printf "Name: {4}\nID: {1}\nWindows: {2}\nMonitor: {3}"'
+    fzf --style=full "${fzf_opts[@]}" --delimiter='|' --with-nth=4 \
+      --preview-label='[ Workspace Stats ]' \
+      --preview='printf "Name: {4}\nID: {1}\nWindows: {3}\nMonitor: {2}"'
 )
 
 [[ -z $sel ]] && exit 1

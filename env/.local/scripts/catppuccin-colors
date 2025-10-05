@@ -31,4 +31,4 @@ export BASE="#1e1e2e"
 export MANTLE="#181825"
 export CRUST="#11111b"
 
-export FZF_DEFAULT_OPTS="--color=header:$MAROON:bold,footer:$MAROON:bold,pointer:$MAUVE,prompt:$MAUVE,fg+:$MAUVE,border:$LAVENDER,info:$LAVENDER,fg:$TEXT,hl:$TEXT:bold,hl+:$TEXT:bold,bg:$BASE,bg+:$SURFACE0"
+export FZF_DEFAULT_OPTS="--color=header:$MAROON:bold,footer:$MAROON:bold,pointer:$MAUVE,prompt:$MAUVE,fg+:$MAUVE,border:$LAVENDER,info:$LAVENDER,fg:$TEXT,hl:$TEXT:bold,hl+:$TEXT:bold,bg:$BASE,bg+:$SURFACE0,preview-label:$TEAL:bold"

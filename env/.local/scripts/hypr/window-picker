@@ -58,7 +58,7 @@ generate_rows() {
 
   # Zip into rows.
   for i in "${!addresses[@]}"; do
-    rows+=("${workspaces[i]}=>${titles[i]}=>${classes[i]}=>${addresses[i]}")
+    rows+=("${addresses[i]}|${workspaces[i]}|${classes[i]}|${titles[i]}")
   done
 }
 
@@ -79,15 +79,12 @@ generate_rows
 sel=$(
   printf '%s\n' "${rows[@]}" |
     fzf --style=full "${fzf_opts[@]}" \
-      --preview-label='[ Window Stats ]' --delimiter='=>' --with-nth=2 \
-      --preview='echo -e "Title: {2}\nClass: {3}\nWorkspace: {1}\nAddress: {4}"'
+      --preview-label='[ Window Stats ]' --delimiter='|' --with-nth=4 \
+      --preview='echo -e "Title: {4}\nClass: {3}\nWorkspace: {2}\nAddress: {1}"'
 )
 
 [[ -z $sel ]] && exit 1
 
-# remove spaces and quotes from result.
-sel=${sel//\"/}
-sel=${sel// /}
 # revove everything but the address portion.
-sel=${sel##*=>}
+sel=${sel%%|*}
 echo "$sel"
