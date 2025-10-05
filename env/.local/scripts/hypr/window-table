@@ -4,7 +4,8 @@ usage() {
   cat <<EOF
 
 Show a table with details about the currently active windows. You can choose a window and perform
-an action depending on the option passed in.
+an action. This script will prompt for what you would like to do depending on the options passed.
+There are no required options for this script to work.
 
 USAGE:
 
@@ -17,6 +18,10 @@ OPTIONS:
   -x | --close:         Close the selected window.
   -f | --focus:         Focus the selected window.
   -i | --ignore:        Ignore the selected window.
+  -m | --move:          Move the selected window to another workspace and switch to that workspace.
+  -s | --silent-move:   Move the selected window to another workspace and remain on current workspace.
+  -t | --to-workspace:  Used with one of the move options to set which workspace to move to. If not supplied
+                        then we will prompt for a workspace to move to.
   --show-window-class:  Include window class in the table.
   -h | --help:          Show this page.
 
@@ -37,12 +42,13 @@ close_flag="0"
 focus_flag="0"
 ignore_flag="0"
 launch_flag="0"
+move_flag="0"
+move_silent_flag="0"
+move_to_workspace_name=""
 show_window_class_flag="0"
 
 launch_args=()
-rows=()
 selected_value=""
-window_data=$(hyprctl clients -j | jq 'sort_by(.workspace.name)')
 
 SCRIPTS=${SCRIPTS}
 
@@ -60,6 +66,14 @@ while [[ $# -gt 0 ]]; do
       usage && exit 0
     elif [[ $1 =~ ^-i ]] || [[ $1 =~ ^--ignore ]]; then
       ignore_flag="1"
+    elif [[ $1 =~ ^-m ]] || [[ $1 =~ ^--move ]]; then
+      move_flag="1"
+    elif [[ $1 =~ ^-s ]] || [[ $1 =~ ^--silent-move ]]; then
+      move_flag="1"
+      move_silent_flag="1"
+    elif [[ $1 =~ ^-t ]] || [[ $1 =~ ^--to-workspace ]]; then
+      shift
+      move_to_workspace_name=$1
     elif [[ $1 =~ ^--launch ]]; then
       launch_flag="1"
     elif [[ $1 =~ ^--show-window-class ]]; then
@@ -69,57 +83,92 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-generate_rows() {
-
-  readarray -t addresses <<<"$(echo "$window_data" | jq -r '.[] | .address')"
-  readarray -t classes <<<$(echo "$window_data" | jq -r '.[] | .class')
-  readarray -t titles <<<$(echo "$window_data" | jq -r '.[] | .title')
-  readarray -t workspaces <<<$(echo "$window_data" | jq -r '.[] | .workspace.name')
-
-  # Zip into a new comma separated values
-  for i in "${!addresses[@]}"; do
-    if [[ $show_window_class_flag == "1" ]]; then
-      rows+=("${workspaces[i]} | ${titles[i]} | ${classes[i]} | ${addresses[i]}")
-    else
-      rows+=("${workspaces[i]} | ${titles[i]} | ${addresses[i]}")
-    fi
-  done
+action_footer() {
+  cat <<'EOF'
+   ___      __  _         
+  / _ |____/ /_(_)__  ___ 
+ / __ / __/ __/ / _ \/ _ \
+/_/ |_\__/\__/_/\___/_//_/
+                          
+EOF
 }
 
 show_table_return_choice() {
-  local columns="Workspace | Title | Address"
-
+  local opts=()
   if [[ $show_window_class_flag == "1" ]]; then
-    columns="Workspace | Title | Class | Address"
+    opts+=("--show-window-class")
   fi
-  local ret=$(
-    printf '%s\n' "${rows[@]}" |
-      fzf --footer="$columns"
-
-  )
-  # remove spaces and quotes from result.
-  ret=${ret//\"/}
-  ret=${ret// /}
-  # revove everything but the address portion.
-  ret=${ret##*|}
-  echo "$ret"
+  echo $("$SCRIPTS/hypr/window-picker" "${opts[@]}")
 }
 
 ask_what_to_do_with_selection() {
-  choice=$(printf "Focus Window\nCopy to Clipboard\nRefresh Window List\nClose Window\nQuit" | fzf)
+  local choices=(
+    "Focus window"
+    "Close window"
+    "Move to workspace"
+    "Move to workspace - silent"
+    "Copy to clipboard"
+    "Refresh window list"
+    "Quit"
+  )
+  choice=$(
+    printf "%s\n" "${choices[@]}" |
+      fzf --style=full --footer="$(action_footer)" --header="What should we do with the selected window?"
+  )
   echo "Choice: $choice"
   if [[ $choice == "Quit" ]]; then
     exit 0
-  elif [[ $choice == "Close Window" ]]; then
+  elif [[ $choice == "Close window" ]]; then
     close_flag="1"
-  elif [[ $choice == "Copy to Clipboard" ]]; then
+  elif [[ $choice == "Copy to clipboard" ]]; then
     clipboard_flag="1"
-  elif [[ $choice == "Focus Window" ]]; then
+  elif [[ $choice == "Focus window" ]]; then
     focus_flag="1"
-  elif [[ $choice == "Refresh" ]]; then
+  elif [[ $choice == "Move to workspace" ]]; then
+    move_flag="1"
+  elif [[ $choice == "Move to workspace - silent" ]]; then
+    move_silent_flag="1"
+    move_flag="1"
+  elif [[ $choice == "Refresh window list" ]]; then
     eval exec ${BASH_SOURCE[0]}
     exit 0
   fi
+}
+
+move_to_workspace() {
+  local workspace_id=""
+
+  if [[ -z $move_to_workspace_name ]]; then
+    move_to_workspace_name=$(
+      $SCRIPTS/hypr/workspace-picker --return-name-if-special \
+        --header="Select a workspace to move window to:"
+    )
+  fi
+
+  if [[ -z $move_to_workspace_name ]]; then
+    echo "[ERROR]: No workspace set to move window to."
+    exit 1
+  fi
+
+  # Check if moving to a special workspace to pass the appropriate args in to hyprctl.
+  if [[ $move_to_workspace_name =~ ^special ]]; then
+    workspace_id=$move_to_workspace_name
+  else
+    workspace_id=$(hyprctl workspaces -j | jq -r ".[] | select(.name | contains(\"$move_to_workspace_name\")) | .id")
+  fi
+
+  if [[ -z $workspace_id ]]; then
+    echo "[ERROR]: No workspace id found for: '$move_to_workspace_name'"
+    exit 1
+  fi
+
+  action="movetoworkspace"
+  if [[ $move_silent_flag == "1" ]]; then
+    action="movetoworkspacesilent"
+  fi
+
+  echo "Moving window: '$selected_value' to workspace: '$workspace_id'"
+  hyprctl dispatch $action "$workspace_id,address:$selected_value"
 }
 
 handle_selected_value() {
@@ -138,6 +187,8 @@ handle_selected_value() {
     echo "Closing window, selection: $selected_value"
     hyprctl dispatch closewindow "address:$selected_value"
     exit 0
+  elif [[ $move_flag == "1" ]] || [[ $move_silent_flag == "1" ]]; then
+    move_to_workspace && exit 0
   fi
   # TODO: Choose from list of what to do with the selected_value.
   echo "No flag set, selection: '$selected_value'"
@@ -149,7 +200,7 @@ handle_selected_value() {
 
 if [[ $launch_flag == "1" ]]; then
   ghostty --class="$window_class" --window-padding-x="$window_padding_x" \
-    --keybind="q=quit" \
+    --keybind="ctrl+c=quit" \
     -e "${BASH_SOURCE[0]}" "${launch_args[@]}"
 else
 
@@ -158,7 +209,6 @@ else
     [[ -f $SCRIPTS/catppuccin-colors ]] &&
     source $SCRIPTS/catppuccin-colors
 
-  generate_rows
   selected_value=$(show_table_return_choice)
   if [[ -n $selected_value ]]; then
     handle_selected_value

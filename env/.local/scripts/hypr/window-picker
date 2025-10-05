@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+THIS=$(basename ${BASH_SOURCE[0]})
+
+usage() {
+  cat <<EOF
+
+Select from currently available windows.
+
+USAGE:
+
+  $ $THIS [OPTIONS] [ARGS...]
+
+OPTIONS:
+  --show-window-class:  Include window class in the table.
+
+NOTES:
+
+By default, we show a footer and header unless specifically passed in as extra arguments / options.
+Any other options or arguments are passed directly to 'fzf'.
+
+EOF
+}
+
+show_window_class_flag="0"
+uses_supplied_footer="0"
+uses_supplied_header="0"
+
+fzf_opts=()
+rows=()
+window_data=$(hyprctl clients -j | jq 'sort_by(.workspace.name)')
+SCRIPTS=${SCRIPTS}
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 =~ ^--header ]]; then
+    uses_supplied_header="1"
+    fzf_opts+=("$1")
+  elif [[ $1 =~ ^--footer ]]; then
+    uses_supplied_footer="1"
+    fzf_opts+=("$1")
+  elif [[ $1 =~ ^--show-window-class ]]; then
+    show_window_class_flag="1"
+  else
+    fzf_opts+=("$1")
+  fi
+  shift
+done
+
+if [[ -z $SCRIPTS ]]; then
+  SCRIPTS=$HOME/.local/scripts
+fi
+
+footer() {
+  cat <<'EOF'
+ _      ___         __             
+| | /| / (_)__  ___/ /__ _    _____
+| |/ |/ / / _ \/ _  / _ \ |/|/ (_-<
+|__/|__/_/_//_/\_,_/\___/__,__/___/
+EOF
+}
+
+header() {
+  local columns="Workspace | Title | Address"
+
+  if [[ $show_window_class_flag == "1" ]]; then
+    columns="Workspace | Title | Class | Address"
+  fi
+
+  echo "$columns"
+}
+
+generate_rows() {
+
+  readarray -t addresses <<<"$(echo "$window_data" | jq -r '.[] | .address')"
+  readarray -t classes <<<$(echo "$window_data" | jq -r '.[] | .class')
+  readarray -t titles <<<$(echo "$window_data" | jq -r '.[] | .title')
+  readarray -t workspaces <<<$(echo "$window_data" | jq -r '.[] | .workspace.name')
+
+  # Zip into a new comma separated values
+  for i in "${!addresses[@]}"; do
+    if [[ $show_window_class_flag == "1" ]]; then
+      rows+=("${workspaces[i]} | ${titles[i]} | ${classes[i]} | ${addresses[i]}")
+    else
+      rows+=("${workspaces[i]} | ${titles[i]} | ${addresses[i]}")
+    fi
+  done
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+[[ -z ${FZF_DEFAULT_OPTS} ]] &&
+  [[ -f $SCRIPTS/catppuccin-colors ]] &&
+  source $SCRIPTS/catppuccin-colors
+
+if [[ $uses_supplied_footer == "0" ]]; then
+  fzf_opts+=("--footer=$(footer)")
+fi
+
+if [[ $uses_supplied_header == "0" ]]; then
+  fzf_opts+=("--header=$(header)")
+fi
+
+generate_rows
+
+sel=$(printf '%s\n' "${rows[@]}" | fzf --style=full "${fzf_opts[@]}")
+
+[[ -z $sel ]] && exit 1
+
+# remove spaces and quotes from result.
+sel=${sel//\"/}
+sel=${sel// /}
+# revove everything but the address portion.
+sel=${sel##*|}
+echo "$sel"
