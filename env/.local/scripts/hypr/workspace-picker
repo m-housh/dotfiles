@@ -32,7 +32,6 @@ EOF
 return_name_if_special_flag="0"
 return_name_flag="0"
 uses_supplied_footer="0"
-uses_supplied_header="0"
 
 fzf_opts=()
 rows=()
@@ -44,9 +43,6 @@ while [[ $# -gt 0 ]]; do
     return_name_flag="1"
   elif [[ $1 == "-s" ]] || [[ $1 == "--return-name-if-special" ]]; then
     return_name_if_special_flag="1"
-  elif [[ $1 =~ ^--header ]]; then
-    uses_supplied_header="1"
-    fzf_opts+=("$1")
   elif [[ $1 =~ ^--footer ]]; then
     uses_supplied_footer="1"
     fzf_opts+=("$1")
@@ -73,9 +69,11 @@ EOF
 generate_rows() {
   readarray -t names <<<"$(echo "$workspaces" | jq -r '.[] | .name')"
   readarray -t ids <<<"$(echo "$workspaces" | jq -r '.[] | .id')"
+  readarray -t monitors <<<"$(echo "$workspaces" | jq -r '.[] | .monitor')"
+  readarray -t windows <<<"$(echo "$workspaces" | jq -r '.[] | .windows')"
 
   for i in "${!names[@]}"; do
-    rows+=("${ids[i]} | ${names[i]}")
+    rows+=("${ids[i]}|${monitors[i]}|${windows[i]}|${names[i]}")
   done
 }
 
@@ -93,19 +91,17 @@ if [[ $uses_supplied_footer == "0" ]]; then
   fzf_opts+=("--footer=$(footer)")
 fi
 
-if [[ $uses_supplied_header == "0" ]]; then
-  fzf_opts+=("--header=Id | Name")
-fi
-
 sel=$(
   printf "%s\n" "${rows[@]}" |
-    fzf --style=full "${fzf_opts[@]}"
+    fzf --style=full "${fzf_opts[@]}" \
+      --delimiter='|' --with-nth=4 --preview-label='[ Workspace Stats ]' \
+      --preview='printf "Name: {4}\nID: {1}\nWindows: {2}\nMonitor: {3}"'
 )
 
 [[ -z $sel ]] && exit 1
 
-name=${sel##*| }
-id=${sel% |*}
+name=${sel##*\|}
+id=${sel%%\|*}
 
 if [[ $return_name_flag == "1" ]] ||
   ([[ $return_name_if_special_flag == "1" ]] && [[ $name =~ ^special ]]); then
