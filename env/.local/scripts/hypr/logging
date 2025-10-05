@@ -120,12 +120,34 @@ logging() {
 }
 
 setup-logging() {
-  LOG_FILE+=("$1")
-  LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-$RANDOM}
-  if [[ -n "$LOG_LABEL" ]]; then
-    LOG_LABEL+=("${LOG_LABEL[@]}=>$2")
+  label=""
+  file=""
+
+  if [[ "${#@}" == "1" ]]; then
+    file="/tmp/$1.log"
+    label="$1"
   else
-    LOG_LABEL+=("$2")
+    file="$1"
+    label="$2"
+  fi
+
+  if [[ -z "$file" ]]; then
+    echo -e "\e[31m[ERROR]:\e[0m Must supply a log file."
+    exit 1
+  fi
+
+  if [[ -z "$label" ]]; then
+    echo -e "\e[31m[ERROR]:\e[0m Must supply a logger label."
+    exit 1
+  fi
+
+  LOG_FILE+=("$file")
+  LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-$RANDOM}
+
+  if [[ -n "$LOG_LABEL" ]]; then
+    LOG_LABEL+=("${LOG_LABEL[@]}=>$label")
+  else
+    LOG_LABEL+=("$label")
   fi
   export LOG_FILE
   export LOG_LABEL
