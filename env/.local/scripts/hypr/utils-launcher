@@ -25,6 +25,7 @@ window_padding_x="2"
 config_file=""
 launch_flag="0"
 
+rows=()
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME}
 SCRIPTS=${SCRIPTS}
 
@@ -61,6 +62,15 @@ footer() {
 EOF
 }
 
+generate_rows() {
+  readarray -t names <<<"$(echo "$1" | jq -r '.[] | .name')"
+  readarray -t execs <<<"$(echo "$1" | jq -r '.[] | .exec')"
+
+  for i in "${!names[@]}"; do
+    rows+=("${execs[i]}|${names[i]}")
+  done
+}
+
 ################################################################################
 # MAIN
 ################################################################################
@@ -89,7 +99,16 @@ file_data=$(cat $config_file)
 
 # Setup colors before calling fzf.
 [[ -f $SCRIPTS/catppuccin-colors ]] && source $SCRIPTS/catppuccin-colors
-sel=$(echo "$file_data" | jq -r '.[] | .name' | fzf --style=full --footer="$(footer)")
+
+generate_rows "$file_data"
+# sel=$(echo "$file_data" | jq -r '.[] | .name' | fzf --style=full --footer="$(footer)")
+echo "ROWS: ${rows[@]}"
+sel=$(
+  printf "%s\n" "${rows[@]}" |
+    fzf --style=full --footer="$(footer)" --with-nth=2 --delimiter='|' \
+      --preview-label='[ Command ]' \
+      --preview='printf "\nName: {2}\nExec: {1}"'
+)
 
 echo "Selection: $sel"
 

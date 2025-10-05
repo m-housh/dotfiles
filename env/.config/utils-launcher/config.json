@@ -16,7 +16,7 @@
     "exec": "$SCRIPTS/hypr/waybarctl --restart"
   },
   {
-    "name": "Waybar -- toggle",
+    "name": "Waybar - toggle",
     "exec": "$SCRIPTS/hypr/waybarctl --toggle"
   },
   {

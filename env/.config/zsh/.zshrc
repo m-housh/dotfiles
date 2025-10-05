@@ -219,6 +219,7 @@ source <(fzf --zsh)
 #       I tried sourcing them in the the `.zshenv` files, but did not work.
 _source_if "$ZDOTDIR/.zshrc-local"
 _source_if "$LOCAL_ENV"
+_source_if "$SCRIPTS/catppuccin-colors"
 
 # pnpm
 export PNPM_HOME="$XDG_DATA_HOME/pnpm"
