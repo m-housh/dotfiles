@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
+
 THIS_FILE=${BASH_SOURCE[0]}
 THIS=$(basename $THIS_FILE)
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 usage() {
   cat <<EOF
@@ -35,6 +37,12 @@ launched terminal, allowing you to launch with a specific mode turned on, any fl
 EOF
 }
 
+if [[ "$1" == "close" ]]; then
+  shift
+  THIS="$THIS close" "$SCRIPTS/hypr/utils/windows/close-windows" "$@"
+  exit $?
+fi
+
 window_class="com.ghostty.$THIS"
 window_padding_x="10"
 
@@ -51,8 +59,6 @@ should_quit="0"
 
 launch_args=()
 selected_value=""
-
-SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 while [[ $# -gt 0 ]]; do
   if [[ $launch_flag == "1" ]]; then

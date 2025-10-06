@@ -76,7 +76,8 @@ generate_script() {
 
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS_FILE=${BASH_SOURCE[0]}
-THIS=$(basename $THIS_FILE)
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
 
 # Logging utility function, use in place of echo.
 log() {
@@ -89,7 +90,7 @@ log() {
 
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
-setup-logging "$THIS"
+setup-logging "$LOG_LABEL"
 
 log "Starting $THIS..."
 
