@@ -12,6 +12,10 @@
     "exec": "$SCRIPTS/hypr/clear-clipboard-history && echo Done"
   },
   {
+    "name": "Monitors - stats / picker",
+    "exec": "$SCRIPTS/hypr/monitor-picker"
+  },
+  {
     "name": "Waybar - restart",
     "exec": "$SCRIPTS/hypr/waybarctl --restart"
   },
@@ -20,7 +24,7 @@
     "exec": "$SCRIPTS/hypr/waybarctl --toggle"
   },
   {
-    "name": "Windows - active window table / picker",
+    "name": "Windows - window stats / picker",
     "exec": "$SCRIPTS/hypr/window-table"
   },
   {
