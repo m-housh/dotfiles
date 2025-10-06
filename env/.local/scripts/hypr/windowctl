@@ -16,16 +16,16 @@ USAGE:
 
 OPTIONS:
 
-  --launch:             Launch in a new terminal window, user will be prompted what to do with selected window.
-  -c | --clip:          Copy selected window's address to the system clipboard.
-  -x | --close:         Close the selected window.
-  -f | --focus:         Focus the selected window.
-  -i | --ignore:        Ignore the selected window.
-  -m | --move:          Move the selected window to another workspace and switch to that workspace.
-  -s | --silent-move:   Move the selected window to another workspace and remain on current workspace.
-  -t | --to-workspace:  Used with one of the move options to set which workspace to move to. If not supplied
-                        then we will prompt for a workspace to move to.
-  -h | --help:          Show this page.
+  --launch:                         Launch in a new terminal window, user will be prompted what to do with selected window.
+  -c | --clip:                      Copy selected window's address to the system clipboard.
+  -x | --close <address>:           Close the selected window.
+  -f | --focus <address>:           Focus the selected window, if optional address is supplied then we focus it.
+  -i | --ignore:                    Ignore the selected window.
+  -m | --move <address>:            Move the selected window to another workspace and switch to that workspace.
+  -s | --silent-move <address>:     Move the selected window to another workspace and remain on current workspace.
+  -t | --to-workspace <id>:         Used with one of the move options to set which workspace to move to. If not supplied
+                                    then we will prompt for a workspace to move to.
+  -h | --help:                      Show this page.
 
 NOTES:
 
@@ -61,17 +61,25 @@ while [[ $# -gt 0 ]]; do
       clipboard_flag="1"
     elif [[ $1 =~ ^-x ]] || [[ $1 =~ ^--close ]]; then
       close_flag="1"
+      selected_value=$2
+      shift
     elif [[ $1 =~ ^-f ]] || [[ $1 =~ ^--focus ]]; then
       focus_flag="1"
+      selected_value=$2
+      shift
     elif [[ $1 =~ ^-h ]] || [[ $1 =~ ^--help ]]; then
       usage && exit 0
     elif [[ $1 =~ ^-i ]] || [[ $1 =~ ^--ignore ]]; then
       ignore_flag="1"
     elif [[ $1 =~ ^-m ]] || [[ $1 =~ ^--move ]]; then
       move_flag="1"
+      selected_value=$2
+      shift
     elif [[ $1 =~ ^-s ]] || [[ $1 =~ ^--silent-move ]]; then
       move_flag="1"
       move_silent_flag="1"
+      selected_value=$2
+      shift
     elif [[ $1 =~ ^-t ]] || [[ $1 =~ ^--to-workspace ]]; then
       shift
       move_to_workspace_name=$1
@@ -114,6 +122,8 @@ ask_what_to_do_with_selection() {
         --preview-label="[  Description ]" \
         --preview='echo -e {1}'
   )
+  # Set choice to just the action portion.
+  choice="${choice#*:}"
   log "Choice: $choice"
   if [[ $choice == "Quit" ]]; then
     exit 0
@@ -176,6 +186,20 @@ move_to_workspace() {
   hypr_dispatch $action "$workspace_id,address:$selected_value"
 }
 
+focus_window() {
+  log "Focusing window, selection: $selected_value"
+  local address="$selected_value"
+  local name=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$address\") | .workspace.name")
+  local active_workspace=$(hyprctl activewindow -j | jq -r ".workspace.name")
+  log "Window workspace: '$name', active workspace: '$active_workspace'"
+  if [[ $name =~ ^special ]] && [[ ! $active_workspace == $name ]]; then
+    log "Toggling special workspace prior to focusing window."
+    name="${name#special:*}"
+    hypr_dispatch togglespecialworkspace $name
+  fi
+  hypr_dispatch focuswindow "address:$address"
+}
+
 handle_selected_value() {
   if [[ $ignore_flag == "1" ]]; then
     log "Ignore flag set, selection: '$selected_value'"
@@ -185,9 +209,9 @@ handle_selected_value() {
     wl-copy $selected_value
     exit 0
   elif [[ $focus_flag == "1" ]]; then
-    log "Focusing window, selection: $selected_value"
-    hypr_dispatch focuswindow "address:$selected_value"
-    exit 0
+    # log "Focusing window, selection: $selected_value"
+    # hypr_dispatch focuswindow "address:$selected_value"
+    focus_window && exit 0
   elif [[ $close_flag == "1" ]]; then
     log "Closing window, selection: $selected_value"
     hypr_dispatch closewindow "address:$selected_value"
@@ -207,6 +231,8 @@ handle_selected_value() {
 source "$SCRIPTS/hypr/logging"
 setup-logging "/tmp/$THIS.log" "$THIS"
 
+log "Starting with selected value: '$selected_value'"
+
 if [[ $launch_flag == "1" ]]; then
   ghostty --class="$window_class" --window-padding-x="$window_padding_x" \
     --keybind="ctrl+c=quit" \
@@ -218,7 +244,10 @@ else
     [[ -f $SCRIPTS/catppuccin-colors ]] &&
     source $SCRIPTS/catppuccin-colors
 
-  selected_value=$("$SCRIPTS/hypr/window-picker")
+  if [[ -z $selected_value ]]; then
+    selected_value=$("$SCRIPTS/hypr/window-picker")
+  fi
+
   if [[ -n $selected_value ]]; then
     handle_selected_value
     # If we got here then no flag was passed in initially on how to handle the
