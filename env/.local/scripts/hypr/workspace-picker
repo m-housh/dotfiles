@@ -69,11 +69,9 @@ EOF
 generate_rows() {
   readarray -t names <<<"$(echo "$workspaces" | jq -r '.[] | .name')"
   readarray -t ids <<<"$(echo "$workspaces" | jq -r '.[] | .id')"
-  readarray -t monitors <<<"$(echo "$workspaces" | jq -r '.[] | .monitor')"
-  readarray -t windows <<<"$(echo "$workspaces" | jq -r '.[] | .windows')"
 
   for i in "${!names[@]}"; do
-    rows+=("${ids[i]}|${monitors[i]}|${windows[i]}|${names[i]}")
+    rows+=("${ids[i]}|${names[i]}")
   done
 }
 
@@ -93,9 +91,9 @@ fi
 
 sel=$(
   printf "%s\n" "${rows[@]}" |
-    fzf --style=full "${fzf_opts[@]}" --delimiter='|' --with-nth=4 \
+    fzf --style=full "${fzf_opts[@]}" --delimiter='|' --with-nth=2 \
       --preview-label='[ Workspace Stats ]' \
-      --preview='printf "Name: {4}\nID: {1}\nWindows: {3}\nMonitor: {2}"'
+      --preview="$SCRIPTS/hypr/preview-stats workspace {1}"
 )
 
 [[ -z $sel ]] && exit 1

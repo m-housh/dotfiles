@@ -89,7 +89,7 @@ log() {
 
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
-setup-logging "/tmp/THIS.log" "$THIS"
+setup-logging "$THIS"
 
 log "Starting $THIS..."
 

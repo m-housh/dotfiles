@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+THIS=$(basename $THIS_FILE)
+
+usage() {
+  cat <<EOF
+
+Utility for getting fzf preview data.
+
+USAGE:
+
+  $ $THIS <mode> <arg>
+
+MODES:
+
+  monitor:    Get monitor data, arg is the monitor id.
+  window:     Get window data, arg is the window address.
+  workspace:  Get workspace data, arg is the workspace id.
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$THIS"
+
+if [[ ! "${#@}" == "2" ]]; then
+  log --error "Unexpected argument count: ${#@}, expected: 2"
+  usage && exit 1
+fi
+
+mode="$1"
+# Remove single quotes from the arg.
+arg="${2//\'/}"
+
+if [[ $mode == "monitor" ]]; then
+  hyprctl monitors -j | jq -C ".[] | select(.id == $arg)"
+elif [[ $mode == "window" ]]; then
+  hyprctl clients -j | jq -C ".[] | select(.address == \"$arg\")"
+elif [[ $mode == "workspace" ]]; then
+  hyprctl workspaces -j | jq -C ".[] | select(.id == $arg)"
+else
+  log --error "Unexpected mode: $mode"
+  usage && exit 1
+fi

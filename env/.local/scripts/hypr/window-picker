@@ -48,13 +48,11 @@ EOF
 generate_rows() {
 
   readarray -t addresses <<<"$(echo "$window_data" | jq -r '.[] | .address')"
-  readarray -t classes <<<$(echo "$window_data" | jq -r '.[] | .class')
   readarray -t titles <<<$(echo "$window_data" | jq -r '.[] | .title')
-  readarray -t workspaces <<<$(echo "$window_data" | jq -r '.[] | .workspace.name')
 
   # Zip into rows.
   for i in "${!addresses[@]}"; do
-    rows+=("${addresses[i]}|${workspaces[i]}|${classes[i]}|${titles[i]}")
+    rows+=("${addresses[i]}|${titles[i]}")
   done
 }
 
@@ -75,8 +73,8 @@ generate_rows
 sel=$(
   printf '%s\n' "${rows[@]}" |
     fzf --style=full "${fzf_opts[@]}" \
-      --preview-label='[ Window Stats ]' --delimiter='|' --with-nth=4 \
-      --preview='echo -e "Title: {4}\nClass: {3}\nWorkspace: {2}\nAddress: {1}"'
+      --preview-label='[ Window Stats ]' --delimiter='|' --with-nth=2 \
+      --preview="$SCRIPTS/hypr/preview-stats window {1}"
 )
 
 [[ -z $sel ]] && exit 1
