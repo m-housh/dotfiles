@@ -28,7 +28,7 @@ Any extra arguments after '--' get passed directly to the browser invocation.
   
   $ launch-webapp https://example.com -- --some-random-flag-for-browser=1
 
-Any options passed in prior to the '--' get sent to the 'launch-or' script, so you can pass
+Any options passed in prior to the '--' get sent to the 'launch' script, so you can pass
 options that are not specifically shown here, but the ones shown would be the most commonly
 used, so they are documented here.
 
