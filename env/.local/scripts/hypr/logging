@@ -30,7 +30,7 @@
 
 LOG_FILE=(${LOG_FILE:-})
 LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-}
-LOG_LABEL=(${LOG_LABEL:-})
+LOG_LABEL=${LOG_LABEL:-()}
 # Run in dry run mode, which just prints to the console and does
 # not log to the files.
 LOG_ENABLE_DRY_RUN=${LOG_ENABLE_DRY_RUN:-"0"}
@@ -144,7 +144,7 @@ setup-logging() {
   LOG_FILE+=("$file")
   LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-$RANDOM}
 
-  if [[ -n "$LOG_LABEL" ]]; then
+  if [[ -n $LOG_LABEL ]]; then
     LOG_LABEL+=("${LOG_LABEL[@]}=>$label")
   else
     LOG_LABEL+=("$label")

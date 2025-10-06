@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -e
+set -o nounset
+set -o pipefail
+
 THIS_FILE=${BASH_SOURCE[0]}
 # Allows script name to be set when called from a parent script or defaults to filename.
 THIS=${THIS:-$(basename "$THIS_FILE")}
@@ -43,8 +47,8 @@ all_flag="0"
 class_flag="0"
 dry_run_flag="0"
 special_flag="0"
-args=()
-addresses=()
+args=""
+addresses=""
 SCRIPTS="${SCRIPTS:-$HOME/.local/scripts}"
 
 while [[ $# -gt 0 ]]; do
@@ -61,7 +65,7 @@ while [[ $# -gt 0 ]]; do
   elif [[ $1 =~ ^-s ]] || [[ $1 =~ ^--special ]]; then
     special_flag="1"
   else
-    args+=($1)
+    args+=("$1")
   fi
   shift
 done
@@ -122,15 +126,18 @@ elif [[ $special_flag == "1" ]]; then
   # Set addresses to all windows in the passed in special workspaces.
   get_special_addresses
 
-else
+elif [[ -n $args ]]; then
   # If no modes selected, then assume there were addresses passed in
   # as args.
-  addresses=("$args")
+  addresses=$args
 fi
 
+# If no addresses at this point, then read from stdin, which allows addresses
+# to be piped in.
 if [[ ${#addresses} == 0 ]]; then
-  log --warning "No windows found."
-  exit 0
+  log "No window addresses supplied, reading from stdin..."
+  read -r addresses
+  log "Addresses: ${addresses[@]}"
 fi
 
 for address in ${addresses[@]}; do
