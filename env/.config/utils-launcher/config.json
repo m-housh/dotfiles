@@ -12,7 +12,7 @@
   {
     "name": "Clipboard - clear history",
     "description": "Clear the clipboard history file.",
-    "exec": "$SCRIPTS/hypr/clear-clipboard-history && echo Done"
+    "exec": "$SCRIPTS/hypr/clear-clipboard-history --notify-complete"
   },
   {
     "name": "Monitors - stats / picker",

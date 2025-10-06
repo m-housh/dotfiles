@@ -76,9 +76,11 @@ sel=$(
       --preview-label='[ Window Stats ]' --delimiter='|' --with-nth=2 \
       --preview="$SCRIPTS/hypr/preview-stats window {1}"
 )
+status=$?
 
 [[ -z $sel ]] && exit 1
 
 # revove everything but the address portion.
 sel=${sel%%|*}
 echo "$sel"
+exit $status
