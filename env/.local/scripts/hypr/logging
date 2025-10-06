@@ -111,7 +111,7 @@ logging() {
 
     # Also log errors and warning messages to the console.
     if [[ $error_flag == "1" ]] || [[ $warn_flag == "1" ]]; then
-      echo -e "[id: $LOG_INVOCATION_ID]: $msg"
+      echo -e "[id: $LOG_INVOCATION_ID]$msg"
     fi
   else
     # Dry run mode, so just log to the console

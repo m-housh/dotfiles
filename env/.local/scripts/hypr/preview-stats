@@ -34,6 +34,18 @@ log() {
   logging log --source "$THIS_FILE" "$@"
 }
 
+call_jq() {
+  hypr_path=$1
+  select_str=$2
+  optional_keys=$3
+
+  if [[ -n $optional_keys ]]; then
+    hyprctl $hypr_path -j | jq -C ".[] | $select_str | $optional_keys"
+  else
+    hyprctl $hypr_path -j | jq -C ".[] | $select_str"
+  fi
+}
+
 ################################################################################
 # MAIN
 ################################################################################
@@ -42,39 +54,27 @@ log() {
 source "$SCRIPTS/hypr/logging"
 setup-logging "$THIS"
 
-if [[ ! ${#@} -ge 2 ]]; then
-  log --error "Unexpected argument count: ${#@}, expected at least: 2"
-  usage && exit 1
+# Early out check for help flag
+if [[ $@ =~ -h ]] || [[ $@ =~ --help ]]; then
+  usage && exit 0
+# Check for expected argument count or error.
+elif [[ ! $# -ge 2 ]] || [[ $# -gt 3 ]]; then
+  log --error "Unexpected argument count, expected 2 or 3 but got '$#'"
+  exit 1
 fi
 
-mode="$1"
-# Remove single quotes from the arg.
-arg="${2//\'/}"
+mode=$1
+arg=$2
+arg2=$3 # either optional keys or utils config.
 
 if [[ $mode == "monitor" ]]; then
-  keys="$3"
-  if [[ -n $keys ]]; then
-    hyprctl monitors -j | jq -C ".[] | select(.id == $arg) | $keys"
-  else
-    hyprctl monitors -j | jq -C ".[] | select(.id == $arg)"
-  fi
+  call_jq monitors "select(.id == $arg)" "$arg2"
 elif [[ $mode == "window" ]]; then
-  keys="$3"
-  if [[ -n $keys ]]; then
-    hyprctl clients -j | jq -C ".[] | select(.address == \"$arg\") | $keys"
-  else
-    hyprctl clients -j | jq -C ".[] | select(.address == \"$arg\")"
-  fi
-
+  call_jq clients "select(.address == \"$arg\")" "$arg2"
 elif [[ $mode == "workspace" ]]; then
-  keys="$3"
-  if [[ -n $keys ]]; then
-    hyprctl workspaces -j | jq -C ".[] | select(.id == $arg) | $keys"
-  else
-    hyprctl workspaces -j | jq -C ".[] | select(.id == $arg)"
-  fi
+  call_jq workspaces "select(.id == $arg)" "$arg2"
 elif [[ $mode == "utils" ]]; then
-  config="${3//\'/}"
+  config="${arg2//\'/}"
   if [[ ! -f $config ]]; then
     log --error "No utility-launcher config found: $config"
     exit 1
