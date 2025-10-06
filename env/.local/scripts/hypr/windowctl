@@ -142,8 +142,8 @@ ask_what_to_do_with_selection() {
       fzf --style=full --footer="$(action_footer)" \
         --delimiter=':' --with-nth=2 \
         --header="What should we do with the selected window?" \
-        --preview-label="[  Description ]" \
-        --preview="echo -e {1}; echo -e '\n\n\e[35mSelected Window:\e[0m'; $SCRIPTS/hypr/preview-stats window $selected_value;"
+        --preview-label="[ Description ]" \
+        --preview="echo -e {1}; echo -e '\n\n\e[35mSelected Window:\e[0m'; $SCRIPTS/hypr/preview-stats window $selected_value \"{title, workspace, address}\";"
   )
   # Set choice to just the action portion.
   choice="${choice#*:}"

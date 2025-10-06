@@ -15,10 +15,16 @@ USAGE:
 
 MODES:
 
-  monitor <id>:             Get monitor data.
-  window <address>:         Get window data.
-  workspace <id>:           Get workspace data.
-  utlis <name> <config>:    Get utils-launcher data.
+  monitor <id> <keys>:            Get monitor data, optionally providing keys to return.
+  window <address> <keys>:        Get window data, optionally providing keys to return.
+  workspace <id> <keys>:          Get workspace data, optionally providing keys to return.
+  utlis <name> <config>:          Get utils-launcher data.
+
+EXAMPLE:
+
+Here's an example of getting window data, but only returning "title", "workspace", and "address".
+
+  $ $THIS window "0xaaaaea92a7e0" "{title, workspace, address}"
 
 EOF
 }
@@ -46,11 +52,27 @@ mode="$1"
 arg="${2//\'/}"
 
 if [[ $mode == "monitor" ]]; then
-  hyprctl monitors -j | jq -C ".[] | select(.id == $arg)"
+  keys="$3"
+  if [[ -n $keys ]]; then
+    hyprctl monitors -j | jq -C ".[] | select(.id == $arg) | $keys"
+  else
+    hyprctl monitors -j | jq -C ".[] | select(.id == $arg)"
+  fi
 elif [[ $mode == "window" ]]; then
-  hyprctl clients -j | jq -C ".[] | select(.address == \"$arg\")"
+  keys="$3"
+  if [[ -n $keys ]]; then
+    hyprctl clients -j | jq -C ".[] | select(.address == \"$arg\") | $keys"
+  else
+    hyprctl clients -j | jq -C ".[] | select(.address == \"$arg\")"
+  fi
+
 elif [[ $mode == "workspace" ]]; then
-  hyprctl workspaces -j | jq -C ".[] | select(.id == $arg)"
+  keys="$3"
+  if [[ -n $keys ]]; then
+    hyprctl workspaces -j | jq -C ".[] | select(.id == $arg) | $keys"
+  else
+    hyprctl workspaces -j | jq -C ".[] | select(.id == $arg)"
+  fi
 elif [[ $mode == "utils" ]]; then
   config="${3//\'/}"
   if [[ ! -f $config ]]; then
