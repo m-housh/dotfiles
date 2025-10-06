@@ -294,7 +294,7 @@ log "\e[032mCreating web app:\e[0m $desktop_file"
 print_properties
 
 if [[ $dry_run == "0" ]]; then
-  generate_file $desktop_file
+  generate_file "$desktop_file"
 fi
 
 if [[ $interactive_mode == true ]] && [[ $dry_run == "0" ]]; then

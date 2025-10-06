@@ -23,7 +23,7 @@ OPTIONS:
                              instance.
   -x | --close-active-only:  Close only windows on active workspace matching the pattern.
   -s | --special <name>:     Launch or toggle a special workspace.
-  -n | --new-instance:       Launch a new instance of an application.
+  -n | --new:                Launch a new instance of an application.
   -h | --help:               Show this help page.
 
 NOTES:
@@ -73,7 +73,7 @@ while [[ $# -gt 0 ]]; do
     close_flag="1"
     close_active_only_flag="1"
     action="closewindow"
-  elif [[ $1 == "-n" ]] || [[ $1 == "--new-instance" ]]; then
+  elif [[ $1 == "-n" ]] || [[ $1 == "--new" ]]; then
     new_instance_flag="1"
   elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     usage && exit 0
