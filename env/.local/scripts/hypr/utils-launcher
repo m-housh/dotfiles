@@ -77,7 +77,7 @@ generate_rows() {
 
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
-setup-logging "/tmp/$THIS.log" "$THIS"
+setup-logging "$THIS"
 
 if [[ -z $XDG_CONFIG_HOME ]]; then
   log "XDG_CONFIG_HOME not set"
@@ -91,12 +91,6 @@ if [[ -z $config_file ]]; then
   config_file="$XDG_CONFIG_HOME/utils-launcher/config.json"
 fi
 
-if [[ -z $SCRIPTS ]]; then
-  log "SCRIPTS not set"
-  log "using ~/.local/scripts"
-  SCRIPTS=$HOME/.local/scripts
-fi
-
 if [[ $launch_flag == "1" ]]; then
   launch && exit 0
 fi
@@ -108,14 +102,16 @@ fi
 file_data=$(cat $config_file)
 
 # Setup colors before calling fzf.
-[[ -f $SCRIPTS/catppuccin-colors ]] && source $SCRIPTS/catppuccin-colors
+[[ -z ${FZF_DEFAULT_OPTS} ]] &&
+  [[ -f $SCRIPTS/catppuccin-colors ]] &&
+  source $SCRIPTS/catppuccin-colors
 
 generate_rows "$file_data"
 sel=$(
   printf "%s\n" "${rows[@]}" |
     fzf --style=full --footer="$(footer)" --with-nth=2 --delimiter='|' \
       --preview-label='[ Command ]' \
-      --preview='printf "\nName: {2}\nExec: {1}"'
+      --preview="$SCRIPTS/hypr/preview-stats utils {2} $config_file"
 )
 
 log "Selection: $sel"

@@ -11,13 +11,14 @@ Utility for getting fzf preview data.
 
 USAGE:
 
-  $ $THIS <mode> <arg>
+  $ $THIS [MODE] [ARG...]
 
 MODES:
 
-  monitor:    Get monitor data, arg is the monitor id.
-  window:     Get window data, arg is the window address.
-  workspace:  Get workspace data, arg is the workspace id.
+  monitor <id>:             Get monitor data.
+  window <address>:         Get window data.
+  workspace <id>:           Get workspace data.
+  utlis <name> <config>:    Get utils-launcher data.
 
 EOF
 }
@@ -35,8 +36,8 @@ log() {
 source "$SCRIPTS/hypr/logging"
 setup-logging "$THIS"
 
-if [[ ! "${#@}" == "2" ]]; then
-  log --error "Unexpected argument count: ${#@}, expected: 2"
+if [[ ! ${#@} -ge 2 ]]; then
+  log --error "Unexpected argument count: ${#@}, expected at least: 2"
   usage && exit 1
 fi
 
@@ -50,6 +51,16 @@ elif [[ $mode == "window" ]]; then
   hyprctl clients -j | jq -C ".[] | select(.address == \"$arg\")"
 elif [[ $mode == "workspace" ]]; then
   hyprctl workspaces -j | jq -C ".[] | select(.id == $arg)"
+elif [[ $mode == "utils" ]]; then
+  config="${3//\'/}"
+  if [[ ! -f $config ]]; then
+    log --error "No utility-launcher config found: $config"
+    exit 1
+  fi
+  desc=$(jq -C ".[] | select(.name == \"$arg\") | .description" $config)
+  exec=$(jq -C ".[] | select(.name == \"$arg\") | .exec" $config)
+  echo -e "\n${desc[@]}\n\n"
+  echo -e "\e[31mEXEC:\e[0m $exec\n"
 else
   log --error "Unexpected mode: $mode"
   usage && exit 1

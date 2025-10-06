@@ -1,38 +1,47 @@
 [
   {
     "name": "App - install web app",
+    "description": "Install a new website as a desktop application that can be launched by an application launcher.",
     "exec": "$SCRIPTS/hypr/install-webapp"
   },
   {
     "name": "App - uninstall desktop app",
+    "description": "Uninstalls desktop applications and their icon, generally used for web\napplications.\n\nIf the app was installed through a package manager, then you should\nuse the package manager to uninstall the applciation.",
     "exec": "$SCRIPTS/hypr/uninstall-desktop-app"
   },
   {
     "name": "Clipboard - clear history",
+    "description": "Clear the clipboard history file.",
     "exec": "$SCRIPTS/hypr/clear-clipboard-history && echo Done"
   },
   {
     "name": "Monitors - stats / picker",
+    "description": "View information from hyprctl about currently connected monitors.",
     "exec": "$SCRIPTS/hypr/monitor-picker"
   },
   {
     "name": "Waybar - restart",
+    "description": "Restart the menu bar application, useful when making changes to the configuration.",
     "exec": "$SCRIPTS/hypr/waybarctl --restart"
   },
   {
     "name": "Waybar - toggle",
+    "description": "Toggle the visibility of the menu bar.",
     "exec": "$SCRIPTS/hypr/waybarctl --toggle"
   },
   {
     "name": "Windows - window stats / picker",
-    "exec": "$SCRIPTS/hypr/window-table"
+    "description": "View information from hyprctl about all the current windows.\n\nAllows you to choose an action you would like to perform on the selected window.",
+    "exec": "$SCRIPTS/hypr/windowctl"
   },
   {
-    "name": "Windows - close ALL in active workspace",
+    "name": "Windows - close in active workspace",
+    "description": "Close all windows in the currently active workspace.",
     "exec": "$SCRIPTS/hypr/close-windows --active-workspace"
   },
   {
-    "name": "Windows - close ALL in all workspaces",
+    "name": "Windows - close ALL",
+    "description": "Close all windows in all workspaces.",
     "exec": "$SCRIPTS/hypr/close-windows --all"
   }
 ]

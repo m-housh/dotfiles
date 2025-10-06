@@ -25,7 +25,6 @@ OPTIONS:
   -s | --silent-move:   Move the selected window to another workspace and remain on current workspace.
   -t | --to-workspace:  Used with one of the move options to set which workspace to move to. If not supplied
                         then we will prompt for a workspace to move to.
-  --show-window-class:  Include window class in the table.
   -h | --help:          Show this page.
 
 NOTES:
@@ -37,7 +36,7 @@ launched terminal, allowing you to launch with a specific mode turned on, any fl
 EOF
 }
 
-window_class="com.ghostty.window-table"
+window_class="com.ghostty.$THIS"
 window_padding_x="10"
 
 clipboard_flag="0"
@@ -48,7 +47,6 @@ launch_flag="0"
 move_flag="0"
 move_silent_flag="0"
 move_to_workspace_name=""
-show_window_class_flag="0"
 
 launch_args=()
 selected_value=""
@@ -79,8 +77,6 @@ while [[ $# -gt 0 ]]; do
       move_to_workspace_name=$1
     elif [[ $1 =~ ^--launch ]]; then
       launch_flag="1"
-    elif [[ $1 =~ ^--show-window-class ]]; then
-      show_window_class_flag="1"
     fi
   fi
   shift
@@ -100,27 +96,23 @@ log() {
   logging log --source "$THIS_FILE" "$@"
 }
 
-show_table_return_choice() {
-  local opts=()
-  if [[ $show_window_class_flag == "1" ]]; then
-    opts+=("--show-window-class")
-  fi
-  echo $("$SCRIPTS/hypr/window-picker" "${opts[@]}")
-}
-
 ask_what_to_do_with_selection() {
   local choices=(
-    "Focus window"
-    "Close window"
-    "Move to workspace"
-    "Move to workspace - silent"
-    "Copy to clipboard"
-    "Refresh window list"
-    "Quit"
+    "Focus the selected window.:Focus window"
+    "Close the selected window.:Close window"
+    "Move the selected window to another workspace, focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace"
+    "Move the selected window to another workspace, without focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace - silent"
+    "Copy the window address to the system clipboard:Copy to clipboard"
+    "Move back to window picker and reload windows.:Back"
+    "Quit:Quit"
   )
   choice=$(
     printf "%s\n" "${choices[@]}" |
-      fzf --style=full --footer="$(action_footer)" --header="What should we do with the selected window?"
+      fzf --style=full --footer="$(action_footer)" \
+        --delimiter=':' --with-nth=2 \
+        --header="What should we do with the selected window?" \
+        --preview-label="[  Description ]" \
+        --preview='echo -e {1}'
   )
   log "Choice: $choice"
   if [[ $choice == "Quit" ]]; then
@@ -226,7 +218,7 @@ else
     [[ -f $SCRIPTS/catppuccin-colors ]] &&
     source $SCRIPTS/catppuccin-colors
 
-  selected_value=$(show_table_return_choice)
+  selected_value=$("$SCRIPTS/hypr/window-picker")
   if [[ -n $selected_value ]]; then
     handle_selected_value
     # If we got here then no flag was passed in initially on how to handle the
