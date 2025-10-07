@@ -27,6 +27,7 @@ COMMANDS:
   focus:                Focuses a window, handling special workspaces properly.
   launch:               Launches an interactive picker in a new terminal.
   picker:               Window picker that prompts for an action to perform on the window.
+  toggle-floating:      Toggles floating property of a window.
 
 Run "$THIS <command> --help" for more information on a command.
 
@@ -99,6 +100,10 @@ while [[ $# -gt 0 ]]; do
     shift
     show_picker "$@"
     exit $?
+  elif [[ $1 == "toggle-floating" ]]; then
+    shift
+    THIS="$THIS toggle-floating" "$SCRIPTS/hypr/utils/windows/window-toggle-floating" "$@"
+    exit $?
   elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     usage && exit 0
   else
@@ -107,3 +112,6 @@ while [[ $# -gt 0 ]]; do
   fi
   shift
 done
+
+# If we've reached here then no commands were passed / handled.
+usage && exit 1

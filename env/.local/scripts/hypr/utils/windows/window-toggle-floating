@@ -10,23 +10,33 @@ LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
 
+address=""
+width=""
+height=""
+
 usage() {
   cat <<EOF
 
 Utility for toggling a windows floating property.
+
+If no address is supplied and '--active' flag is not set, then we will read address from stdin.
 
 USAGE:
 
   $ $THIS <flags> <address>
 
 FLAGS:
-  -a | --active:        Toggle floating on the currently active window.
-  -w | --width <n>:     Set a width of the floating window.
-  -h | --height <n>:    Set a height of the floating window.
+  -a | --active:        Toggles floating of the active window.
+  -w | --width <n>:     Set a width of the floating window, can be pixels or percent (ex. 80%).
+  -h | --height <n>:    Set a height of the floating window, can be pixels or percent (ex. 80%).
   --help:               Show this help page.
 
 EOF
 
+}
+
+log() {
+  logging log --source "$THIS_FILE" "$@"
 }
 
 # Suppress output of hyprctl
@@ -35,40 +45,69 @@ hypr_dispatch() {
 }
 
 toggle_floating() {
-  local address="$1"
-  hypr_dispatch togglefloating
+  hypr_dispatch togglefloating "address:$address"
+}
+
+resize_window() {
+  if [[ -n $width ]] && [[ -n $height ]]; then
+    log "Resizing window: width: $width, height: $height"
+    hypr_dispatch resizewindowpixel exact "$width $height,address:$address"
+  fi
+
   echo "$address"
+
 }
 
 center_window() {
   local address=""
   read -r address
-  hypr_dispatch centerwindow
-  echo "$address"
+  local activeaddress=$(hyprctl activewindow -j | jq -r '.address')
+  if [[ $address == $activeaddress ]]; then
+    log "Centering window..."
+    hypr_dispatch centerwindow
+  fi
 }
 
-# Float's a window, setting it's height and width and centering.
+################################################################################
+# MAIN
+################################################################################
 
-# The percentage of the screen size for the floating window.
-WIDTH_PERCENT=80
-HEIGHT_PERCENT=40
+# Setup logging
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 
-floating=$(hyprctl activewindow -j | jq '.floating')
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ $1 == "-w" ]] || [[ $1 == "--width" ]]; then
+    shift
+    width=$1
+  elif [[ $1 == "-h" ]] || [[ $1 == "--height" ]]; then
+    shift
+    height=$1
+  elif [[ $1 == "-a" ]] || [[ $1 == "--active" ]]; then
+    address=$(hyprctl activewindow -j | jq -r '.address')
+  else
+    address=$1
+  fi
+  shift
+done
 
-if [ "$floating" = "true" ]; then
-  hyprctl dispatch togglefloating
-else
-  monitor=$(hyprctl monitors -j | jq '.[] | select(.focused == true)')
-  mw=$(echo "$monitor" | jq '.width')
-  mh=$(echo "$monitor" | jq '.height')
-  ms=$(echo "$monitor" | jq '.scale')
+if [[ -z $address ]]; then
+  read -p "Window address: " address
+fi
 
-  echo "scale: $ms"
+if [[ -z $address ]]; then
+  log --error "No address was supplied" && exit 1
+fi
 
-  neww=$(echo "scale=6; (($mw / $ms) * $WIDTH_PERCENT / 100)" | bc)
-  newh=$(echo "scale=6; (($mh / $ms) * $HEIGHT_PERCENT / 100)" | bc)
+log "Begin toggling floating for: '$address'"
 
-  hyprctl dispatch togglefloating &&
-    hyprctl dispatch resizeactive exact $neww $newh &&
-    hyprctl dispatch centerwindow
+floating=$(hyprctl clients -j | jq ".[] | select(.address == \"$address\") | .floating")
+log "Is currently floating: $floating"
+
+toggle_floating
+
+if [ ! "$floating" == "true" ]; then
+  resize_window | center_window
 fi
