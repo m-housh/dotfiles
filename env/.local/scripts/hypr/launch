@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
 THIS=$(basename "$THIS_FILE")
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
 
 usage() {
   cat <<EOF
@@ -52,7 +59,6 @@ launch_cmd=()
 pattern=""
 special_flag="0"
 special=""
-SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 == "-c" ]] || [[ $1 == "--or-close" ]]; then
@@ -114,7 +120,7 @@ launch_application() {
 
 # Setup logging file and label
 source "$SCRIPTS/hypr/logging"
-setup-logging "/tmp/$THIS.log" "$THIS"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 
 if [[ -z $pattern ]]; then
   log --error "Must supply a pattern to match the window class."
