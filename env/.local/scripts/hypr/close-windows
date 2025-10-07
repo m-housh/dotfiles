@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -e
-set -o nounset
+# FIX: Fix args not set error, to be able to use this option.
+#set -o nounset
 set -o pipefail
 
 THIS_FILE=${BASH_SOURCE[0]}
@@ -47,8 +48,8 @@ all_flag="0"
 class_flag="0"
 dry_run_flag="0"
 special_flag="0"
-args=""
-addresses=""
+declare -a args=()
+declare -a addresses=()
 SCRIPTS="${SCRIPTS:-$HOME/.local/scripts}"
 
 while [[ $# -gt 0 ]]; do
@@ -84,9 +85,9 @@ get_special_addresses() {
 
   # If no arguments, then we add the "special" to the pattern args, which will
   # match all windows in any special workspace.
-  if [[ ${#args} == 0 ]]; then
-    args+=("special")
-  fi
+  # if [[ ${#args} == 0 ]]; then
+  #   args+=("special")
+  # fi
 
   for name in ${args[@]}; do
     log "Fetching addresses for special: $name"
@@ -123,6 +124,7 @@ elif [[ $class_flag == "1" ]]; then
   done
 
 elif [[ $special_flag == "1" ]]; then
+
   # Set addresses to all windows in the passed in special workspaces.
   get_special_addresses
 

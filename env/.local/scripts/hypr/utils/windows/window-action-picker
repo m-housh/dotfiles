@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+
+address=""
+move_silent_flag="0"
+should_go_back="0"
+
+if [[ $# == 1 ]]; then
+  address="$1"
+else
+  # If an address not supplied then read from stdin, which allows us to pipe into
+  # this command.
+  read -r address
+fi
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+action_footer() {
+  cat <<'EOF'
+   ___      __  _         
+  / _ |____/ /_(_)__  ___ 
+ / __ / __/ __/ / _ \/ _ \
+/_/ |_\__/\__/_/\___/_//_/
+                          
+EOF
+}
+
+# Prevent hyprctl dispatch calls from printing to the console.
+hypr_dispatch() {
+  hyprctl dispatch "$@" >/dev/null 2>&1
+  return $?
+}
+
+focus_window() {
+  log "Focusing window, selection: $address"
+  local name=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$address\") | .workspace.name")
+  local active_workspace=$(hyprctl activewindow -j | jq -r ".workspace.name")
+  log "Window workspace: '$name', active workspace: '$active_workspace'"
+  if [[ $name =~ ^special ]] && [[ ! $active_workspace == $name ]]; then
+    log "Toggling special workspace prior to focusing window."
+    name="${name#special:*}"
+    hypr_dispatch togglespecialworkspace $name
+  fi
+  hypr_dispatch focuswindow "address:$address"
+}
+
+parse_workspace_id() {
+  local workspace_name=""
+  read -r workspace_name
+
+  log "Parsing selected workspace name: $workspace_name"
+
+  if [[ -z $workspace_name ]]; then
+    log --error "No workspace set to move window to."
+    exit 1
+  fi
+
+  if [[ $workspace_name =~ ^special ]]; then
+    log "Special workspace, returning name."
+    echo $workspace_name
+  else
+    local id="$(hyprctl workspaces -j | jq -r ".[] | select(.name | contains(\"$workspace_name\")) | .id")"
+    log "Selected workspace id: $id"
+    echo "$id"
+  fi
+}
+
+move_to_workspace() {
+
+  log "Moving window: '$address'"
+  log "Prompting for workspace to move to..."
+
+  local action="movetoworkspace"
+  if [[ $move_silent_flag == "1" ]]; then
+    action="movetoworkspacesilent"
+  fi
+
+  $SCRIPTS/hypr/workspace-picker --return-name-if-special --header="Select a workspace to move window to:" |
+    parse_workspace_id |
+    xargs -I{} hyprctl dispatch "$action" "{},address:$address" >/dev/null 2>&1
+
+  return $?
+
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_LABEL"
+
+if [[ -z $address ]]; then
+  log --error "Address not set."
+  exit 1
+fi
+
+log "Prompting for window action..."
+
+choices=(
+  "Focus the selected window.:Focus window"
+  "Close the selected window.:Close window"
+  "Close the selected window and go back to the window list.:Close window and back"
+  "Move the selected window to another workspace, focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace"
+  "Move the selected window to another workspace, without focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace - silent"
+  "Copy the window address to the system clipboard:Copy to clipboard"
+  "Move back to window picker and reload windows.:Back"
+  "Quit:Quit"
+)
+preview_action="$SCRIPTS/hypr/preview-stats window $address \"{title, workspace, address}\""
+choice=$(
+  printf "%s\n" "${choices[@]}" |
+    fzf --style=full --footer="$(action_footer)" \
+      --delimiter=':' --with-nth=2 \
+      --header="What should we do with the selected window?" \
+      --preview-label="[ Description ]" \
+      --preview="echo -e {1}; echo -e '\n\n\e[35mSelected Window:\e[0m'; $preview_action;"
+)
+if [[ $? -gt 0 ]]; then
+  log --error "Unexpected fzf status: $?"
+  exit $?
+fi
+
+# Set choice to just the action portion.
+choice="${choice#*:}"
+log "Action Choice: $choice"
+
+# Set appropriate flags based on the choice and perform the action on the window address.
+if [[ $choice == "Quit" ]]; then
+  exit 0
+elif [[ $choice == "Close window" ]]; then
+  "$SCRIPTS/hypr/close-windows" "$address"
+elif [[ $choice == "Close window and back" ]]; then
+  "$SCRIPTS/hypr/close-windows" "$address"
+  should_go_back="1"
+elif [[ $choice == "Copy to clipboard" ]]; then
+  echo $address | wl-copy
+elif [[ $choice == "Focus window" ]]; then
+  focus_window
+elif [[ $choice == "Move to workspace" ]]; then
+  move_to_workspace
+elif [[ $choice == "Move to workspace - silent" ]]; then
+  move_silent_flag="1"
+  move_to_workspace
+elif [[ $choice == "Back" ]]; then
+  should_go_back="1"
+fi
+
+# TODO: Maybe we just echo out a 'back' message.
+if [[ $should_go_back == "1" ]]; then
+  exit 69
+fi
