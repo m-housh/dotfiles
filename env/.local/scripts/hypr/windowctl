@@ -12,263 +12,81 @@ usage() {
   cat <<EOF
 
 Show a table with details about the currently active windows. You can choose a window and perform
-an action. This script will prompt for what you would like to do depending on the options passed.
-There are no required options for this script to work.
+an action. 
 
 USAGE:
 
-  $ $THIS [OPTIONS]
+  $ $THIS <command> <flags>
 
-OPTIONS:
+FLAGS:
 
-  --launch:                         Launch in a new terminal window, user will be prompted what to do with selected window.
-  -c | --clip:                      Copy selected window's address to the system clipboard.
-  -x | --close <address>:           Close the selected window.
-  -f | --focus <address>:           Focus the selected window, if optional address is supplied then we focus it.
-  -i | --ignore:                    Ignore the selected window.
-  -m | --move <address>:            Move the selected window to another workspace and switch to that workspace.
-  -s | --silent-move <address>:     Move the selected window to another workspace and remain on current workspace.
-  -t | --to-workspace <id>:         Used with one of the move options to set which workspace to move to. If not supplied
-                                    then we will prompt for a workspace to move to.
   -h | --help:                      Show this page.
 
-NOTES:
+COMMANDS:
 
-If using the 'launch' option then flags passed after the '--launch' flag will be passed into the
-launched terminal, allowing you to launch with a specific mode turned on, any flags passed in prior to
-'--launch' will be ignored.
+  close:          Close window(s).
+  launch:         Launch in a new terminal window, user will be prompted what to do with selected window.
+
+Run "$THIS <command> --help" for more information on a command.
 
 EOF
 }
-
-if [[ "$1" == "close" ]]; then
-  shift
-  THIS="$THIS close" "$SCRIPTS/hypr/utils/windows/close-windows" "$@"
-  exit $?
-fi
 
 window_class="com.ghostty.$THIS"
 window_padding_x="10"
-
-clipboard_flag="0"
-close_flag="0"
-focus_flag="0"
-ignore_flag="0"
-launch_flag="0"
-move_flag="0"
-move_silent_flag="0"
-move_to_workspace_name=""
-refresh_flag="0"
 should_quit="0"
-
-launch_args=()
-selected_value=""
-
-while [[ $# -gt 0 ]]; do
-  if [[ $launch_flag == "1" ]]; then
-    launch_args+=("$1")
-  else
-    if [[ $1 =~ ^-c ]] || [[ $1 =~ ^--clip ]]; then
-      clipboard_flag="1"
-    elif [[ $1 =~ ^-x ]] || [[ $1 =~ ^--close ]]; then
-      close_flag="1"
-      selected_value=$2
-      shift
-    elif [[ $1 =~ ^-f ]] || [[ $1 =~ ^--focus ]]; then
-      focus_flag="1"
-      selected_value=$2
-      shift
-    elif [[ $1 =~ ^-h ]] || [[ $1 =~ ^--help ]]; then
-      usage && exit 0
-    elif [[ $1 =~ ^-i ]] || [[ $1 =~ ^--ignore ]]; then
-      ignore_flag="1"
-    elif [[ $1 =~ ^-m ]] || [[ $1 =~ ^--move ]]; then
-      move_flag="1"
-      selected_value=$2
-      shift
-    elif [[ $1 =~ ^-s ]] || [[ $1 =~ ^--silent-move ]]; then
-      move_flag="1"
-      move_silent_flag="1"
-      selected_value=$2
-      shift
-    elif [[ $1 =~ ^-t ]] || [[ $1 =~ ^--to-workspace ]]; then
-      shift
-      move_to_workspace_name=$1
-    elif [[ $1 =~ ^--launch ]]; then
-      launch_flag="1"
-    fi
-  fi
-  shift
-done
-
-action_footer() {
-  cat <<'EOF'
-   ___      __  _         
-  / _ |____/ /_(_)__  ___ 
- / __ / __/ __/ / _ \/ _ \
-/_/ |_\__/\__/_/\___/_//_/
-                          
-EOF
-}
 
 log() {
   logging log --source "$THIS_FILE" "$@"
 }
 
+launch_usage() {
+  cat <<EOF
+
+Launches in a new terminal window.
+
+USAGE:
+  
+  $ $THIS launch
+
+EOF
+}
+
 # Launch in a new terminal window.
 launch() {
+  if [[ $@ =~ ^-h ]] || [[ $@ =~ ^--help ]]; then
+    launch_usage && exit 0
+  fi
+
   ghostty --class="$window_class" --window-padding-x="$window_padding_x" \
     --keybind="ctrl+c=quit" \
     -e "${BASH_SOURCE[0]}" "${launch_args[@]}"
 }
 
-# Reset flags and selection.
-reset_flags() {
-  selected_value=""
-  clipboard_flag="0"
-  close_flag="0"
-  focus_flag="0"
-  ignore_flag="0"
-  launch_flag="0"
-  move_flag="0"
-  move_silent_flag="0"
-  move_to_workspace_name=""
-  refresh_flag="0"
-  should_quit="0"
-}
-
-ask_what_to_do_with_selection() {
-  local choices=(
-    "Focus the selected window.:Focus window"
-    "Close the selected window.:Close window"
-    "Close the selected window and go back to the window list.:Close window and back"
-    "Move the selected window to another workspace, focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace"
-    "Move the selected window to another workspace, without focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace - silent"
-    "Copy the window address to the system clipboard:Copy to clipboard"
-    "Move back to window picker and reload windows.:Back"
-    "Quit:Quit"
-  )
-  choice=$(
-    printf "%s\n" "${choices[@]}" |
-      fzf --style=full --footer="$(action_footer)" \
-        --delimiter=':' --with-nth=2 \
-        --header="What should we do with the selected window?" \
-        --preview-label="[ Description ]" \
-        --preview="echo -e {1}; echo -e '\n\n\e[35mSelected Window:\e[0m'; $SCRIPTS/hypr/preview-stats window $selected_value \"{title, workspace, address}\";"
-  )
-  # Set choice to just the action portion.
-  choice="${choice#*:}"
-  log "Choice: $choice"
-
-  # Set appropriate flags based on the choice.
-  if [[ $choice == "Quit" ]]; then
-    exit 0
-  elif [[ $choice == "Close window" ]]; then
-    should_quit="1"
-    close_flag="1"
-  elif [[ $choice == "Close window and back" ]]; then
-    close_flag="1"
-    refresh_flag="1"
-    should_quit="0"
-  elif [[ $choice == "Copy to clipboard" ]]; then
-    should_quit="1"
-    clipboard_flag="1"
-  elif [[ $choice == "Focus window" ]]; then
-    should_quit="1"
-    focus_flag="1"
-  elif [[ $choice == "Move to workspace" ]]; then
-    should_quit="1"
-    move_flag="1"
-  elif [[ $choice == "Move to workspace - silent" ]]; then
-    should_quit="1"
-    move_silent_flag="1"
-    move_flag="1"
-  elif [[ $choice == "Refresh window list" ]]; then
-    refresh_flag="1"
-    should_quit="0"
-  fi
-}
-
-# Prevent hyprctl dispatch calls from printing to the console.
-hypr_dispatch() {
-  hyprctl dispatch "$@" >/dev/null 2>&1
-  return $?
-}
-
-move_to_workspace() {
-  local workspace_id=""
-
-  if [[ -z $move_to_workspace_name ]]; then
-    move_to_workspace_name=$(
-      $SCRIPTS/hypr/workspace-picker --return-name-if-special \
-        --header="Select a workspace to move window to:"
-    )
-  fi
-
-  if [[ -z $move_to_workspace_name ]]; then
-    log --error "No workspace set to move window to."
-    exit 1
-  fi
-
-  # Check if moving to a special workspace to pass the appropriate args in to hyprctl.
-  if [[ $move_to_workspace_name =~ ^special ]]; then
-    workspace_id=$move_to_workspace_name
-  else
-    workspace_id=$(hyprctl workspaces -j | jq -r ".[] | select(.name | contains(\"$move_to_workspace_name\")) | .id")
-  fi
-
-  if [[ -z $workspace_id ]]; then
-    log --error "No workspace id found for: '$move_to_workspace_name'"
-    exit 1
-  fi
-
-  action="movetoworkspace"
-  if [[ $move_silent_flag == "1" ]]; then
-    action="movetoworkspacesilent"
-  fi
-
-  log "Moving window: '$selected_value' to workspace: '$workspace_id'"
-  hypr_dispatch $action "$workspace_id,address:$selected_value"
-}
-
-focus_window() {
-  log "Focusing window, selection: $selected_value"
-  local address="$selected_value"
-  local name=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$address\") | .workspace.name")
-  local active_workspace=$(hyprctl activewindow -j | jq -r ".workspace.name")
-  log "Window workspace: '$name', active workspace: '$active_workspace'"
-  if [[ $name =~ ^special ]] && [[ ! $active_workspace == $name ]]; then
-    log "Toggling special workspace prior to focusing window."
-    name="${name#special:*}"
-    hypr_dispatch togglespecialworkspace $name
-  fi
-  hypr_dispatch focuswindow "address:$address"
-}
-
 handle_selected_value() {
-  if [[ $ignore_flag == "1" ]]; then
-    log "Ignore flag set, selection: '$selected_value'"
-    exit 0
-  elif [[ $clipboard_flag == "1" ]]; then
-    log "Copying to clipboard, selection: $selected_value"
-    wl-copy $selected_value
-  elif [[ $focus_flag == "1" ]]; then
-    focus_window
-  elif [[ $close_flag == "1" ]]; then
-    log "Closing window, selection: $selected_value"
-    hypr_dispatch closewindow "address:$selected_value"
-    if [[ $refresh_flag == "1" ]]; then
-      log "Refreshing windows..."
-      # Need to sleep here breifly otherwise recently closed windows will still show
-      # in the window picker.
-      reset_flags && sleep 0.3
-    fi
-  elif [[ $move_flag == "1" ]] || [[ $move_silent_flag == "1" ]]; then
-    move_to_workspace
-    # && exit 0
-  else
-    log "No flag set, selection: '$selected_value'"
+  local selection=""
+  read -r selection
+
+  if [[ -z $selection ]]; then
+    log "No selected value."
+    return 1
   fi
+
+  log "Prompting for action, window: '$selection'"
+
+  local res=$(echo "$selection" | "$SCRIPTS/hypr/utils/windows/window-action-picker")
+  log "Action callback result: $res"
+  echo "$res"
+
+}
+
+prompt_for_window_selection() {
+  local selected_value=$("$SCRIPTS/hypr/window-picker")
+  local status=$?
+  if [[ $status -ne 0 ]]; then
+    exit $status
+  fi
+  echo "$selected_value"
 }
 
 ##################################################
@@ -277,52 +95,38 @@ handle_selected_value() {
 
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
-setup-logging "/tmp/$THIS.log" "$THIS"
+setup-logging "$THIS"
 
-log "Starting with selected value: '$selected_value'"
-
-if [[ $launch_flag == "1" ]]; then
-  launch && exit 0
-else
-
-  # Load colors if they haven't been loaded already.
-  [[ -z ${FZF_DEFAULT_OPTS} ]] &&
-    [[ -f $SCRIPTS/catppuccin-colors ]] &&
-    source $SCRIPTS/catppuccin-colors
-
-  if [[ -n $selected_value ]]; then
-    # Handle value if it was passed in.
-    # TODO: This should probably ensure that flags were set.
-    handle_selected_value && exit 0
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "close" ]]; then
+    shift
+    THIS="$THIS close" "$SCRIPTS/hypr/utils/windows/close-windows" "$@"
+    exit $?
+  elif [[ $1 == "launch" ]]; then
+    shift
+    launch "$@" && exit 0
+  elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
   else
-
-    trap 'log "Stoping..."; should_quit="1"' SIGINT
-
-    while [[ $should_quit == "0" ]]; do
-
-      # not sure if this should be here or somewhere else, as it will
-      # cause any passed in flags to be ignored, but they're generally empty
-      # when using this interactive mode anyway.
-      reset_flags
-
-      selected_value=$("$SCRIPTS/hypr/window-picker")
-      status=$?
-
-      if [[ $status -ne 0 ]]; then
-        should_quit="1"
-      else
-        if [[ -n $selected_value ]]; then
-          handle_selected_value
-          # If we got here then no flag was passed in initially on how to handle the
-          # selected window, so ask what they'd like to do.  Then handle it.
-          log "Asking what to do with selction."
-          ask_what_to_do_with_selection
-
-          [[ -n $selected_value ]] && handle_selected_value
-          # If you make it here, We just give up... Don't start an endless loop.
-          # log "Giving up without a selection."
-        fi
-      fi
-    done
+    log --error "Unhandled arg: $1"
+    exit 1
   fi
-fi
+  shift
+done
+
+# Load colors if they haven't been loaded already.
+[[ -z ${FZF_DEFAULT_OPTS} ]] &&
+  [[ -f $SCRIPTS/catppuccin-colors ]] &&
+  source $SCRIPTS/catppuccin-colors
+
+trap 'log "Stoping..."; should_quit="1"' SIGINT
+
+while [[ $should_quit -eq 0 ]]; do
+  res=$(prompt_for_window_selection | handle_selected_value)
+  if [[ ! $res =~ ^back ]]; then
+    should_quit=1
+  elif [[ $res == "back:close" ]]; then
+    sleep 0.3 # allow time for windows close, to prevent showing closed windows.
+  fi
+  log "Should quit: $should_quit"
+done

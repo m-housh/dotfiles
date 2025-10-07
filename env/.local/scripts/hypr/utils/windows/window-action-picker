@@ -11,7 +11,6 @@ THIS=${THIS:-$LOG_LABEL}
 
 address=""
 move_silent_flag="0"
-should_go_back="0"
 
 if [[ $# == 1 ]]; then
   address="$1"
@@ -125,17 +124,21 @@ make_selection() {
 
 # Set appropriate flags based on the choice and perform the action on the window address.
 handle_selection() {
+  local resp="done"
   local choice=""
   read -r choice
   log "Action Choice: $choice"
   if [[ $choice == "Quit" ]]; then
-    exit 0
+    log "Quitting..."
   elif [[ $choice == "Close window" ]]; then
+    log "Closing window..."
     "$SCRIPTS/hypr/close-windows" "$address"
   elif [[ $choice == "Close window and back" ]]; then
+    log "Closing window and setting should go back flag."
     "$SCRIPTS/hypr/close-windows" "$address"
-    should_go_back="1"
+    resp="back:close"
   elif [[ $choice == "Copy to clipboard" ]]; then
+    log "Copied window address to the clipboard."
     echo $address | wl-copy
   elif [[ $choice == "Focus window" ]]; then
     focus_window
@@ -144,9 +147,13 @@ handle_selection() {
   elif [[ $choice == "Move to workspace - silent" ]]; then
     move_silent_flag="1"
     move_to_workspace
+    resp="back"
   elif [[ $choice == "Back" ]]; then
-    should_go_back="1"
+    resp="back"
   fi
+
+  echo "$resp"
+
 }
 
 ################################################################################
@@ -162,9 +169,6 @@ if [[ -z $address ]]; then
   exit 1
 fi
 
-make_selection | handle_selection
-
-# TODO: Maybe we just echo out a 'back' message.
-if [[ $should_go_back == "1" ]]; then
-  exit 69
-fi
+res=$(make_selection | handle_selection)
+log "Action result: $res"
+echo "$res"
