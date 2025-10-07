@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -e
+set -o nounset
+set -o pipefail
+
 THIS_FILE=${BASH_SOURCE[0]}
 THIS=$(basename $THIS_FILE)
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
@@ -109,6 +113,13 @@ EOF
 
 log() {
   logging log --source "$THIS_FILE" "$@"
+}
+
+# Launch in a new terminal window.
+launch() {
+  ghostty --class="$window_class" --window-padding-x="$window_padding_x" \
+    --keybind="ctrl+c=quit" \
+    -e "${BASH_SOURCE[0]}" "${launch_args[@]}"
 }
 
 # Reset flags and selection.
@@ -271,9 +282,7 @@ setup-logging "/tmp/$THIS.log" "$THIS"
 log "Starting with selected value: '$selected_value'"
 
 if [[ $launch_flag == "1" ]]; then
-  ghostty --class="$window_class" --window-padding-x="$window_padding_x" \
-    --keybind="ctrl+c=quit" \
-    -e "${BASH_SOURCE[0]}" "${launch_args[@]}"
+  launch && exit 0
 else
 
   # Load colors if they haven't been loaded already.
