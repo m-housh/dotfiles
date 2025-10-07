@@ -32,7 +32,7 @@
   {
     "name": "Windows - window stats / picker",
     "description": "View information from hyprctl about all the current windows.\n\nAllows you to choose an action you would like to perform on the selected window.",
-    "exec": "$SCRIPTS/hypr/windowctl"
+    "exec": "$SCRIPTS/hypr/windowctl picker"
   },
   {
     "name": "Windows - close in active workspace",

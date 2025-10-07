@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 
+set -e
+set -o nounset
+set -o pipefail
+
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS_FILE=${BASH_SOURCE[0]}
-THIS=$(basename $THIS_FILE)
+LOG_LABEL=$(basename $THIS_FILE)
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-/tmp/$LOG_LABEL.log}
 
 usage() {
   cat <<EOF
@@ -11,9 +17,9 @@ Utility for getting fzf preview data.
 
 USAGE:
 
-  $ $THIS [MODE] [ARG...]
+  $ $THIS [COMMAND] [ARG...]
 
-MODES:
+COMMAND:
 
   monitor <id> <keys>:            Get monitor data, optionally providing keys to return.
   window <address> <keys>:        Get window data, optionally providing keys to return.
@@ -52,7 +58,7 @@ call_jq() {
 
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
-setup-logging "$THIS"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 
 # Early out check for help flag
 if [[ $@ =~ -h ]] || [[ $@ =~ --help ]]; then
@@ -63,9 +69,9 @@ elif [[ ! $# -ge 2 ]] || [[ $# -gt 3 ]]; then
   exit 1
 fi
 
-mode=$1
-arg=$2
-arg2=$3 # either optional keys or utils config.
+mode=${1:-""}
+arg=${2:-""}
+arg2=${3:-""} # either optional keys or utils config.
 
 if [[ $mode == "monitor" ]]; then
   call_jq monitors "select(.id == $arg)" "$arg2"

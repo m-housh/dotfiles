@@ -155,6 +155,64 @@ if [[ -z $address ]]; then
   exit 1
 fi
 
+<<<<<<< Updated upstream
 res=$(make_selection | handle_selection)
 log "Action result: $res"
 echo "$res"
+=======
+log "Prompting for window action..."
+
+choices=(
+  "Focus the selected window.:Focus window"
+  "Close the selected window.:Close window"
+  "Close the selected window and go back to the window list.:Close window and back"
+  "Move the selected window to another workspace, focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace"
+  "Move the selected window to another workspace, without focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace - silent"
+  "Copy the window address to the system clipboard:Copy to clipboard"
+  "Move back to window picker and reload windows.:Back"
+  "Quit:Quit"
+)
+preview_action="$SCRIPTS/hypr/preview-stats window $address \"{title, workspace, address}\""
+choice=$(
+  printf "%s\n" "${choices[@]}" |
+    fzf --style=full --footer="$(action_footer)" \
+      --delimiter=':' --with-nth=2 \
+      --header="What should we do with the selected window?" \
+      --preview-label="[ Description ]" \
+      --preview="echo -e {1}; echo -e '\n\n\e[35mSelected Window:\e[0m'; $preview_action;"
+)
+if [[ $? -gt 0 ]]; then
+  log --error "Unexpected fzf status: $?"
+  exit $?
+fi
+
+# Set choice to just the action portion.
+choice="${choice#*:}"
+log "Window action choice: $choice"
+
+# Set appropriate flags based on the choice and perform the action on the window address.
+if [[ $choice == "Quit" ]]; then
+  exit 0
+elif [[ $choice == "Close window" ]]; then
+  "$SCRIPTS/hypr/close-windows" "$address"
+elif [[ $choice == "Close window and back" ]]; then
+  "$SCRIPTS/hypr/close-windows" "$address"
+  should_go_back="1"
+elif [[ $choice == "Copy to clipboard" ]]; then
+  echo $address | wl-copy
+elif [[ $choice == "Focus window" ]]; then
+  focus_window
+elif [[ $choice == "Move to workspace" ]]; then
+  move_to_workspace
+elif [[ $choice == "Move to workspace - silent" ]]; then
+  move_silent_flag="1"
+  move_to_workspace
+elif [[ $choice == "Back" ]]; then
+  should_go_back="1"
+fi
+
+# TODO: Maybe we just echo out a 'back' message.
+if [[ $should_go_back == "1" ]]; then
+  exit 69
+fi
+>>>>>>> Stashed changes
