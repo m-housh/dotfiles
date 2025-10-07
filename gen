@@ -74,10 +74,15 @@ generate_script() {
   cat >"$dest" <<'EOF'
 #!/usr/bin/env bash
 
+set -e
+set -o nounset
+set -o pipefail
+
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
 
 # Logging utility function, use in place of echo.
 log() {
@@ -90,7 +95,7 @@ log() {
 
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
-setup-logging "$LOG_LABEL"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 
 log "Starting $THIS..."
 

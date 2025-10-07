@@ -27,10 +27,13 @@
 # log --warning "My warning message."
 # log --error "My error message."
 #
+set -e
+set -o nounset
+set -o pipefail
 
-LOG_FILE=(${LOG_FILE:-})
-LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-}
-LOG_LABEL=${LOG_LABEL:-()}
+LOG_FILE=${LOG_FILE:-""}
+LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-""}
+LOG_LABEL=${LOG_LABEL:-""}
 # Run in dry run mode, which just prints to the console and does
 # not log to the files.
 LOG_ENABLE_DRY_RUN=${LOG_ENABLE_DRY_RUN:-"0"}
@@ -104,14 +107,23 @@ logging() {
   if [[ $LOG_ENABLE_DRY_RUN == "0" ]]; then
     # Loop over log files logging message to each file.
     for i in "${!LOG_FILE[@]}"; do
-      prefix="[id: $LOG_INVOCATION_ID][time: $($SCRIPTS/isosec)][label: ${LOG_LABEL[i]}][source: $source_file] : "
-      m="$prefix $msg"
-      echo -e "$m" >>${LOG_FILE[i]}
+      local file=${LOG_FILE[i]}
+      local id=$LOG_INVOCATION_ID
+      local label=${LOG_LABEL[i]:-"$LOG_LABEL"}
+      local time=$("$SCRIPTS/isosec")
+
+      if [[ -z $file ]] || [[ -z $id ]] || [[ -z $label ]]; then
+        echo "Loggging not properly setup."
+        exit 1
+      fi
+      local prefix="[id: $id][time: $time][source: \e[32m$source_file\e[0m][\e[34m$label\e[0m] :"
+      local m="$prefix $msg"
+      echo -e "$m" >>"$file"
     done
 
     # Also log errors and warning messages to the console.
     if [[ $error_flag == "1" ]] || [[ $warn_flag == "1" ]]; then
-      echo -e "[id: $LOG_INVOCATION_ID]$msg"
+      echo -e "[id: $id]$msg"
     fi
   else
     # Dry run mode, so just log to the console
@@ -141,14 +153,19 @@ setup-logging() {
     exit 1
   fi
 
-  LOG_FILE+=("$file")
+  # Only add files that aren't already in the LOG_FILE.
+  if [[ ! $LOG_FILE =~ $file ]]; then
+    LOG_FILE+=("$file")
+  fi
+
   LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-$RANDOM}
 
-  if [[ -n $LOG_LABEL ]]; then
+  if [[ -n $LOG_LABEL ]] && [[ ! $LOG_LABEL =~ $label ]]; then
     LOG_LABEL+=("${LOG_LABEL[@]}=>$label")
-  else
+  elif [[ ! $LOG_LABEL =~ $label ]]; then
     LOG_LABEL+=("$label")
   fi
+
   export LOG_FILE
   export LOG_LABEL
   export LOG_INVOCATION_ID

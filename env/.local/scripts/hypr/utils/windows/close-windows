@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -e
+set -o nounset
+set -o pipefail
+
 THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename "$THIS_FILE")
 # Allows script name to be set when called from a parent script or defaults to filename.
@@ -97,6 +101,10 @@ close() {
     hyprctl dispatch closewindow "address:$1" >/dev/null 2>&1
   fi
 }
+
+################################################################################
+# MAIN
+################################################################################
 
 # Setup logging file and label
 source "$SCRIPTS/hypr/logging"

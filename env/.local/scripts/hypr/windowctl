@@ -6,26 +6,27 @@ set -o pipefail
 
 THIS_FILE=${BASH_SOURCE[0]}
 THIS=$(basename $THIS_FILE)
+LOG_LABEL=$(basename $THIS_FILE)
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
 
 usage() {
   cat <<EOF
 
-Show a table with details about the currently active windows. You can choose a window and perform
-an action. 
+Utility for performing actions on windows.
 
 USAGE:
 
   $ $THIS <command> <flags>
 
 FLAGS:
-
-  -h | --help:                      Show this page.
+  -h | --help:          Show this page.
 
 COMMANDS:
-
-  close:          Close window(s).
-  launch:         Launch in a new terminal window, user will be prompted what to do with selected window.
+  close:                Close window(s).
+  focus:                Focuses a window, handling special workspaces properly.
+  launch:               Launches an interactive picker in a new terminal.
+  picker:               Window picker that prompts for an action to perform on the window.
 
 Run "$THIS <command> --help" for more information on a command.
 
@@ -34,7 +35,6 @@ EOF
 
 window_class="com.ghostty.$THIS"
 window_padding_x="10"
-should_quit="0"
 
 log() {
   logging log --source "$THIS_FILE" "$@"
@@ -43,11 +43,15 @@ log() {
 launch_usage() {
   cat <<EOF
 
-Launches in a new terminal window.
+Launches an interactive picker in a new terminal window.
 
 USAGE:
   
-  $ $THIS launch
+  $ $THIS launch <flags>
+
+
+FLAGS:
+  -h | --help:                      Show this page.
 
 EOF
 }
@@ -58,35 +62,17 @@ launch() {
     launch_usage && exit 0
   fi
 
+  log "Launching terminal."
+
   ghostty --class="$window_class" --window-padding-x="$window_padding_x" \
     --keybind="ctrl+c=quit" \
-    -e "${BASH_SOURCE[0]}" "${launch_args[@]}"
+    -e "${BASH_SOURCE[0]}" "$@"
 }
 
-handle_selected_value() {
-  local selection=""
-  read -r selection
-
-  if [[ -z $selection ]]; then
-    log "No selected value."
-    return 1
-  fi
-
-  log "Prompting for action, window: '$selection'"
-
-  local res=$(echo "$selection" | "$SCRIPTS/hypr/utils/windows/window-action-picker")
-  log "Action callback result: $res"
-  echo "$res"
-
-}
-
-prompt_for_window_selection() {
-  local selected_value=$("$SCRIPTS/hypr/window-picker")
-  local status=$?
-  if [[ $status -ne 0 ]]; then
-    exit $status
-  fi
-  echo "$selected_value"
+show_picker() {
+  log "Showing picker..."
+  THIS="$THIS picker" "$SCRIPTS/hypr/utils/windows/windowctl-picker" "$@"
+  return $?
 }
 
 ##################################################
@@ -95,16 +81,24 @@ prompt_for_window_selection() {
 
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
-setup-logging "$THIS"
+setup-logging "$LOG_LABEL"
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 == "close" ]]; then
     shift
     THIS="$THIS close" "$SCRIPTS/hypr/utils/windows/close-windows" "$@"
     exit $?
+  elif [[ $1 == "focus" ]]; then
+    shift
+    THIS="$THIS focus" "$SCRIPTS/hypr/utils/windows/focus-window" "$@"
+    exit $?
   elif [[ $1 == "launch" ]]; then
     shift
-    launch "$@" && exit 0
+    launch picker "$@" && exit 0
+  elif [[ $1 == "picker" ]]; then
+    shift
+    show_picker "$@"
+    exit $?
   elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     usage && exit 0
   else
@@ -112,21 +106,4 @@ while [[ $# -gt 0 ]]; do
     exit 1
   fi
   shift
-done
-
-# Load colors if they haven't been loaded already.
-[[ -z ${FZF_DEFAULT_OPTS} ]] &&
-  [[ -f $SCRIPTS/catppuccin-colors ]] &&
-  source $SCRIPTS/catppuccin-colors
-
-trap 'log "Stoping..."; should_quit="1"' SIGINT
-
-while [[ $should_quit -eq 0 ]]; do
-  res=$(prompt_for_window_selection | handle_selected_value)
-  if [[ ! $res =~ ^back ]]; then
-    should_quit=1
-  elif [[ $res == "back:close" ]]; then
-    sleep 0.3 # allow time for windows close, to prevent showing closed windows.
-  fi
-  log "Should quit: $should_quit"
 done

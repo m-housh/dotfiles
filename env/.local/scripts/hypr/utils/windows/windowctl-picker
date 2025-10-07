@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
+
+usage() {
+  cat <<EOF
+
+Shows a window picker and window details, then prompts for an action that can be 
+performed on the selected window.
+
+USAGE:
+
+  $ $THIS <flags>
+
+FLAGS:
+  -h | --help:        Show this page.
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+handle_selected_value() {
+  local selection=""
+  read -r selection
+
+  if [[ -z $selection ]]; then
+    log "No selected value."
+    return 1
+  fi
+
+  log "Prompting for action, window: '$selection'"
+
+  local res=$(echo "$selection" | "$SCRIPTS/hypr/utils/windows/window-action-picker")
+  log "Action callback result: $res"
+  echo "$res"
+
+}
+
+prompt_for_window_selection() {
+  local selected_value=$("$SCRIPTS/hypr/window-picker")
+  local status=$?
+  if [[ $status -ne 0 ]]; then
+    exit $status
+  fi
+  echo "$selected_value"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging $LOG_FILE $LOG_LABEL
+should_quit="0"
+
+log "Starting $THIS..."
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ -n $1 ]]; then
+    address=$1
+  fi
+  shift
+done
+
+# Load colors if they haven't been loaded already.
+[[ -z ${FZF_DEFAULT_OPTS} ]] &&
+  [[ -f $SCRIPTS/catppuccin-colors ]] &&
+  source $SCRIPTS/catppuccin-colors
+
+trap 'log "Stoping..."; should_quit="1"' SIGINT
+
+while [[ $should_quit -eq 0 ]]; do
+  res=$(prompt_for_window_selection | handle_selected_value)
+
+  if [[ ! $res =~ ^back ]]; then
+    should_quit=1
+  elif [[ $res == "back:close" ]]; then
+    sleep 0.3 # allow time for windows close, to prevent showing closed windows.
+  fi
+
+  log "Should quit: $should_quit"
+done

@@ -7,6 +7,7 @@ set -o pipefail
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename "$THIS_FILE")
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
 THIS=${THIS:-$LOG_LABEL}
 
 address=""
@@ -17,7 +18,7 @@ if [[ $# == 1 ]]; then
 else
   # If an address not supplied then read from stdin, which allows us to pipe the address into
   # this command.
-  read -r address
+  read -p "Window address: " address
 fi
 
 # Logging utility function, use in place of echo.
@@ -39,21 +40,6 @@ EOF
 hypr_dispatch() {
   hyprctl dispatch "$@" >/dev/null 2>&1
   return $?
-}
-
-focus_window() {
-  log "Focusing window, selection: $address"
-
-  local name=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$address\") | .workspace.name")
-  local active_workspace=$(hyprctl activewindow -j | jq -r ".workspace.name")
-
-  log "Window workspace: '$name', active workspace: '$active_workspace'"
-  if [[ $name =~ ^special ]] && [[ ! $active_workspace == $name ]]; then
-    log "Toggling special workspace prior to focusing window."
-    name="${name#special:*}"
-    hypr_dispatch togglespecialworkspace $name
-  fi
-  hypr_dispatch focuswindow "address:$address"
 }
 
 parse_workspace_id() {
@@ -141,7 +127,7 @@ handle_selection() {
     log "Copied window address to the clipboard."
     echo $address | wl-copy
   elif [[ $choice == "Focus window" ]]; then
-    focus_window
+    "$SCRIPTS/hypr/utils/windows/focus-window" $address
   elif [[ $choice == "Move to workspace" ]]; then
     move_to_workspace
   elif [[ $choice == "Move to workspace - silent" ]]; then
@@ -162,7 +148,7 @@ handle_selection() {
 
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
-setup-logging "$LOG_LABEL"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 
 if [[ -z $address ]]; then
   log --error "Address not set."
