@@ -1,8 +1,11 @@
 #! /usr/bin/env bash
 
 # Adapted from https://github.com/basecamp/omarchy/tree/master?tab=readme-ov-file
+SCRIPTS="${SCRIPTS:-$HOME/.local/scripts}"
 THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
 THIS=$(basename "$THIS_FILE")
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
 
 usage() {
   cat <<EOF
@@ -45,7 +48,6 @@ browser="chromium.desktop"
 url=""
 launch_args=()
 app_args=""
-SCRIPTS="${SCRIPTS:-$HOME/.local/scripts}"
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^--special ]] || [[ $1 =~ ^-s ]]; then
@@ -83,7 +85,7 @@ log() {
 
 # setup logging file and label
 source "$SCRIPTS/hypr/logging"
-setup-logging "/tmp/$THIS.log" "$THIS"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 
 if [[ -z $url ]]; then
   log --error "Must supply a url." && usage && exit 1

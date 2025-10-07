@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
+
+# Float's a window, setting it's height and width and centering.
+
+# The percentage of the screen size for the floating window.
+WIDTH_PERCENT=80
+HEIGHT_PERCENT=40
+
+floating=$(hyprctl activewindow -j | jq '.floating')
+
+if [ "$floating" = "true" ]; then
+  hyprctl dispatch togglefloating
+else
+  monitor=$(hyprctl monitors -j | jq '.[] | select(.focused == true)')
+  mw=$(echo "$monitor" | jq '.width')
+  mh=$(echo "$monitor" | jq '.height')
+  ms=$(echo "$monitor" | jq '.scale')
+
+  echo "scale: $ms"
+
+  neww=$(echo "scale=6; (($mw / $ms) * $WIDTH_PERCENT / 100)" | bc)
+  newh=$(echo "scale=6; (($mh / $ms) * $HEIGHT_PERCENT / 100)" | bc)
+
+  hyprctl dispatch togglefloating &&
+    hyprctl dispatch resizeactive exact $neww $newh &&
+    hyprctl dispatch centerwindow
+fi
