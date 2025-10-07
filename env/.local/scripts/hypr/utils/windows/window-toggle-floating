@@ -10,6 +10,43 @@ LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
 
+usage() {
+  cat <<EOF
+
+Utility for toggling a windows floating property.
+
+USAGE:
+
+  $ $THIS <flags> <address>
+
+FLAGS:
+  -a | --active:        Toggle floating on the currently active window.
+  -w | --width <n>:     Set a width of the floating window.
+  -h | --height <n>:    Set a height of the floating window.
+  --help:               Show this help page.
+
+EOF
+
+}
+
+# Suppress output of hyprctl
+hypr_dispatch() {
+  hyprctl dispatch "$@" >/dev/null 2>&1 && return $?
+}
+
+toggle_floating() {
+  local address="$1"
+  hypr_dispatch togglefloating
+  echo "$address"
+}
+
+center_window() {
+  local address=""
+  read -r address
+  hypr_dispatch centerwindow
+  echo "$address"
+}
+
 # Float's a window, setting it's height and width and centering.
 
 # The percentage of the screen size for the floating window.

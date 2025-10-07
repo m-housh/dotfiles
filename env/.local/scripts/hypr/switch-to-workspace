@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 THIS_FILE=${BASH_SOURCE[0]}
-THIS=$(basename "$THIS_FILE")
+LOG_LABEL=$(basename $THIS_FILE)
+LOG_FILE=${LOG_FILE:-/tmp/$LOG_LABEL.log}
+THIS=${THIS:-$LOG_LABEL}
 
 usage() {
   cat <<EOF
@@ -42,7 +44,7 @@ log() {
 }
 
 source "$SCRIPTS/hypr/logging"
-setup-logging "/tmp/$THIS.log" "$THIS"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 
 if [[ -z target_workspace ]]; then
   log --error "Must supply a workpsace to switch to."
