@@ -4,34 +4,21 @@ set -e
 set -o nounset
 set -o pipefail
 
-# TODO: This works / was adapted to work with mutliple workspaces, but with this
-#       implementation then we don't know the last workspace that was hidden, and after
-#       hiding windows the original workspace doesn't technically exist (it seems), but
-#       stays visible because a special workspace is displayed overtop of it.  This should
-#       either be reverted to only work on one workspace, or perhaps write a temp file with
-#       last workspace (as the orginal), but also have a picker that shows all workspaces
-#       with hidden windows, but I honestly not sure how useful it is to hide windows on
-#       multiple workspaces at once is.
-
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
 
-# Workspace to hide everything in
-HIDE_WS=${HIDE_WS:-"special:hidden"}
-
 usage() {
   cat <<EOF
-Toggle the visibility of all windows on a given workspace.
+Toggle the visibility of all windows on the active workspace.
 
 USAGE:
 
-  $ $THIS <flags> <workspace-id>
+  $ $THIS <flags>
 
 FLAGS:
-  -a | --active:        Use the active workspace to hide all windows.
   -h | --help:          Show this help page.
 
 EOF
@@ -42,58 +29,53 @@ log() {
   logging log --source "$THIS_FILE" "$@"
 }
 
+# Suppress output from hyprctl
+hypr_dispatch() {
+  hyprctl dispatch "$@" >/dev/null 2>&1
+}
+
 ################################################################################
 # MAIN
 ################################################################################
 
 # Setup logging file and label.
-source "$SCRIPTS/hypr/logging"
-setup-logging "$LOG_FILE" "$LOG_LABEL"
+# source "$SCRIPTS/hypr/logging"
+# setup-logging "$LOG_FILE" "$LOG_LABEL"
+#
+# while [[ $# -gt 0 ]]; do
+#   if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+#     usage && exit 0
+#   fi
+#   shift
+# done
 
-workspace=""
-state_file_prefix="/tmp/hypr_hide_state"
-
-while [[ $# -gt 0 ]]; do
-  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    usage && exit 0
-  elif [[ $1 == "-a" ]] || [[ $1 == "--active" ]]; then
-    workspace=$(hyprctl -j activeworkspace | jq -r '.id')
-  else
-    workspace=$1
-  fi
-  shift
-done
-
-if [[ -z $workspace ]]; then
-  read -p "Workspace id: " workspace
-fi
-
-if [[ -z $workspace ]]; then
-  log --error "No workspace supplied." && exit 1
-fi
+# Workspace to hide everything in
+HIDE_WS="special:hidden"
 
 # File to store original workspace ID
-STATE_FILE="${state_file_prefix}_${workspace}"
+STATE_FILE="/tmp/hypr_hide_state"
+
+# Get current workspace ID
+CUR_WS=$(hyprctl -j activeworkspace | jq -r '.id')
 
 # Check if we're currently hidden
 if [[ -f "$STATE_FILE" ]]; then
   # Restore windows
-  while read address; do
-    hyprctl dispatch movetoworkspace "$workspace,address:$address"
-    hyprctl dispatch workspace "$workspace"
-  done <"$STATE_FILE"
-
+  ORIG_WS=$(cat "$STATE_FILE")
+  # log "Restoring windows to: '$ORIG_WS'"
+  for win in $(hyprctl -j clients | jq -r ".[] | select(.workspace.name | contains(\"$HIDE_WS\")) | .address"); do
+    hyprctl dispatch movetoworkspace "$ORIG_WS,address:$win"
+    hyprctl dispatch workspace "$ORIG_WS"
+  done
   rm "$STATE_FILE"
 else
-  if [[ -f $STATE_FILE ]]; then
-    log --error "State file already exists for workspace, this could cause windows to get stuck hidden."
-    exit 1
-  fi
+  # log "Hiding windows from: '$CUR_WS'"
   # Hide all windows (move to special hidden workspace)
-  for win in $(hyprctl -j clients | jq -r ".[] | select(.workspace.id == $workspace) | .address"); do
-    log "Hidding address: '$win'"
+  for win in $(hyprctl -j clients | jq -r ".[] | select(.workspace.id == $CUR_WS) | .address"); do
     hyprctl dispatch movetoworkspace "$HIDE_WS,address:$win"
     hyprctl dispatch togglespecialworkspace "$HIDE_WS"
-    echo "$win" >>"$STATE_FILE"
   done
+
+  [[ -f "$STATE_FILE" ]] && rm "$STATE_FILE"
+  echo "$CUR_WS" >"$STATE_FILE"
 fi
