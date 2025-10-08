@@ -17,7 +17,7 @@
   {
     "name": "Monitors - stats / picker",
     "description": "View information from hyprctl about currently connected monitors.",
-    "exec": "$SCRIPTS/hypr/monitor-picker"
+    "exec": "$SCRIPTS/hypr/monitorctl picker"
   },
   {
     "name": "Waybar - restart",

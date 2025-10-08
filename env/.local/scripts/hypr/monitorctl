@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
+
+window_class="com.ghostty.$THIS"
+window_padding_x="10"
+
+usage() {
+  cat <<EOF
+
+Utility for monitor controls.
+
+USAGE:
+
+  $ $THIS <command> <flags>
+
+FLAGS:
+  -h | --help:          Show this help page.
+
+COMMANDS:
+  launch:               Launch in a new terminal window.
+  picker:               Shows information about the monitor(s).
+  toggle:               Enable/disable a connected monitor.
+
+
+Run "$THIS <command> --help" for more information about a command.
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+launch_usage() {
+  cat <<EOF
+
+Launches a new terminal window that runs the given '$THIS' command. If no command
+is supplied, then it will launch the picker command.
+
+USAGE:
+
+  $ $THIS launch <command> <flags>
+
+FLAGS:
+  -h | --help:          Show this help page.
+
+Run "$THIS --help" to show available commands that can ba launched in the new window.
+
+EOF
+}
+
+launch() {
+
+  if [[ $@ =~ ^-h ]] || [[ $@ =~ ^--help ]]; then
+    launch_usage && exit 0
+  fi
+
+  log "Launching terminal..."
+
+  ghostty --class=$window_class --window-padding-x=$window_padding_x \
+    --keybind="ctrl+c=quit" \
+    -e $THIS_FILE "$@"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+log "Starting args: '$@'"
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "launch" ]]; then
+    shift
+    if [[ -z "$@" ]]; then
+      launch picker && exit $?
+    else
+      launch "$@" && exit $?
+    fi
+  elif [[ $1 == "picker" ]]; then
+    shift
+    log "Showing picker..."
+    THIS="$THIS picker" "$SCRIPTS/hypr/utils/monitors/monitor-picker" "$@"
+    exit $?
+  elif [[ $1 == "toggle" ]]; then
+    shift
+    THIS="$THIS picker" "$SCRIPTS/hypr/utils/monitors/monitor-toggle" "$@"
+    exit $?
+  elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  else
+    log --error "Unhandle command: $1" && exit 1
+  fi
+  shift
+done
+
+# If we've reached here then no commands were passed / handled.
+usage && exit 1

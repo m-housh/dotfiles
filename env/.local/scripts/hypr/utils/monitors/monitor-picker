@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 
+set -e
+set -o nounset
+set -o pipefail
+
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS_FILE=${BASH_SOURCE[0]}
-THIS=$(basename $THIS_FILE)
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
+FZF_DEFAULT_OPTS=${FZF_DEFAULT_OPTS:-""}
 
 usage() {
   cat <<EOF
@@ -12,13 +19,13 @@ like to pass. The id of the monitor is returned from this script upon selection.
 
 USAGE:
 
-  $ $THIS [OPTIONS] [FZF_OPTIONS...]
+  $ $THIS [flags] [FZF_OPTIONS...]
 
-OPTIONS:
-
+FLAGS:
   --no-default-footer:    Disable the 'Monitors' footer (supplying your own footer disables default as well).
   --no-preview:           Disables the monitor stats preview window.
   -h | --help:            Show this help page.
+
 EOF
 }
 
@@ -76,7 +83,7 @@ generate_rows() {
 
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
-setup-logging "$THIS"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 
 [[ -z ${FZF_DEFAULT_OPTS} ]] &&
   [[ -f $SCRIPTS/catppuccin-colors ]] &&

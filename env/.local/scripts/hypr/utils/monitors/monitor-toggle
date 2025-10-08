@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+# Toggles the state of the internal laptop monitor, which is useful
+# when I'm connected to an external monitor / docks.
+set -o nounset
+set -o pipefail
+set -e
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
+
+usage() {
+  cat <<EOF
+
+Toggles the state (enable/disable) of a monitor.
+
+USAGE:
+
+  $ $THIS <flags> <id>
+
+FLAGS:
+  -i | --internal:      Toggle the internal monitor.
+  -h | --help:          Show this help page.
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+toggle() {
+
+  local monitor="${1:-""}"
+
+  if [[ -z $monitor ]]; then
+    log --error "No monitor supplied." && exit 1
+  fi
+
+  if hyprctl monitors | grep -q "$monitor"; then
+    hyprctl keyword monitor "$monitor,disable" 1>/dev/null
+  else
+    hyprctl keyword monitor "$monitor,enable" 1>/dev/null
+  fi
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+monitor=""
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ $1 == "-i" ]] || [[ $1 == "--internal" ]]; then
+    monitor="eDP-1"
+  else
+    log --error "Unhandled option: $1" && exit 1
+  fi
+  shift
+done
+
+if [[ -z $monitor ]]; then
+  read -p "Monitor id: " monitor
+fi
+
+toggle $monitor
