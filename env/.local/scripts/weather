@@ -46,7 +46,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 get_weather() {
-  curl "wttr.in/$location"
+  gum spin --show-output --title="Loading weather for: $location..." curl "wttr.in/$location"
 }
 
 ##################################################
