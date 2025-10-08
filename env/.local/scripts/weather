@@ -46,7 +46,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 get_weather() {
-  gum spin --show-output --title="Loading weather for: $location..." curl "wttr.in/$location"
+  gum spin --show-output --title="Loading weather for: $location..." \
+    curl "wttr.in/$location"
 }
 
 ##################################################
@@ -67,7 +68,6 @@ elif [[ $launch_flag == "1" ]]; then
 elif [[ $interactive_flag == "1" ]]; then
   # Interactive mode starts a loop until the user quits.  It prompts them to quit or refresh the weather results.
   while [[ $should_continue == "0" ]]; do
-    echo "Fetching weather for: $location"
     get_weather
     # Set's should_continue to '0' if when user hits the quit option or '1' if the hit refresh.
     should_continue=$(gum confirm "Weather: $location" --affirmative Refresh --negative Quit && echo "0" || echo "1")
