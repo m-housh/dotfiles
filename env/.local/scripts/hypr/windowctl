@@ -83,7 +83,7 @@ show_picker() {
 
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
-setup-logging "$LOG_LABEL"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 == "action" ]]; then

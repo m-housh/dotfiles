@@ -172,7 +172,7 @@ make_selection() {
         --delimiter=':' --with-nth=3 \
         --header="What should we do with the selected window?" \
         --preview-label="[ Description ]" \
-        --preview='echo -e {2} | fmt -w ${FZF_PREVIEW_COLUMNS:-40}; echo -e "\n\n\e[35mSelected Window:\e[0m"; "$SCRIPTS/hypr/preview-stats" window {1} "{title, workspace, address, floating}";'
+        --preview='echo -e {2} | fmt -w ${FZF_PREVIEW_COLUMNS:-40}; echo -e "\n\n\e[35mSelected Window:\e[0m"; "$SCRIPTS/hypr/utils/fzf/preview-stats" window {1} "{title, workspace, address, floating}";'
   )
   # Exit if non-zero code returned from making selection.
   [[ $? -gt 0 ]] && log --error "Unexpected fzf status: $?" && exit $?

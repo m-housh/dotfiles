@@ -98,7 +98,7 @@ sel=""
 
 # For some reason can't get the preview to work when setting in the fzf_opts array.
 if [[ $no_preview_flag == "0" ]]; then
-  sel=$(printf '%s\n' "${rows[@]}" | fzf "${fzf_opts[@]}" --preview="$SCRIPTS/hypr/preview-stats monitor {1}")
+  sel=$(printf '%s\n' "${rows[@]}" | fzf "${fzf_opts[@]}" --preview="$SCRIPTS/hypr/utils/fzf/preview-stats monitor {1}")
 else
   sel=$(printf '%s\n' "${rows[@]}" | fzf "${fzf_opts[@]}")
 fi

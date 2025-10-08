@@ -93,7 +93,7 @@ sel=$(
   printf "%s\n" "${rows[@]}" |
     fzf --style=full "${fzf_opts[@]}" --delimiter='|' --with-nth=2 \
       --preview-label='[ Workspace Stats ]' \
-      --preview="$SCRIPTS/hypr/preview-stats workspace {1}"
+      --preview="$SCRIPTS/hypr/utils/fzf/preview-stats workspace {1}"
 )
 
 [[ -z $sel ]] && exit 1
