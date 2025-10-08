@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS=$(basename ${BASH_SOURCE[0]})
 
 usage() {
@@ -24,7 +29,6 @@ uses_supplied_footer="0"
 fzf_opts=()
 rows=()
 window_data=$(hyprctl clients -j | jq 'sort_by(.workspace.id)')
-SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^--footer ]]; then
@@ -59,10 +63,6 @@ generate_rows() {
 ################################################################################
 # MAIN
 ################################################################################
-
-[[ -z ${FZF_DEFAULT_OPTS} ]] &&
-  [[ -f $SCRIPTS/catppuccin-colors ]] &&
-  source $SCRIPTS/catppuccin-colors
 
 if [[ $uses_supplied_footer == "0" ]]; then
   fzf_opts+=("--footer=$(footer)")

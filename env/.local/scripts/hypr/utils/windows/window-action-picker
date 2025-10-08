@@ -9,15 +9,46 @@ THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename "$THIS_FILE")
 LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
 THIS=${THIS:-$LOG_LABEL}
+FZF_DEFAULT_OPTS=${FZF_DEFAULT_OPTS:-""}
+
+usage() {
+  cat <<EOF
+
+Shows a picker of actions that can be performed on a window. The chosen action will
+be performed on the window.
+
+USAGE:
+
+  $ $THIS <flags> <address>
+
+FLAGS:
+  -a | --active:      Uses the active window to perform the selected action.
+  --show-back:        Shows a back option in the list of choices, useful when called from another script.
+  -h | --help:        Show this help page.
+
+EOF
+}
 
 address=""
 move_silent_flag="0"
+show_back_choice="0"
 
-if [[ $# == 1 ]]; then
-  address="$1"
-else
-  # If an address not supplied then read from stdin, which allows us to pipe the address into
-  # this command.
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ $1 == "-a" ]] || [[ $1 == "--active" ]]; then
+    address=$(hyprctl activewindow -j | jq -r '.address')
+  elif [[ $1 == "--show-back" ]]; then
+    show_back_choice="1"
+  else
+    address=$1
+  fi
+  shift
+done
+
+# If an address not supplied then read from stdin, which allows us to pipe the address into
+# this command.
+if [[ -z $address ]]; then
   read -p "Window address: " address
 fi
 
@@ -113,24 +144,26 @@ toggle_floating() {
 make_selection() {
   log "Prompting for window action..."
   local choices=(
-    "Focus the selected window.:Focus window"
-    "Close the selected window.:Close window"
-    "Close the selected window and go back to the window list.:Close window and back"
-    "Move the selected window to another workspace, focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace"
-    "Move the selected window to another workspace, without focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace - silent"
-    "Toggles the selected windows floating property.\n\nIf the window is not floating then you will be prompted if you\nwant to set the size or not.:Toggle floating"
-    "Copy the window address to the system clipboard:Copy to clipboard"
-    "Move back to window picker and reload windows.:Back"
-    "Quit:Quit"
+    "$address:Focus the selected window.:Focus window"
+    "$address:Close the selected window.:Close window"
+    "$address:Close the selected window and go back to the window list.:Close window and back"
+    "$address:Move the selected window to another workspace, focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace"
+    "$address:Move the selected window to another workspace, without focusing the window.\n\nA workspace picker will be presented to choose which workspace to move to.:Move to workspace - silent"
+    "$address:Toggles the selected windows floating property.\n\nIf the window is not floating then you will be prompted if you want to set the size or not.:Toggle floating"
+    "$address:Copy the window address to the system clipboard:Copy to clipboard"
   )
-  local preview_action="$SCRIPTS/hypr/preview-stats window $address \"{title, workspace, address, floating}\""
+  if [[ $show_back_choice == "1" ]]; then
+    log "Adding show back choice option."
+    choices+=("$address:Move back to window picker and reload windows.:Back")
+  fi
+  choices+=("$address:Quit and close the application:Quit")
   local choice=$(
     printf "%s\n" "${choices[@]}" |
       fzf --style=full --footer="$(action_footer)" \
-        --delimiter=':' --with-nth=2 \
+        --delimiter=':' --with-nth=3 \
         --header="What should we do with the selected window?" \
         --preview-label="[ Description ]" \
-        --preview="echo -e {1}; echo -e '\n\n\e[35mSelected Window:\e[0m'; $preview_action;"
+        --preview='echo -e {2} | fmt -w ${FZF_PREVIEW_COLUMNS:-40}; echo -e "\n\n\e[35mSelected Window:\e[0m"; "$SCRIPTS/hypr/preview-stats" window {1} "{title, workspace, address, floating}";'
   )
   # Exit if non-zero code returned from making selection.
   [[ $? -gt 0 ]] && log --error "Unexpected fzf status: $?" && exit $?
@@ -182,6 +215,11 @@ handle_selection() {
 # Setup logging file and label.
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+# Load colors if they haven't been loaded already.
+[[ -z ${FZF_DEFAULT_OPTS} ]] &&
+  [[ -f $SCRIPTS/catppuccin-colors ]] &&
+  source $SCRIPTS/catppuccin-colors
 
 if [[ -z $address ]]; then
   log --error "Address not set."

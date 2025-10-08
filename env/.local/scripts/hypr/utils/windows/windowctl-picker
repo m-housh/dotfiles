@@ -21,6 +21,7 @@ USAGE:
   $ $THIS <flags>
 
 FLAGS:
+  -a | --active:      Select action to perform on active window.
   -h | --help:        Show this page.
 
 EOF
@@ -42,7 +43,7 @@ handle_selected_value() {
 
   log "Prompting for action, window: '$selection'"
 
-  local res=$(echo "$selection" | "$SCRIPTS/hypr/utils/windows/window-action-picker")
+  local res=$(echo "$selection" | "$SCRIPTS/hypr/utils/windows/window-action-picker" --show-back)
   log "Action callback result: $res"
   echo "$res"
 
@@ -65,27 +66,30 @@ prompt_for_window_selection() {
 source "$SCRIPTS/hypr/logging"
 setup-logging $LOG_FILE $LOG_LABEL
 should_quit="0"
+address=""
 
 log "Starting $THIS..."
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     usage && exit 0
+  elif [[ $1 == "-a" ]] || [[ $1 == "--active" ]]; then
+    address=$(hyprctl activewindow -j | jq -r '.address')
   elif [[ -n $1 ]]; then
     address=$1
   fi
   shift
 done
 
-# Load colors if they haven't been loaded already.
-[[ -z ${FZF_DEFAULT_OPTS} ]] &&
-  [[ -f $SCRIPTS/catppuccin-colors ]] &&
-  source $SCRIPTS/catppuccin-colors
-
 trap 'log "Stoping..."; should_quit="1"' SIGINT
 
 while [[ $should_quit -eq 0 ]]; do
-  res=$(prompt_for_window_selection | handle_selected_value)
+
+  if [[ -n $address ]]; then
+    res=$(echo $address | handle_selected_value)
+  else
+    res=$(prompt_for_window_selection | handle_selected_value)
+  fi
 
   if [[ ! $res =~ ^back ]]; then
     should_quit=1

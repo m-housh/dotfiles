@@ -23,6 +23,7 @@ FLAGS:
   -h | --help:          Show this page.
 
 COMMANDS:
+  action:               Action picker, to perform actions on a given window.
   close:                Close window(s).
   focus:                Focuses a window, handling special workspaces properly.
   launch:               Launches an interactive picker in a new terminal.
@@ -85,7 +86,11 @@ source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_LABEL"
 
 while [[ $# -gt 0 ]]; do
-  if [[ $1 == "close" ]]; then
+  if [[ $1 == "action" ]]; then
+    shift
+    THIS="$THIS action" "$SCRIPTS/hypr/utils/windows/window-action-picker" "$@"
+    exit $?
+  elif [[ $1 == "close" ]]; then
     shift
     THIS="$THIS close" "$SCRIPTS/hypr/utils/windows/close-windows" "$@"
     exit $?
@@ -95,7 +100,12 @@ while [[ $# -gt 0 ]]; do
     exit $?
   elif [[ $1 == "launch" ]]; then
     shift
-    launch picker "$@" && exit 0
+    if [[ -z $1 ]]; then
+      launch picker
+    else
+      launch "$@"
+    fi
+    exit 0
   elif [[ $1 == "picker" ]]; then
     shift
     show_picker "$@"
