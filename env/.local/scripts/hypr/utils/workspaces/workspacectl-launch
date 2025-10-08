@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
+PARENT_COMMAND=${THIS// launch/}
+if [[ -z PARENT_COMMAND ]]; then
+  PARENT_COMMAND="workspacectl"
+fi
+
+default_class_name="com.ghostty.$PARENT_COMMAND"
+default_window_padding_x="10"
+
+usage() {
+  cat <<EOF
+Launches a $PARENT_COMMAND command in a new terminal window. If a command
+is not supplied, then we will launch the workspace picker.
+
+USAGE:
+  $ $THIS <command> <flags>
+
+Run "$PARENT_COMMAND --help" for commands to launch in the terminal window.
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+launch() {
+  ghostty --class="$default_class_name" \
+    --window-padding-x="$default_window_padding_x" \
+    --keybind="ctrl+c=quit" \
+    -e "$SCRIPTS/hypr/workspacectl" "$@"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+args="$@"
+
+if [[ $args == "-h" ]] || [[ $args == "--help" ]]; then
+  usage && exit 0
+elif [[ $args =~ ^launch ]]; then
+  log --error "Invalid command, can not launch the command: '$args'."
+  exit 1
+elif [[ -z $args ]]; then
+  args="picker"
+fi
+
+log "Launching with args: $args"
+launch "${args[@]}" && exit $?

@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
+
+usage() {
+  cat <<EOF
+Utilities for managing workspaces.
+
+USAGE:
+  $ $THIS <command> <flags>
+
+COMMANDS:
+  launch:           Launches in a new terminal window.
+  picker:           Shows a picker / stats about active workspaces.
+  toggle:           Toggle visibility of all windows on a workspace.
+
+FLAGS:
+  -h | --help       Show this page.
+
+Run "$THIS <command> --help" for more information about a command.
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ $1 == "launch" ]]; then
+    shift
+    THIS="$THIS launch" "$SCRIPTS/hypr/utils/workspaces/workspacectl-launch" "$@"
+    exit $?
+  elif [[ $1 == "picker" ]]; then
+    shift
+    THIS="$THIS picker" "$SCRIPTS/hypr/utils/workspaces/workspace-picker" "$@"
+    exit $?
+  elif [[ $1 == "toggle" ]]; then
+    shift
+    THIS="$THIS toggle" "$SCRIPTS/hypr/utils/workspaces/workspace-toggle" "$@"
+    exit $?
+  fi
+  shift
+done
+
+# If we made it here no commands were passed in / handled.
+usage && exit 1
