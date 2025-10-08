@@ -37,7 +37,16 @@ while [[ $# -gt 0 ]]; do
   if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     usage && exit 0
   elif [[ $1 == "-a" ]] || [[ $1 == "--active" ]]; then
-    address=$(hyprctl activewindow -j | jq -r '.address')
+
+    class=$(hyprctl activewindow -j | jq -r '.class')
+    if [[ $class == "com.ghostty.windowctl" ]]; then
+      # Select the previously focused window if we were launched in a new terminal window.
+      address=$(hyprctl clients -j | jq -r '.[] | select(.focusHistoryID == 1) | .address')
+    else
+      # Select the active address if not.
+      address=$(hyprctl activewindow -j | jq -r '.address')
+    fi
+
   elif [[ $1 == "--show-back" ]]; then
     show_back_choice="1"
   else
