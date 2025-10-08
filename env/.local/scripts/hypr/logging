@@ -110,7 +110,7 @@ logging() {
       local file=${LOG_FILE[i]}
       local id=$LOG_INVOCATION_ID
       local label=${LOG_LABEL[i]:-"$LOG_LABEL"}
-      local time=$("$SCRIPTS/isosec")
+      local time=$(date '+%D %H:%M:%S')
 
       if [[ -z $file ]] || [[ -z $id ]] || [[ -z $label ]]; then
         echo "Loggging not properly setup."

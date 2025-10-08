@@ -37,11 +37,11 @@
   {
     "name": "Windows - close in active workspace",
     "description": "Close all windows in the currently active workspace.",
-    "exec": "$SCRIPTS/hypr/close-windows --active-workspace"
+    "exec": "$SCRIPTS/hypr/windowctl close --active-workspace"
   },
   {
     "name": "Windows - close ALL",
     "description": "Close all windows in all workspaces.",
-    "exec": "$SCRIPTS/hypr/close-windows --all"
+    "exec": "$SCRIPTS/hypr/windowctl close --all"
   }
 ]

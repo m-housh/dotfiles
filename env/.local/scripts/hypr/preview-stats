@@ -87,7 +87,7 @@ elif [[ $mode == "utils" ]]; then
   fi
   desc=$(jq -C ".[] | select(.name == \"$arg\") | .description" $config)
   exec=$(jq -C ".[] | select(.name == \"$arg\") | .exec" $config)
-  echo -e "\n${desc[@]}\n\n"
+  echo -e "\n${desc[@]}\n\n" | fmt -w ${FZF_PREVIEW_COLUMNS:-80}
   echo -e "\e[31mEXEC:\e[0m $exec\n"
 else
   log --error "Unexpected mode: $mode"

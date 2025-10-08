@@ -8,6 +8,7 @@ THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename "$THIS_FILE")
 # Allows script name to be set when called from a parent script or defaults to filename.
 THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-/tmp/$LOG_LABEL.log}
 
 usage() {
   cat <<EOF
@@ -108,7 +109,7 @@ close() {
 
 # Setup logging file and label
 source "$SCRIPTS/hypr/logging"
-setup-logging "$LOG_LABEL"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 export LOG_ENABLE_DRY_RUN="$dry_run_flag"
 
 if [[ $active_workspace_flag == "1" ]]; then
