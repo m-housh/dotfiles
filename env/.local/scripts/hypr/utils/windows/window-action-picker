@@ -89,8 +89,7 @@ parse_workspace_id() {
   log "Parsing selected workspace name: $workspace_name"
 
   if [[ -z $workspace_name ]]; then
-    log --error "No workspace set to move window to."
-    exit 1
+    log --error "No workspace set to move window to." && exit 1
   fi
 
   if [[ $workspace_name =~ ^special ]]; then
@@ -113,7 +112,7 @@ move_to_workspace() {
     action="movetoworkspacesilent"
   fi
 
-  $SCRIPTS/hypr/workspace-picker --return-name-if-special --header="Select a workspace to move window to:" |
+  $SCRIPTS/hypr/workspacectl picker --return-name-if-special --header="Select a workspace to move window to:" |
     parse_workspace_id |
     xargs -I{} hyprctl dispatch "$action" "{},address:$address" >/dev/null 2>&1
 
@@ -177,7 +176,7 @@ make_selection() {
   # Exit if non-zero code returned from making selection.
   [[ $? -gt 0 ]] && log --error "Unexpected fzf status: $?" && exit $?
   # Set choice to just the action portion.
-  choice="${choice#*:}"
+  choice="${choice##*:}"
   echo "$choice"
 }
 
