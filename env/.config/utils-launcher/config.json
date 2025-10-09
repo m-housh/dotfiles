@@ -43,5 +43,10 @@
     "name": "Windows - close ALL",
     "description": "Close all windows in all workspaces.",
     "exec": "$SCRIPTS/hypr/windowctl close --all"
+  },
+  {
+    "name": "Workspaces - stats / picker",
+    "description": "View information from hyprctl about currently available workspaces",
+    "exec": "$SCRIPTS/hypr/workspacectl picker"
   }
 ]

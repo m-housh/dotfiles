@@ -33,34 +33,6 @@ address=""
 move_silent_flag="0"
 show_back_choice="0"
 
-while [[ $# -gt 0 ]]; do
-  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    usage && exit 0
-  elif [[ $1 == "-a" ]] || [[ $1 == "--active" ]]; then
-
-    class=$(hyprctl activewindow -j | jq -r '.class')
-    if [[ $class == "com.ghostty.windowctl" ]]; then
-      # Select the previously focused window if we were launched in a new terminal window.
-      address=$(hyprctl clients -j | jq -r '.[] | select(.focusHistoryID == 1) | .address')
-    else
-      # Select the active address if not.
-      address=$(hyprctl activewindow -j | jq -r '.address')
-    fi
-
-  elif [[ $1 == "--show-back" ]]; then
-    show_back_choice="1"
-  else
-    address=$1
-  fi
-  shift
-done
-
-# If an address not supplied then read from stdin, which allows us to pipe the address into
-# this command.
-if [[ -z $address ]]; then
-  read -p "Window address: " address
-fi
-
 # Logging utility function, use in place of echo.
 log() {
   logging log --source "$THIS_FILE" "$@"
@@ -224,6 +196,34 @@ handle_selection() {
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ $1 == "-a" ]] || [[ $1 == "--active" ]]; then
+
+    class=$(hyprctl activewindow -j | jq -r '.class')
+    if [[ $class == "com.ghostty.windowctl" ]]; then
+      # Select the previously focused window if we were launched in a new terminal window.
+      address=$(hyprctl clients -j | jq -r '.[] | select(.focusHistoryID == 1) | .address')
+    else
+      # Select the active address if not.
+      address=$(hyprctl activewindow -j | jq -r '.address')
+    fi
+
+  elif [[ $1 == "--show-back" ]]; then
+    show_back_choice="1"
+  else
+    address=$1
+  fi
+  shift
+done
+
+# If an address not supplied then read from stdin, which allows us to pipe the address into
+# this command.
+if [[ -z $address ]]; then
+  read -p "Window address: " address
+fi
+
 # Load colors if they haven't been loaded already.
 [[ -z ${FZF_DEFAULT_OPTS} ]] &&
   [[ -f $SCRIPTS/catppuccin-colors ]] &&
@@ -236,4 +236,5 @@ fi
 
 res=$(make_selection | handle_selection)
 log "Action result: $res"
+# Returns "done | back | back:close" for parent script to know how to handle.
 echo "$res"
