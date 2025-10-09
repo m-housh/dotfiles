@@ -237,7 +237,7 @@ EOF
 
 # Setup logging file and label
 source "$SCRIPTS/hypr/logging"
-setup-logging "/tmp/$THIS.log" "$THIS"
+setup-logging "$THIS.log" "$THIS"
 export LOG_ENABLE_DRY_RUN="$dry_run"
 
 if [[ -z "$XDG_DATA_HOME" ]]; then

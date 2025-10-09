@@ -31,6 +31,7 @@ set -e
 set -o nounset
 set -o pipefail
 
+LOG_DIR=${LOG_DIR:-/tmp/logs}
 LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-""}
 LOG_LABEL=${LOG_LABEL:-""}
 # Run in dry run mode, which just prints to the console and does
@@ -56,10 +57,13 @@ __msg() {
 }
 
 __ensure_setup() {
-  if [[ -z $LOG_FILE ]] || [[ -z $LOG_INVOCATION_ID ]] || [[ -z $LOG_LABEL ]]; then
+  if [[ -z $LOG_FILE ]] || [[ -z $LOG_INVOCATION_ID ]] || [[ -z $LOG_LABEL ]] || [[ -z $LOG_DIR ]]; then
     echo -e "\e[31m[ERROR]:\e[0m Logging is not properly setup."
     echo "Perhaps you didn't call 'setup-logging' first."
     print_logger_env && exit 1
+  fi
+  if [[ ! -d $LOG_DIR ]]; then
+    mkdir -p "$LOG_DIR"
   fi
 }
 
@@ -106,7 +110,7 @@ logging() {
   if [[ $LOG_ENABLE_DRY_RUN == "0" ]]; then
     # Loop over log files logging message to each file.
     for i in "${!LOG_FILE[@]}"; do
-      local file=${LOG_FILE[i]}
+      local file=${LOG_DIR}/${LOG_FILE[i]}
       local id=$LOG_INVOCATION_ID
       local label=${LOG_LABEL[i]:-"$LOG_LABEL"}
       local time=$(date '+%D %H:%M:%S')
@@ -165,6 +169,7 @@ setup-logging() {
     LOG_LABEL+=("$label")
   fi
 
+  export LOG_DIR
   export LOG_FILE
   export LOG_LABEL
   export LOG_INVOCATION_ID

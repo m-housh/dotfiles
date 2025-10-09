@@ -3,7 +3,7 @@
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename $THIS_FILE)
-LOG_FILE=${LOG_FILE:-/tmp/$LOG_LABEL.log}
+LOG_FILE=${LOG_FILE:-$LOG_LABEL.log}
 THIS=${THIS:-$LOG_LABEL}
 
 usage() {
