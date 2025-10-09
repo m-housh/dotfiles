@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
+FZF_DEFAULT_OPTS=${FZF_DEFAULT_OPTS:-""}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+footer() {
+  cat <<'EOF'
+   __               
+  / /  ___  ___ ____
+ / /__/ _ \/ _ `(_-<
+/____/\___/\_, /___/
+          /___/     
+EOF
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+# Setup colors before calling fzf.
+[[ -z $FZF_DEFAULT_OPTS ]] &&
+  [[ -f $SCRIPTS/catppuccin-colors ]] &&
+  source $SCRIPTS/catppuccin-colors
+
+sel=$(
+  /bin/ls /tmp/*.log |
+    sed 's#.*/##; s/\..*$//' | # cleans to only show file name, excluding the path and '.log'
+    fzf --style=full \
+      --footer="$(footer)" \
+      --preview-label='[ Logs ]' \
+      --preview='echo ""; bat /tmp/{}.log' \
+      --preview-window="down"
+)
+
+if [[ -z $sel ]]; then
+  log --error "No selection" && exit 1
+fi
+
+bat /tmp/$sel.log
