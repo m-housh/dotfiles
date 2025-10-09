@@ -5,7 +5,15 @@ set -o nounset
 set -o pipefail
 
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
-THIS=${THIS:-$(basename ${BASH_SOURCE[0]})}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename $THIS_FILE)
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-/tmp/$LOG_LABEL.log}
+
+uses_supplied_footer="0"
+fzf_opts=()
+rows=()
+workspace_id=""
 
 usage() {
   cat <<EOF
@@ -17,7 +25,8 @@ USAGE:
   $ $THIS <flags> [FZF_OPTIONS]
 
 FLAGS:
-  -h | --help:      Show this help page.
+  -w | --workspace <id>:    Only show windows for the given workspace.
+  -h | --help:              Show this help page.
 
 NOTES:
 
@@ -27,11 +36,10 @@ Any other options or arguments are passed directly to 'fzf'.
 EOF
 }
 
-uses_supplied_footer="0"
-
-fzf_opts=()
-rows=()
-window_data=$(hyprctl clients -j | jq 'sort_by(.workspace.id)')
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
 
 footer() {
   cat <<'EOF'
@@ -43,13 +51,17 @@ EOF
 }
 
 generate_rows() {
+  local addresses=()
 
-  readarray -t addresses <<<"$(echo "$window_data" | jq -r '.[] | .address')"
-  readarray -t titles <<<$(echo "$window_data" | jq -r '.[] | .title')
+  if [[ -n $workspace_id ]]; then
+    addresses=$(hyprctl clients -j | jq -r ".[] | select(.workspace.id == $workspace_id) | .address")
+  else
+    addresses=$(hyprctl clients -j | jq -r ".[] | .address")
+  fi
 
-  # Zip into rows.
-  for i in "${!addresses[@]}"; do
-    rows+=("${addresses[i]}|${titles[i]}")
+  for address in $addresses; do
+    title=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$address\") | .title")
+    rows+=("$address|$title")
   done
 }
 
@@ -57,12 +69,19 @@ generate_rows() {
 # MAIN
 ################################################################################
 
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
 while [[ $# -gt 0 ]]; do
-  if [[ $1 =~ ^--footer ]]; then
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ $1 =~ ^--footer ]]; then
     uses_supplied_footer="1"
     fzf_opts+=("$1")
-  elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    usage && exit 0
+  elif [[ $1 == "-w" ]] || [[ $1 == "--workspace" ]]; then
+    shift
+    workspace_id=$1
   else
     fzf_opts+=("$1")
   fi
