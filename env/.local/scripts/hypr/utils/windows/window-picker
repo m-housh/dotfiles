@@ -61,6 +61,9 @@ generate_rows() {
 
   for address in $addresses; do
     title=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$address\") | .title")
+    # Replace in occurrences of what we use as delimiter in the title, so they're presented
+    # correctly.
+    title=${title//|/-}
     rows+=("$address|$title")
   done
 }
