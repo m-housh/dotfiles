@@ -20,6 +20,7 @@ USAGE:
 COMMANDS:
   launch:           Launches in a new terminal window.
   picker:           Shows a picker / stats about active workspaces.
+  switch:           Switch to another workspace, handling special workspaces.
   toggle:           Toggle visibility of all windows on a workspace.
 
 FLAGS:
@@ -53,6 +54,11 @@ while [[ $# -gt 0 ]]; do
   elif [[ $1 == "picker" ]]; then
     shift
     THIS="$THIS picker" "$SCRIPTS/hypr/utils/workspaces/workspace-picker" "$@"
+    exit $?
+
+  elif [[ $1 == "switch" ]]; then
+    shift
+    THIS="$THIS switch" "$SCRIPTS/hypr/utils/workspaces/switch-to-workspace" "$@"
     exit $?
   elif [[ $1 == "toggle" ]]; then
     shift

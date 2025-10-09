@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename $THIS_FILE)
 LOG_FILE=${LOG_FILE:-/tmp/$LOG_LABEL.log}
@@ -17,34 +18,49 @@ the workspace.
 
 USAGE:
 
-  $ $THIS [OPTIONS] <workspace>
 
-OPTIONS:
+$ $THIS <flags> <workspace>
 
-  -h | --help:      Show this help page.
+FLAGS:
+  -p | --previous:          Switch to the previously active workspace.
+  -t | --to <workspace>:    Workspace to switch to.
+  -h | --help:              Show this help page.
 
 EOF
 }
 
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
 target_workspace=""
 active_workspace=$(hyprctl activewindow -j | jq -r '.workspace.name')
-SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^-h ]] || [[ $1 =~ ^--help ]]; then
     usage && exit 0
+  elif [[ $1 =~ ^-t ]] || [[ $1 =~ ^--to ]]; then
+    target_workspace=$1
+  elif [[ $1 =~ ^-p ]] || [[ $1 =~ ^--previous ]]; then
+    target_workspace="previous"
   else
     target_workspace=$1
   fi
   shift
 done
 
-log() {
-  logging log --source "$THIS_FILE" "$@"
-}
-
-source "$SCRIPTS/hypr/logging"
-setup-logging "$LOG_FILE" "$LOG_LABEL"
+# Read from stdin if no workspace was supplied.
+if [[ -z $target_workspace ]]; then
+  read -p "Workspace: " target_workspace
+fi
 
 if [[ -z target_workspace ]]; then
   log --error "Must supply a workpsace to switch to."
