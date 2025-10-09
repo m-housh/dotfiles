@@ -31,7 +31,6 @@ set -e
 set -o nounset
 set -o pipefail
 
-LOG_FILE=${LOG_FILE:-""}
 LOG_INVOCATION_ID=${LOG_INVOCATION_ID:-""}
 LOG_LABEL=${LOG_LABEL:-""}
 # Run in dry run mode, which just prints to the console and does

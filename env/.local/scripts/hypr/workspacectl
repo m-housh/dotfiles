@@ -55,7 +55,6 @@ while [[ $# -gt 0 ]]; do
     shift
     THIS="$THIS picker" "$SCRIPTS/hypr/utils/workspaces/workspace-picker" "$@"
     exit $?
-
   elif [[ $1 == "switch" ]]; then
     shift
     THIS="$THIS switch" "$SCRIPTS/hypr/utils/workspaces/switch-to-workspace" "$@"

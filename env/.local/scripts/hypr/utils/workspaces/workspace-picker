@@ -11,6 +11,9 @@ THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"/tmp/$LOG_LABEL.log"}
 FZF_DEFAULT_OPTS=${FZF_DEFAULT_OPTS:-""}
 
+return_name_if_special_flag="0"
+return_name_flag="0"
+
 usage() {
   cat <<EOF
 
@@ -59,13 +62,10 @@ prompt_for_selection() {
   local rows=()
   local fzf_opts=$1
   local sel=""
-  local workspaces=$(hyprctl workspaces -j | jq 'sort_by(.id)')
 
-  readarray -t names <<<"$(echo "$workspaces" | jq -r '.[] | .name')"
-  readarray -t ids <<<"$(echo "$workspaces" | jq -r '.[] | .id')"
-
-  for i in "${!names[@]}"; do
-    rows+=("${ids[i]}|${names[i]}")
+  for id in $(hyprctl workspaces -j | jq 'sort_by(.id)' | jq 'reverse' | jq -r '.[] | .id'); do
+    name=$(hyprctl workspaces -j | jq -r ".[] | select(.id == $id) | .name")
+    rows+=("$id|$name")
   done
 
   log "Showing workspace picker / stats..."
@@ -80,6 +80,26 @@ prompt_for_selection() {
   echo "$sel"
 }
 
+parse_return_val() {
+  local sel=""
+  read -r sel
+
+  if [[ -z $sel ]]; then
+    log --error "Selection was empty." && exit 1
+  fi
+  local name=${sel##*\|}
+  local id=${sel%%\|*}
+
+  if [[ $return_name_flag == "1" ]] ||
+    ([[ $return_name_if_special_flag == "1" ]] && [[ $name =~ ^special ]]); then
+    # Return only the name portion of the selection.
+    echo "$name"
+  else
+    # Return only the id portion of the selection.
+    echo "$id"
+  fi
+}
+
 ################################################################################
 # MAIN
 ################################################################################
@@ -88,8 +108,6 @@ prompt_for_selection() {
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
-return_name_if_special_flag="0"
-return_name_flag="0"
 uses_supplied_footer="0"
 fzf_opts=()
 
@@ -118,13 +136,4 @@ if [[ $uses_supplied_footer == "0" ]]; then
   fzf_opts+=("--footer=$(footer)")
 fi
 
-sel=$(prompt_for_selection "${fzf_opts[@]}")
-name=${sel##*\|}
-id=${sel%%\|*}
-
-if [[ $return_name_flag == "1" ]] ||
-  ([[ $return_name_if_special_flag == "1" ]] && [[ $name =~ ^special ]]); then
-  echo "$name" && exit 0
-fi
-
-echo "$id"
+prompt_for_selection "${fzf_opts[@]}" | parse_return_val

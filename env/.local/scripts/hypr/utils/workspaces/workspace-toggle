@@ -39,15 +39,15 @@ hypr_dispatch() {
 ################################################################################
 
 # Setup logging file and label.
-# source "$SCRIPTS/hypr/logging"
-# setup-logging "$LOG_FILE" "$LOG_LABEL"
-#
-# while [[ $# -gt 0 ]]; do
-#   if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-#     usage && exit 0
-#   fi
-#   shift
-# done
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  fi
+  shift
+done
 
 # Workspace to hide everything in
 HIDE_WS="special:hidden"
@@ -62,14 +62,14 @@ CUR_WS=$(hyprctl -j activeworkspace | jq -r '.id')
 if [[ -f "$STATE_FILE" ]]; then
   # Restore windows
   ORIG_WS=$(cat "$STATE_FILE")
-  # log "Restoring windows to: '$ORIG_WS'"
+  log "Restoring windows to: '$ORIG_WS'"
   for win in $(hyprctl -j clients | jq -r ".[] | select(.workspace.name | contains(\"$HIDE_WS\")) | .address"); do
     hyprctl dispatch movetoworkspace "$ORIG_WS,address:$win"
     hyprctl dispatch workspace "$ORIG_WS"
   done
   rm "$STATE_FILE"
 else
-  # log "Hiding windows from: '$CUR_WS'"
+  log "Hiding windows from: '$CUR_WS'"
   # Hide all windows (move to special hidden workspace)
   for win in $(hyprctl -j clients | jq -r ".[] | select(.workspace.id == $CUR_WS) | .address"); do
     hyprctl dispatch movetoworkspace "$HIDE_WS,address:$win"

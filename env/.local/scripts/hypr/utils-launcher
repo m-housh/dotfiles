@@ -118,7 +118,8 @@ sel=$(
   printf "%s\n" "${rows[@]}" |
     fzf --style=full --footer="$(footer)" --with-nth=2 --delimiter='|' \
       --preview-label='[ Command ]' \
-      --preview="$SCRIPTS/hypr/utils/fzf/preview-stats utils {2} $config_file"
+      --preview="$SCRIPTS/hypr/utils/fzf/preview-stats utils {2} $config_file" \
+      --preview-window='down,30%'
 )
 
 log "Selection: $sel"
