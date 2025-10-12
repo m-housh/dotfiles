@@ -1,0 +1,114 @@
+;; Adapted from https://github.com/linkarzu/dotfiles-latest/blob/main/kanata/configs/macbook-subl.kbd
+;; Video related to this file
+;; https://youtu.be/jvJ3f4HHiMY
+
+;; Kanata docs
+;; https://github.com/jtroo/kanata/blob/main/docs/config.adoc
+
+;; OS key code mappings
+;; https://github.com/jtroo/kanata/blob/main/parser/src/keys/mod.rs
+
+(defcfg
+  process-unmapped-keys yes
+  log-layer-changes no
+  danger-enable-cmd yes
+  concurrent-tap-hold yes
+
+  ;; When any non-chord activation happens, this timeout begins. Until this timeout expires
+  ;; all inputs will immediately skip chords processing and be processed by the active layer.
+  ;; chords-v2-min-idle 250
+)
+
+;; Variables
+(defvar
+ tap-higher 400
+ tap-time 200
+ hold-time 200
+ chord-time 60
+ subl-time 200
+ tmux-delay 40
+)
+
+;; Only one defsrc is allowed.
+;;
+;; defsrc defines the keys that will be intercepted by kanata. The order of the
+;; keys matches with deflayer declarations and all deflayer declarations must
+;; have the same number of keys as defsrc. Any keys not listed in defsrc will
+;; be passed straight to the operating system.
+(defsrc
+  esc    f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12
+  grv    1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab    q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps   a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft   z    x    c    v    b    n    m    ,    .    /    ▲   rsft
+        lctl  lalt lmet          spc         rmet ralt ◀    ▼    ▶
+)
+
+(defalias
+  ;; Modifier keys - Left
+  mlctl (tap-hold $tap-time $hold-time a lctl)
+  mlalt (tap-hold $tap-time $hold-time s lalt)
+  mlmet (tap-hold $tap-time $hold-time d lmet)
+  mlsft (tap-hold $tap-time $hold-time f lsft)
+
+  ;; Modifier keys - Right
+  mrsft (tap-hold $tap-time $hold-time j rsft)
+  mrmet (tap-hold $tap-time $hold-time k rmet)
+  mralt (tap-hold $tap-time $hold-time l ralt)
+  mrctl (tap-hold $tap-time $hold-time ; rctl)
+
+  mretu (tap-hold $tap-time $hold-time tab ret)
+
+  mlnums (tap-hold-press $tap-time $hold-time lctl (layer-while-held nums_and_symbols))
+  mrnums (tap-hold-press $tap-time $hold-time ret (layer-while-held nums_and_symbols))
+
+  ;; Multi
+  mhypr (tap-hold $tap-time $hold-time spc (multi lsft lctl lalt lmet)) ;; Hyper key
+
+  ;; Sublayers
+  ;; I implemented sublayers thanks to the help in this discussion
+  ;; https://github.com/jtroo/kanata/discussions/1765
+  ;; DO NOT USE THE SUBLAYERS IN A FREQUENTLY PRESSED KEY LIKE SPACEBAR
+  ;; It made typing spaces a pain in the ass, enter is not pressed to often, so it works way better
+  ;; msubl (tap-hold-press $subl-time $subl-time ret (layer-while-held sublayers))
+
+  ;; Execute script
+  ;; maltt (cmd open "btt://execute_assigned_actions_for_trigger/?uuid=F35EF770-FAA5-448A-957D-70BB449DEB0F")
+
+  ;; key and script at the same time
+  ;; maltt (tap-hold $tap-time $hold-time lsft (cmd open "btt://execute_assigned_actions_for_trigger/?uuid=F35EF770-FAA5-448A-957D-70BB449DEB0F"))
+)
+
+;; Blank layer
+;;(deflayer {{NAME}}
+;;  esc    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX           ;; function row
+;;  grv    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    bspc   ;; number row
+;;  tab    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX     ;; top letter row
+;;  caps   XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    ret          ;; home row
+;;  lsft   XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX   rsft          ;; bottom letter row
+;;        lctl  lalt lmet          spc         rmet ralt ◀    ▼    ▶                      ;; control row
+;;)
+
+;; Main layer
+;;
+;; Disable most function keys, and add homerow mods.
+;;
+(deflayer main
+  esc     brd     bru     XX      XX      XX   XX   XX       XX     XX     mute   vold  volu
+  grv     1       2       3       4       5    6    7        8      9       0       -    =    bspc
+  tab     q       w       e       r       t    y    u        i      o       p       [    ]    \
+  @mlnums @mlctl  @mlalt  @mlmet  @mlsft  g    h    @mrsft  @mrmet  @mralt  @mrctl  '    @mrnums
+  lsft    z       x       c       v       b    n    m        ,      .       /       ▲   rsft
+         lctl    lalt    lmet             spc               rmet   ralt     ◀       ▼    ▶
+)
+
+;; Number and Symbols layer
+(deflayer nums_and_symbols
+  esc    XX   XX     XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
+  grv    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    -     =     bspc
+  S-grv  S-1   S-9   S-0   S-2   XX    XX    1     2     3     \     XX    XX    XX
+  XX     [     ]     S-[   S-]   XX    XX    4     5     6     .     XX    ret
+  lsft   S-7   S-8   S-4   S-3   XX    XX    7     8     9     /     XX   rsft
+        lctl  lalt lmet          spc         0     ralt ◀    ▼    ▶
+)
+

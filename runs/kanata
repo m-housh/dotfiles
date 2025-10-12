@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
+kanata_dir="$XDG_DATA_HOME/kanata"
+
+yay ${1:-"-S --noconfirm"} rustup
+
+git clone https://github.com/jtroo/kanata.git $kanata_dir
+pushd $kanata_dir &>/dev/null
+(
+  cargo install --features cmd --path .
+)
+popd &>/dev/null
