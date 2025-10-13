@@ -53,7 +53,7 @@ get_current_version() {
   if [[ $(command -v /usr/bin/kanata) ]]; then
     kanata_current_version=$(/usr/bin/kanata --version)
     # Remove 'kanata ' from output of the version command.
-    kanata_current_version="${version#kanata *}"
+    kanata_current_version="${kanata_current_version#kanata *}"
   fi
 }
 
@@ -95,8 +95,8 @@ compare_versions() {
     [[ -z $kanata_current_version ]] && get_current_version
     local selected_version=${selection#v*} # remove the 'v' from selected version.
 
-    log "Comparing selected: '$selected_version' to installed '$kanada_current_version'"
-    if [[ $selected_version == $kanada_current_version ]]; then
+    log "Comparing selected: '$selected_version' to installed '$kanata_current_version'"
+    if [[ $selected_version == $kanata_current_version ]]; then
       log --warn "Selected version matches the currently installed version." && exit 1
     fi
   fi
