@@ -34,6 +34,7 @@ COMMANDS:
   restart:        Restart the kanata systemd service.
   start:          Enable and start the kanata systemd service.
   status:         Get the status of the kanata systemd service.
+  stop:           Stop the kanata systemd service.
   update:         Pull from git and check for updates.
 
 EOF
@@ -177,10 +178,16 @@ get_status() {
   systemctl status kanata.service
 }
 
+# Stop the service.
+stop_service() {
+  log "Stopping kanata service..."
+  sudo systemctl stop kanata.service
+}
+
 # Disable the kanata systemd service.
 disable_service() {
   log "Disabling kanata service..."
-  sudo systemctl stop kanata.service
+  stop_service
   sudo systemctl disable kanata.service
 }
 
@@ -244,10 +251,14 @@ while [[ $# -gt 0 ]]; do
     bat ${LOG_DIR:-/tmp/logs}/$LOG_FILE && exit 0
   elif [[ $1 == "status" ]]; then
     get_status && exit $?
+  elif [[ $1 == "stop" ]]; then
+    stop_service && exit $?
   elif [[ $1 == "restart" ]]; then
     restart_service && exit 0
   elif [[ $1 == "update" ]]; then
     install_or_update "Updating" && exit 0
+  else
+    break
   fi
 done
 

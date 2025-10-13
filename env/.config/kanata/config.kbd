@@ -13,6 +13,8 @@
   log-layer-changes no
   danger-enable-cmd yes
   concurrent-tap-hold yes
+  rapid-event-delay 3
+  allow-hardware-repeat false
 
   ;; When any non-chord activation happens, this timeout begins. Until this timeout expires
   ;; all inputs will immediately skip chords processing and be processed by the active layer.
@@ -23,6 +25,8 @@
 (defvar
  tap-higher 400
  tap-time 200
+ tap-time-plus 300
+ hold-time-plus 300
  hold-time 200
  chord-time 60
  subl-time 200
@@ -59,8 +63,13 @@
 
   mretu (tap-hold $tap-time $hold-time tab ret)
 
-  mlnums (tap-hold-press $tap-time $hold-time esc (layer-while-held nums_and_symbols))
-  mrnums (tap-hold-press $tap-time $hold-time ret (layer-while-held nums_and_symbols))
+  ;; number and symbols layer trigger keys.
+  mlnums (tap-hold-press $tap-time-plus $hold-time-plus esc (layer-while-held nums_and_symbols))
+  mrnums (tap-hold-press $tap-time-plus $hold-time-plus ret (layer-while-held nums_and_symbols))
+
+  ;; mouse layer trigger keys.
+  mlms (tap-hold-press $tap-time $hold-time lsft (layer-while-held mouse))
+  mrms (tap-hold-press $tap-time $hold-time rsft (layer-while-held mouse))
 
   ;; Multi
   mhypr (tap-hold $tap-time $hold-time spc (multi lsft lctl lalt lmet)) ;; Hyper key
@@ -98,7 +107,7 @@
   grv     1       2       3       4       5    6    7        8      9       0       -    =    bspc
   tab     q       w       e       r       t    y    u        i      o       p       [    ]    \
   @mlnums @mlctl  @mlalt  @mlmet  @mlsft  g    h    @mrsft  @mrmet  @mralt  @mrctl  '    @mrnums
-  lsft    z       x       c       v       b    n    m        ,      .       /       ▲   rsft
+  @mlms   z       x       c       v       b    n    m        ,      .       /       ▲    @mrms
          lctl    lalt    lmet             spc               rmet   ralt     ◀       ▼    ▶
 )
 
@@ -110,4 +119,35 @@
   XX     [     ]     S-[   S-]   XX    XX    4     5     6     .     XX    ret
   lsft   S-7   S-8   S-4   S-3   XX    XX    7     8     9     /     XX   rsft
         lctl  lalt lmet             0        rmet     ralt ◀    ▼    ▶
+)
+
+(defalias
+  mwu (mwheel-up 50 120)
+  mwd (mwheel-down 50 120)
+  mwl (mwheel-left 50 120)
+  mwr (mwheel-right 50 120)
+
+  ms↑ (movemouse-up 1 1)
+  ms← (movemouse-left 1 1)
+  ms↓ (movemouse-down 1 1)
+  ms→ (movemouse-right 1 1)
+
+  ma↑ (movemouse-accel-up 5 1000 1 3)
+  ma← (movemouse-accel-left 5 1000 1 3)
+  ma↓ (movemouse-accel-down 5 1000 1 3)
+  ma→ (movemouse-accel-right 5 1000 1 3)
+
+  sm (setmouse 32228 32228)
+
+  fst (movemouse-speed 200)
+)
+
+;; Mouse and arrow layer
+(deflayer mouse
+  esc    XX    XX    XX    XX    XX    XX     XX    XX    XX    XX    XX    XX           ;; function row
+  grv    XX    XX    XX    XX    XX    XX     XX    XX    XX    XX    XX    XX    bspc   ;; number row
+  tab    XX    XX    ▲     XX    XX    @mwl   @mwd  @mwu  @mwr  XX    XX    XX    XX     ;; top letter row
+  caps   XX    ◀     ▼     ▶     XX    @ma←   @ma↓  @ma↑  @ma→  XX    XX    mrtp         ;; home row
+  lsft   XX    XX    XX    XX    XX    XX     XX    XX    XX    XX    XX   rsft          ;; bottom letter row
+        lctl  lalt lmet          mltp           rmet ralt XX    XX    XX                 ;; control row
 )
