@@ -12,12 +12,13 @@ LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
 DEV_ENV=${DEV_ENV:-""}
+KBD=${KBD:-""} # Keyboard config to use, either "voyager" or "macbook"
 
 usage() {
   cat <<EOF
 
 Manages kanata qmk keyboard program, which needs to be built locally. Currently the linux builds
-are only for x86.  Also can manage as a systemd service.
+are only for x86.  Also manages the kanata systemd service.
 
 USAGE:
 
@@ -28,6 +29,7 @@ FLAGS:
 
 COMMANDS:
   bootstrap:      Bootstrap a new machine, performs installation, enables, and starts kanata systemd service.
+  config <kbd>:   Copy the keyboard configuration files for the keyboard type (macbook or voyager).
   disable:        Stop and disable the kanata systemd service.
   install:        Build and install kanata, prompts you to choose the version to install.
   logs:           View the log file.
@@ -228,6 +230,37 @@ bootstrap() {
   enable_and_start_service
 }
 
+# Copy the configuration files based on keyboard type (either macbook or voyager).
+copy_config() {
+  local kbd=${1:-""}
+
+  if [[ -z $kbd ]] && [[ -n $KBD ]]; then
+    kbd=$KBD
+  fi
+
+  if [[ -z $DEV_ENV ]]; then
+    log --error "DEV_ENV not set properly." && exit 1
+  fi
+
+  if [[ -z $kbd ]]; then
+    log --error "Keyboard not set." && exit 1
+  fi
+
+  log "Copying configuration: '$kbd'..."
+  mkdir $XDG_CONFIG_HOME/kanata &>/dev/null
+
+  if [[ $kbd == "macbook" ]]; then
+    log "Copying macbook configuration."
+    cp "$DEV_ENV/env/.config/kanata/config.kbd" "$XDG_CONFIG_HOME/kanata/config.kbd"
+  elif [[ $kbd == "voyager" ]]; then
+    log "Copying voyager configuration."
+    cp "$DEV_ENV/env/.config/kanata/voyager.kbd" "$XDG_CONFIG_HOME/kanata/config.kbd"
+  else
+    log --error "Invalid keyboard: '$kbd'" && exit 1
+  fi
+
+}
+
 ################################################################################
 # MAIN
 ################################################################################
@@ -241,6 +274,9 @@ while [[ $# -gt 0 ]]; do
     usage && exit 0
   elif [[ $1 == "bootstrap" ]]; then
     bootstrap && exit 0
+  elif [[ $1 == "config" ]]; then
+    shift
+    copy_config "$@" && exit $?
   elif [[ $1 == "disable" ]]; then
     disable_service && exit $?
   elif [[ $1 == "start" ]]; then

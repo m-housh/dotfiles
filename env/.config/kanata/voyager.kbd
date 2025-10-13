@@ -1,3 +1,6 @@
+;; ZSA Voyager configuration file.
+;;
+
 ;; Adapted from https://github.com/linkarzu/dotfiles-latest/blob/main/kanata/configs/macbook-subl.kbd
 ;; Video related to this file
 ;; https://youtu.be/jvJ3f4HHiMY
@@ -67,8 +70,8 @@
   mrnums (tap-hold-press $tap-time-plus $hold-time-plus spc (layer-while-held nums_and_symbols))
 
   ;; mouse layer trigger keys.
-  ;;mlms (tap-hold-press $tap-time $hold-time lsft (layer-while-held mouse))
-  ;;mrms (tap-hold-press $tap-time $hold-time rsft (layer-while-held mouse))
+  mlms (tap-hold-press $tap-time $hold-time esc (layer-while-held mouse))
+  mrms (tap-hold-press $tap-time $hold-time ' (layer-while-held mouse))
 
   ;; Multi
   mhypr (tap-hold $tap-time $hold-time bspc (multi lsft lctl lalt lmet)) ;; Hyper key
@@ -100,27 +103,17 @@
 (deflayer main
   =      1       2      3      4    5          6    7       8       9       0       -
   grv    q       w      e      r    t          y    u       i       o       p       \
-  esc    @mlctl  @mlalt @mlmet @mlsft  g       h    @mrsft  @mrmet  @mralt  @mrctl  '
-  lsft   z       x      c      v    b          n    m       ,       .       /       rsft
+  @mlms  @mlctl  @mlalt @mlmet @mlsft  g       h    @mrsft  @mrmet  @mralt  @mrctl  @mrms
+  lsft  z       x      c      v    b          n    m       ,       .       /        rsft
                               @mlnums tab          @mhypr @mrnums
 )
 
 ;; Number and Symbols layer
-;; (deflayer nums_and_symbols
-;;   esc    XX   XX     XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
-;;   grv    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    -     =     bspc
-;;   S-grv  S-1   S-9   S-0   S-2   XX    XX    1     2     3     \     XX    XX    XX
-;;   XX     [     ]     S-[   S-]   XX    XX    4     5     6     .     XX    ret
-;;   lsft   S-7   S-8   S-4   S-3   XX    XX    7     8     9     /     XX   rsft
-;;         lctl  lalt lmet             0        rmet     ralt ◀    ▼    ▶
-;; )
-
-;; Number and Symbols layer
 (deflayer nums_and_symbols
-  =      XX    XX    XX    XX     XX         XX   XX   XX   XX   XX   -
+  =      XX    XX    XX    XX     XX          XX   XX   XX   XX   XX   -
   S-grv  S-1   S-9   S-0   S-2    XX          -    1    2    3    \    \
   XX     [     ]     S-[   S-]    XX          S-=  4    5    6    .    '
-  lsft   S-7   S-8   S-4   S-3    XX          S-8  7    8    9    /    rsft
+  lsft   S-7   S-8   S-3   S-4    XX          S-8  7    8    9    /    rsft
                           @mlnums tab         @mhypr 0
 )
 
@@ -146,13 +139,10 @@
 )
 
 ;; Mouse and arrow layer
-;; (deflayer mouse
-;;   esc    XX    XX    XX    XX    XX    XX     XX    XX    XX    XX    XX    XX           ;; function row
-;;   grv    XX    XX    XX    XX    XX    XX     XX    XX    XX    XX    XX    XX    bspc   ;; number row
-;;   tab    XX    XX    ▲     XX    XX    @mwl   @mwd  @mwu  @mwr  XX    XX    XX    XX     ;; top letter row
-;;   caps   XX    ◀     ▼     ▶     XX    @ma←   @ma↓  @ma↑  @ma→  XX    XX    mrtp         ;; home row
-;;   lsft   XX    XX    XX    XX    XX    XX     XX    XX    XX    XX    XX   rsft          ;; bottom letter row
-;;         lctl  lalt lmet          mltp           rmet ralt XX    XX    XX                 ;; control row
-;; )
-
-;;
+(deflayer mouse
+  XX     XX   XX   XX   XX   XX          XX   XX    XX    XX    XX      XX
+  XX     XX   XX   ▲    XX   XX          @mwl  @mwd  @mwu  @mwr XX      XX
+  XX     XX   ◀    ▼    ▶    XX          @ma←  @ma↓  @ma↑  @ma→ XX      XX
+  XX     XX   XX   XX   XX   XX          XX   XX    XX    XX    XX      XX
+                       ret  tab          mltp mrtp 
+)
