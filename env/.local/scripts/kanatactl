@@ -1,0 +1,255 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
+DEV_ENV=${DEV_ENV:-""}
+
+usage() {
+  cat <<EOF
+
+Manages kanata qmk keyboard program, which needs to be built locally. Currently the linux builds
+are only for x86.  Also can manage as a systemd service.
+
+USAGE:
+
+  $ $THIS <command> <flags>
+
+FLAGS:
+  -h | --help:    Show this help page.
+
+COMMANDS:
+  bootstrap:      Bootstrap a new machine, performs installation, enables, and starts kanata systemd service.
+  disable:        Stop and disable the kanata systemd service.
+  install:        Build and install kanata, prompts you to choose the version to install.
+  logs:           View the log file.
+  restart:        Restart the kanata systemd service.
+  start:          Enable and start the kanata systemd service.
+  status:         Get the status of the kanata systemd service.
+  update:         Pull from git and check for updates.
+
+EOF
+}
+
+kanata_dir="$XDG_DATA_HOME/kanata"
+kanata_url="https://github.com/jtroo/kanata.git"
+kanata_current_version=""
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+# Get the version of currently installed katana execuatable, if available.
+get_current_version() {
+  if [[ $(command -v /usr/bin/kanata) ]]; then
+    kanata_current_version=$(/usr/bin/kanata --version)
+    # Remove 'kanata ' from output of the version command.
+    kanata_current_version="${version#kanata *}"
+  fi
+}
+
+# Get's kanat versions by git tag and filter's out versions that are less than our
+# current version number.
+get_versions() {
+  get_current_version
+  local rows=()
+  local tag=""
+  local has_seen_current="0"
+  for tag in $(git tag --list 'v*' | sort --version-sort); do
+    if [[ $has_seen_current == "1" ]] || [[ -z $kanata_current_version ]]; then
+      rows+=("$tag\n")
+    elif [[ $tag =~ $kanata_current_version ]]; then
+      has_seen_current="1"
+    fi
+  done
+  echo "$(echo -e "${rows[@]}" | sort --version-sort --reverse | tr -d ' ')"
+}
+
+# Present an fzf menu to choose a version to install / update to.
+prompt_for_version_to_install() {
+  local rows=$(get_versions)
+  if [[ -z $rows ]]; then
+    log --error "No versions to select." && exit 1
+  else
+    echo $(printf '%s\n' "${rows[@]}" | fzf --header='Which version would you like to install?')
+  fi
+}
+
+# Compares the selected version to the installed version.
+compare_versions() {
+  # An example selection at this point: 'v1.9.0'
+  local selection=""
+  read -r selection
+
+  if [[ $(command -v /usr/bin/kanata) ]] && [[ -n $selection ]]; then
+
+    [[ -z $kanata_current_version ]] && get_current_version
+    local selected_version=${selection#v*} # remove the 'v' from selected version.
+
+    log "Comparing selected: '$selected_version' to installed '$kanada_current_version'"
+    if [[ $selected_version == $kanada_current_version ]]; then
+      log --warn "Selected version matches the currently installed version." && exit 1
+    fi
+  fi
+  echo "$selection"
+}
+
+# Check's out the selected version tag and builds the kanata executable.
+build_selection() {
+  # An example selection at this point: 'v1.9.0'
+  local selection=""
+  read -r selection
+
+  if [[ -z $selection ]]; then
+    log --error "Selection is empty." && exit 1
+  # Handle logged messages instead of an actual selection.
+  elif [[ $selection =~ "[WARN]" ]] || [[ $selection =~ "[ERROR]" ]]; then
+    echo $selection && exit 1
+  fi
+
+  if [[ $selection =~ ^v ]]; then
+    log "Building kanata..."
+    # checkout the selected version tag and build.
+    git checkout $selection
+    cargo build --release --features cmd
+    echo "done"
+  fi
+}
+
+# Copies the most recently built kanata executable to the '/usr/bin' directory.
+#
+copy_to_usr_bin() {
+
+  # This is the end of the install / update pipe, so it loops over output of
+  # the other commands in the pipe printing it to the console, while waiting on the
+  # build to be done.
+  while read line; do
+    if [[ $line == "done" ]]; then
+      log "Copying to '/usr/bin/kanata'" && echo "Copying to '/usr/bin/kanata'"
+      sudo cp target/release/kanata /usr/bin
+      echo "Done!"
+    else
+      echo "$line"
+    fi
+  done
+}
+
+# Installs the systemd service files and ensures that kanata configuration has been
+# installed.
+install_service() {
+  if [[ -z $DEV_ENV ]]; then
+    log --error "DEV_ENV is not set properly." && exit 1
+  fi
+
+  # Ensure the configuration is copied, this is generally handled by the 'dev-env' command in
+  # dotfiles, but just encase it hasn't been ran or removed we need to copy the configuration
+  # over, otherwise the keyboard may not work.
+  if [[ ! -d $XDG_CONFIG_HOME/kanata ]] || [[ ! -f $XDG_CONFIG_HOME/kanata/config.kbd ]]; then
+    log "Copying kanata configuration."
+    cp -R $DEV_ENV/env/.config/kanata $XDG_CONFIG_HOME/kanata
+  fi
+
+  log "Installing kanata service..."
+  [[ -f /etc/systemd/system/kanata.service ]] && sudo rm -rf /etc/systemd/system/kanata.service
+  sudo cp "$DEV_ENV/env/etc/systemd/system/kanata.service" /etc/systemd/system
+  sudo systemctl daemon-reload
+}
+
+# Enables and starts the kanata systemd service.
+enable_and_start_service() {
+  log "Enabling kanata service..."
+  sudo systemctl enable kanata.service
+  sudo systemctl start kanata.service
+}
+
+# Get the status of the kanata systemd service.
+get_status() {
+  log "Getting kanata service status..."
+  systemctl status kanata.service
+}
+
+# Disable the kanata systemd service.
+disable_service() {
+  log "Disabling kanata service..."
+  sudo systemctl stop kanata.service
+  sudo systemctl disable kanata.service
+}
+
+# Restart the kanata systemd service.
+restart_service() {
+  log "Restarting kanata service..."
+  sudo systemctl restart kanata.service
+}
+
+# Handles both install or update commands, as they do the same thing, just need to pass in the
+# "Updating" argument when updating, so log messages are clear.
+install_or_update() {
+  local mode=${1:-"Installing"}
+
+  log "$mode kanata..."
+  local should_pull="1"
+
+  if [[ ! -d $kanata_dir ]]; then
+    log "Cloning repo."
+    should_pull="0"
+    git clone $kanata_url $kanata_dir
+  fi
+
+  pushd $kanata_dir &>/dev/null
+  (
+    [[ $should_pull == "1" ]] && git pull origin main >/dev/null 2>&1
+    prompt_for_version_to_install | compare_versions | build_selection | copy_to_usr_bin
+  )
+  popd &>/dev/null
+}
+
+# Bootstrap a new machine, by building and installing the kanata executable,
+# installing the systemd service files, and enable / start the service.
+bootstrap() {
+  log "Bootstrapping new system..."
+  install_or_update
+  install_service
+  enable_and_start_service
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ $1 == "bootstrap" ]]; then
+    bootstrap && exit 0
+  elif [[ $1 == "disable" ]]; then
+    disable_service && exit $?
+  elif [[ $1 == "start" ]]; then
+    enable_and_start_service && exit 1
+  elif [[ $1 == "install" ]]; then
+    install_or_update && exit $?
+  elif [[ $1 == "logs" ]]; then
+    bat ${LOG_DIR:-/tmp/logs}/$LOG_FILE && exit 0
+  elif [[ $1 == "status" ]]; then
+    get_status && exit $?
+  elif [[ $1 == "restart" ]]; then
+    restart_service && exit 0
+  elif [[ $1 == "update" ]]; then
+    install_or_update "Updating" && exit 0
+  fi
+done
+
+# If we've made it here, then we didn't handle the command.
+usage && exit 1

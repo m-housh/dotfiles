@@ -78,7 +78,7 @@ logging() {
   args=()
 
   while [[ $# -gt 0 ]]; do
-    if [[ $1 == "-w" ]] || [[ $1 =~ ^--warn ]]; then
+    if [[ $1 == "-w" ]] || [[ $1 == "--warn" ]] || [[ $1 == "--warning" ]]; then
       log_flag="1"
       warn_flag="1"
     elif [[ $1 == "-e" ]] || [[ $1 =~ ^--error ]]; then
@@ -116,9 +116,10 @@ logging() {
       local time=$(date '+%D %H:%M:%S')
 
       if [[ -z $file ]] || [[ -z $id ]] || [[ -z $label ]]; then
-        echo "Loggging not properly setup."
+        echo "Logging not properly setup."
         exit 1
       fi
+
       local prefix="[id: $id][time: $time][source: \e[32m$source_file\e[0m][\e[34m$label\e[0m] :"
       local m="$prefix $msg"
       echo -e "$m" >>"$file"
@@ -126,6 +127,8 @@ logging() {
 
     # Also log errors and warning messages to the console.
     if [[ $error_flag == "1" ]] || [[ $warn_flag == "1" ]]; then
+      echo -e "[id: $id]$msg"
+    elif [[ $warn_flag == "1" ]]; then
       echo -e "[id: $id]$msg"
     fi
   else

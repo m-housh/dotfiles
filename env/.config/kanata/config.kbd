@@ -59,7 +59,7 @@
 
   mretu (tap-hold $tap-time $hold-time tab ret)
 
-  mlnums (tap-hold-press $tap-time $hold-time lctl (layer-while-held nums_and_symbols))
+  mlnums (tap-hold-press $tap-time $hold-time esc (layer-while-held nums_and_symbols))
   mrnums (tap-hold-press $tap-time $hold-time ret (layer-while-held nums_and_symbols))
 
   ;; Multi
@@ -80,21 +80,21 @@
 )
 
 ;; Blank layer
-;;(deflayer {{NAME}}
-;;  esc    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX           ;; function row
-;;  grv    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    bspc   ;; number row
-;;  tab    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX     ;; top letter row
-;;  caps   XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    ret          ;; home row
-;;  lsft   XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX   rsft          ;; bottom letter row
-;;        lctl  lalt lmet          spc         rmet ralt ◀    ▼    ▶                      ;; control row
-;;)
+;; (deflayer {{NAME}}
+;;   esc    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX           ;; function row
+;;   grv    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    bspc   ;; number row
+;;   tab    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX     ;; top letter row
+;;   caps   XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    ret          ;; home row
+;;   lsft   XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX   rsft          ;; bottom letter row
+;;         lctl  lalt lmet          spc         rmet ralt ◀    ▼    ▶                      ;; control row
+;; )
 
 ;; Main layer
 ;;
 ;; Disable most function keys, and add homerow mods.
 ;;
 (deflayer main
-  esc     brd     bru     XX      XX      XX   XX   XX       XX     XX     mute   vold  volu
+  esc     brdn    bru     XX      XX      XX   XX   XX       XX     XX     mute   vold  volu
   grv     1       2       3       4       5    6    7        8      9       0       -    =    bspc
   tab     q       w       e       r       t    y    u        i      o       p       [    ]    \
   @mlnums @mlctl  @mlalt  @mlmet  @mlsft  g    h    @mrsft  @mrmet  @mralt  @mrctl  '    @mrnums
@@ -109,6 +109,5 @@
   S-grv  S-1   S-9   S-0   S-2   XX    XX    1     2     3     \     XX    XX    XX
   XX     [     ]     S-[   S-]   XX    XX    4     5     6     .     XX    ret
   lsft   S-7   S-8   S-4   S-3   XX    XX    7     8     9     /     XX   rsft
-        lctl  lalt lmet          spc         0     ralt ◀    ▼    ▶
+        lctl  lalt lmet             0        rmet     ralt ◀    ▼    ▶
 )
-
