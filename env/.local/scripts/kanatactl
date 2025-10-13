@@ -29,15 +29,13 @@ FLAGS:
 
 COMMANDS:
   bootstrap:      Bootstrap a new machine, performs installation, enables, and starts kanata systemd service.
-  config <kbd>:   Copy the keyboard configuration files for the keyboard type (macbook or voyager).
-  disable:        Stop and disable the kanata systemd service.
+  config:         Commands for the kanata keyboard configuration file(s).
+  service:        Commands for the kanata systemd service.
   install:        Build and install kanata, prompts you to choose the version to install.
   logs:           View the log file.
-  restart:        Restart the kanata systemd service.
-  start:          Enable and start the kanata systemd service.
-  status:         Get the status of the kanata systemd service.
-  stop:           Stop the kanata systemd service.
   update:         Pull from git and check for updates.
+
+Run "$THIS <command> --help" for more information about a command.
 
 EOF
 }
@@ -146,59 +144,6 @@ copy_to_usr_bin() {
   done
 }
 
-# Installs the systemd service files and ensures that kanata configuration has been
-# installed.
-install_service() {
-  if [[ -z $DEV_ENV ]]; then
-    log --error "DEV_ENV is not set properly." && exit 1
-  fi
-
-  # Ensure the configuration is copied, this is generally handled by the 'dev-env' command in
-  # dotfiles, but just encase it hasn't been ran or removed we need to copy the configuration
-  # over, otherwise the keyboard may not work.
-  if [[ ! -d $XDG_CONFIG_HOME/kanata ]] || [[ ! -f $XDG_CONFIG_HOME/kanata/config.kbd ]]; then
-    log "Copying kanata configuration."
-    cp -R $DEV_ENV/env/.config/kanata $XDG_CONFIG_HOME/kanata
-  fi
-
-  log "Installing kanata service..."
-  [[ -f /etc/systemd/system/kanata.service ]] && sudo rm -rf /etc/systemd/system/kanata.service
-  sudo cp "$DEV_ENV/env/etc/systemd/system/kanata.service" /etc/systemd/system
-  sudo systemctl daemon-reload
-}
-
-# Enables and starts the kanata systemd service.
-enable_and_start_service() {
-  log "Enabling kanata service..."
-  sudo systemctl enable kanata.service
-  sudo systemctl start kanata.service
-}
-
-# Get the status of the kanata systemd service.
-get_status() {
-  log "Getting kanata service status..."
-  systemctl status kanata.service
-}
-
-# Stop the service.
-stop_service() {
-  log "Stopping kanata service..."
-  sudo systemctl stop kanata.service
-}
-
-# Disable the kanata systemd service.
-disable_service() {
-  log "Disabling kanata service..."
-  stop_service
-  sudo systemctl disable kanata.service
-}
-
-# Restart the kanata systemd service.
-restart_service() {
-  log "Restarting kanata service..."
-  sudo systemctl restart kanata.service
-}
-
 # Handles both install or update commands, as they do the same thing, just need to pass in the
 # "Updating" argument when updating, so log messages are clear.
 install_or_update() {
@@ -230,37 +175,6 @@ bootstrap() {
   enable_and_start_service
 }
 
-# Copy the configuration files based on keyboard type (either macbook or voyager).
-copy_config() {
-  local kbd=${1:-""}
-
-  if [[ -z $kbd ]] && [[ -n $KBD ]]; then
-    kbd=$KBD
-  fi
-
-  if [[ -z $DEV_ENV ]]; then
-    log --error "DEV_ENV not set properly." && exit 1
-  fi
-
-  if [[ -z $kbd ]]; then
-    log --error "Keyboard not set." && exit 1
-  fi
-
-  log "Copying configuration: '$kbd'..."
-  mkdir $XDG_CONFIG_HOME/kanata &>/dev/null
-
-  if [[ $kbd == "macbook" ]]; then
-    log "Copying macbook configuration."
-    cp "$DEV_ENV/env/.config/kanata/config.kbd" "$XDG_CONFIG_HOME/kanata/config.kbd"
-  elif [[ $kbd == "voyager" ]]; then
-    log "Copying voyager configuration."
-    cp "$DEV_ENV/env/.config/kanata/voyager.kbd" "$XDG_CONFIG_HOME/kanata/config.kbd"
-  else
-    log --error "Invalid keyboard: '$kbd'" && exit 1
-  fi
-
-}
-
 ################################################################################
 # MAIN
 ################################################################################
@@ -276,21 +190,16 @@ while [[ $# -gt 0 ]]; do
     bootstrap && exit 0
   elif [[ $1 == "config" ]]; then
     shift
-    copy_config "$@" && exit $?
-  elif [[ $1 == "disable" ]]; then
-    disable_service && exit $?
-  elif [[ $1 == "start" ]]; then
-    enable_and_start_service && exit 1
+    THIS="$THIS config" $SCRIPTS/utils/kanatactl/config "$@"
+    exit $?
+  elif [[ $1 == "service" ]]; then
+    shift
+    THIS="$THIS service" $SCRIPTS/utils/kanatactl/service "$@"
+    exit $?
   elif [[ $1 == "install" ]]; then
     install_or_update && exit $?
   elif [[ $1 == "logs" ]]; then
     bat ${LOG_DIR:-/tmp/logs}/$LOG_FILE && exit 0
-  elif [[ $1 == "status" ]]; then
-    get_status && exit $?
-  elif [[ $1 == "stop" ]]; then
-    stop_service && exit $?
-  elif [[ $1 == "restart" ]]; then
-    restart_service && exit 0
   elif [[ $1 == "update" ]]; then
     install_or_update "Updating" && exit 0
   else

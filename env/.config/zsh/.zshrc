@@ -176,6 +176,7 @@ alias gs='git status'                   # git status quickly
 alias hn='hugo new'                     # generate a hugo site
 alias hnc='hugo new content'            # generate new hugo site content quickly
 alias j='just'                          # run justfile's quickly.
+alias kb='kanatactl'                    # Keyboard / kanata commands.
 alias l='eza --long --git --group --links --icons --all'                # better ls command.
 alias lfs='ls -lahH --color=auto "$ZDOTDIR/functions"'    # List functions.
 alias ls='eza --long --git --group --links --icons --all'

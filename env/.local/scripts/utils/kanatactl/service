@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+DEV_ENV=${DEV_ENV:-""}
+
+usage() {
+  cat <<EOF
+Manages the kanata systemd service.
+
+USAGE:
+
+  $ $THIS <command> <flags> <args...>
+
+FLAGS:
+  -h | --help:          Show this help page.
+
+COMMANDS:
+  enable:               Enable the kanata service.
+  disable:              Disable the kanata service.
+
+  install <kbd>:        Install the systemd service, the 'kbd' argument is passed to 
+                        'kanatactl config install' command, to ensure the keyboard configuration
+                        is installed otherwise the keyboard may not work when the service is started.
+
+  start:                Start the kanata service.
+  status:               Get the status of the kanata service.
+  stop:                 Start the kanata service.
+  restart:              Restart the kanata service.
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+enable_service() {
+  log "Enabling kanata service..."
+  sudo systemctl enable kanata.service
+}
+
+get_status() {
+  log "Getting kanata service status..."
+  systemctl status kanata.service
+}
+
+install_service() {
+  if [[ -z $DEV_ENV ]]; then
+    log --error "DEV_ENV is not set properly." && exit 1
+  fi
+
+  # Ensure the configuration is copied / setup otherwise the keyboard may not work.
+  "$SCRIPTS/kanatactl" config install "$@"
+
+  log "Installing kanata service..."
+  [[ -f /etc/systemd/system/kanata.service ]] && sudo rm -rf /etc/systemd/system/kanata.service
+  sudo cp "$DEV_ENV/env/etc/systemd/system/kanata.service" /etc/systemd/system
+  sudo systemctl daemon-reload
+}
+
+start_service() {
+  log "Starting kanata service..."
+  systemctl start kanata.service
+}
+
+stop_service() {
+  log "Stopping kanata service..."
+  sudo systemctl stop kanata.service
+}
+
+disable_service() {
+  log "Disabling kanata service..."
+  stop_service
+  sudo systemctl disable kanata.service
+}
+
+restart_service() {
+  log "Restarting kanata service..."
+  sudo systemctl restart kanata.service
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ $1 == "disable" ]]; then
+    disable_service && exit $?
+  elif [[ $1 == "enable" ]]; then
+    enable_service && exit $?
+  elif [[ $1 == "install" ]]; then
+    shift
+    install_service "$@" && exit $?
+  elif [[ $1 == "start" ]]; then
+    start_service && exit $?
+  elif [[ $1 == "status" ]]; then
+    get_status && exit $?
+  elif [[ $1 == "stop" ]]; then
+    stop_service && exit $?
+  elif [[ $1 == "restart" ]]; then
+    restart_service && exit $?
+  fi
+done
+
+# If we made it here, then none of the subcommands handled the args.
+usage && exit 1

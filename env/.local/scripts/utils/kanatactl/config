@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+DEV_ENV=${DEV_ENV:-""}
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
+KBD=${KBD:-""} # Keyboard config to use, either "voyager" or "macbook"
+FZF_DEFAULT_OPTS=${FZF_DEFAULT_OPTS:-""}
+
+install_mode="0"
+update_mode="0"
+
+usage() {
+  cat <<EOF
+Manages the keyboard configuration file(s).
+
+USAGE:
+
+  $ $THIS <command> <flags> <args...>
+
+FLAGS:
+  -h | --help:            Show this help page.
+
+COMMANDS:
+  install <kbd>:          Install the configuration files for the given keyboard.
+  update <kbd>:           Update the configuration.
+
+NOTES:
+  The 'kbd' argument is optional, if it is not supplied or found in either the
+  environment or configuration directory, then we will prompt which keyboard
+  configuration you would like to use. Once it has been setup the first time it
+  should not need to be supplied again, unless you are changing keyboard configurations.
+
+ENVIRONMENT:
+  KBD:                    Sets the keyboard (<kbd>) that should be installed.
+
+KBD FILE:
+  The kbd type can also be discovered from a file at '$XDG_CONFIG_HOME/kanata/kbd.txt'.
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+get_kbd() {
+  local kbd=${1:-""}
+  if [[ -z $kbd ]]; then
+    # check if it's set in the environment.
+    if [[ -n $KBD ]]; then
+      kbd=$KBD
+    elif [[ -f $XDG_CONFIG_HOME/kanata/kbd.txt ]]; then
+      # check if it's set in the config directory.
+      kbd=$(cat $XDG_CONFIG_HOME/kanata/kbd.txt)
+    fi
+  fi
+  echo "$kbd"
+}
+
+prompt_for_kbd() {
+  if [[ -z $DEV_ENV ]]; then
+    log --error "DEV_ENV is not set properly." && exit 1
+  fi
+
+  # Setup fzf color scheme if it's not setup yet.
+  [[ -z $FZF_DEFAULT_OPTS ]] && source "$SCRIPTS/catppuccin-colors"
+
+  echo $(/bin/ls $DEV_ENV/env/.config/kanata | fzf --header="Which keyoard configuration would you like to use?")
+}
+
+title() {
+  if [[ $install_mode == "1" ]] || [[ ! $update_mode == "1" ]]; then
+    echo "Installing"
+  else
+    echo "Updating"
+  fi
+}
+
+install_or_update() {
+  local kbd=$(get_kbd ${1:-""})
+
+  if [[ -z $kbd ]]; then
+    kbd=$(prompt_for_kbd)
+    if [[ -z $kbd ]]; then
+      log --error "No keyboard setup or selected." && exit 1
+    fi
+  fi
+
+  # Ensure the file extension is on the kbd variable.
+  if [[ ! $kbd =~ ".kbd" ]]; then
+    kbd="$kbd.kbd"
+  fi
+
+  log "$(title) '$kbd' configuration."
+
+  # Ensure the kanata config directory exists
+  [[ ! -d $XDG_CONFIG_HOME/kanata ]] && mkdir $XDG_CONFIG_HOME/kanata
+  cp --force $DEV_ENV/env/.config/kanata/$kbd $XDG_CONFIG_HOME/kanata/config.kbd
+  echo "$kbd" >$XDG_CONFIG_HOME/kanata/kbd.txt
+
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "install" ]]; then
+    install_mode="1"
+    shift
+    install_or_update "$@" && exit $?
+  elif [[ $1 == "update" ]]; then
+    update_mode="1"
+    shift
+    install_or_update "$@" && exit $?
+  elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  fi
+done
+
+# If we made it here, then none of the commands handled the args, so
+# show the usage and exit.
+usage && exit 1
