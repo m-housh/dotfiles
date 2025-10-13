@@ -45,7 +45,7 @@ update_dirs() {
     # Copy everything except systemd, share, and zsh folders, they need treated differently.
     configs=$(
       find . -mindepth 1 -maxdepth 1 -type d \
-        \( -name "systemd" -o -name "zsh" -o -name "share" -o -name "scripts" \) \
+        \( -name "systemd" -o -name "zsh" -o -name "share" -o -name "scripts" -o -name "kanata" \) \
         -prune -o -type d -print
     )
     for c in $configs; do
