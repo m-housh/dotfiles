@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+XDG_CACHE_HOME=${XDG_CACHE_HOME:-$HOME/.cache}
+
+usage() {
+  cat <<EOF
+Manage the kanata package / crate.
+
+USAGE:
+
+  $ $THIS <command> <flags> <args...>
+
+FLAGS:
+  -h | --help:           Show this help page. 
+
+COMMANDS:
+  install:               Install the kanata package.
+  update:                Updates the kanata package.
+
+EOF
+}
+
+kanata_dir="$XDG_CACHE_HOME/kanata"
+kanata_url="https://github.com/jtroo/kanata.git"
+kanata_current_version=""
+
+install_mode="0"
+update_mode="0"
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+get_current_version() {
+  if [[ $(command -v /usr/bin/kanata) ]]; then
+    kanata_current_version=$(/usr/bin/kanata --version)
+    # Remove 'kanata ' from output of the version command.
+    kanata_current_version="${kanata_current_version#kanata *}"
+  fi
+}
+
+# Get's kanat versions by git tag and filter's out versions that are less than our
+# current version number.
+get_versions() {
+  get_current_version
+  local rows=()
+  local tag=""
+  local has_seen_current="0"
+  for tag in $(git tag --list 'v*' | sort --version-sort); do
+    if [[ $has_seen_current == "1" ]] || [[ -z $kanata_current_version ]]; then
+      rows+=("$tag\n")
+    elif [[ $tag =~ $kanata_current_version ]]; then
+      has_seen_current="1"
+    fi
+  done
+  echo "$(echo -e "${rows[@]}" | sort --version-sort --reverse | tr -d ' ')"
+}
+
+# Present an fzf menu to choose a version to install / update to.
+prompt_for_version_to_install() {
+  local rows=$(get_versions)
+  if [[ -z $rows ]]; then
+    log --error "No versions to select." && exit 1
+  else
+    echo $(printf '%s\n' "${rows[@]}" | fzf --header='Which version would you like to install?')
+  fi
+}
+
+# Compares the selected version to the installed version.
+compare_versions() {
+  # An example selection at this point: 'v1.9.0'
+  local selection=""
+  read -r selection
+
+  if [[ $(command -v /usr/bin/kanata) ]] && [[ -n $selection ]]; then
+
+    [[ -z $kanata_current_version ]] && get_current_version
+    local selected_version=${selection#v*} # remove the 'v' from selected version.
+
+    log "Comparing selected: '$selected_version' to installed '$kanata_current_version'"
+    if [[ $selected_version == $kanata_current_version ]]; then
+      log --warn "Selected version matches the currently installed version." && exit 1
+    fi
+  fi
+  echo "$selection"
+}
+
+# Check's out the selected version tag and builds the kanata executable.
+build_selection() {
+  # An example selection at this point: 'v1.9.0'
+  local selection=""
+  read -r selection
+
+  if [[ -z $selection ]]; then
+    log --error "Selection is empty." && exit 1
+  # Handle logged messages instead of an actual selection.
+  elif [[ $selection =~ "[WARN]" ]] || [[ $selection =~ "[ERROR]" ]]; then
+    echo $selection && exit 1
+  fi
+
+  if [[ $selection =~ ^v ]]; then
+    log "Building kanata..."
+    # checkout the selected version tag and build.
+    git checkout $selection
+    cargo build --release --features cmd
+    echo "done"
+  fi
+}
+
+# Copies the most recently built kanata executable to the '/usr/bin' directory.
+#
+copy_to_usr_bin() {
+
+  # This is the end of the install / update pipe, so it loops over output of
+  # the other commands in the pipe printing it to the console, while waiting on the
+  # build to be done.
+  while read line; do
+    if [[ $line == "done" ]]; then
+      log "Copying to '/usr/bin/kanata'" && echo "Copying to '/usr/bin/kanata'"
+      sudo cp target/release/kanata /usr/bin
+      echo "Done!"
+    else
+      echo "$line"
+    fi
+  done
+}
+
+title() {
+  if [[ $update_mode == "1" ]]; then
+    echo "Updating"
+  else
+    echo "Installing"
+  fi
+}
+
+# Handles both install or update commands, as they do the same thing, just need to pass in the
+# "Updating" argument when updating, so log messages are clear.
+install_or_update() {
+  local mode=${1:-"Installing"}
+
+  log "$mode kanata..."
+  local should_pull="1"
+
+  if [[ ! -d $kanata_dir ]]; then
+    log "Cloning repo."
+    should_pull="0"
+    git clone $kanata_url $kanata_dir
+  fi
+
+  pushd $kanata_dir &>/dev/null
+  (
+    [[ $should_pull == "1" ]] && git pull origin main >/dev/null 2>&1
+    prompt_for_version_to_install | compare_versions | build_selection | copy_to_usr_bin
+  )
+  popd &>/dev/null
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ $1 == "install" ]]; then
+    shift
+    install_or_update "Installing" "$@"
+    exit $?
+  elif [[ $1 == "update" ]]; then
+    shift
+    install_or_update "Updating" "$@"
+    exit $?
+  fi
+done
+
+# If we made it here, then none of the commands handled the arguments, so show the
+# usage and exit
+usage && exit 1
