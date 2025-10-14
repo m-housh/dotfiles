@@ -143,10 +143,9 @@ title() {
   fi
 }
 
-# Handles both install or update commands, as they do the same thing, just need to pass in the
-# "Updating" argument when updating, so log messages are clear.
+# Handles both install or update commands, as they do the same thing.
 install_or_update() {
-  local mode=${1:-"Installing"}
+  local mode=$(title)
 
   log "$mode kanata..."
   local should_pull="1"
@@ -178,11 +177,13 @@ while [[ $# -gt 0 ]]; do
     usage && exit 0
   elif [[ $1 == "install" ]]; then
     shift
-    install_or_update "Installing" "$@"
+    install_mode="1"
+    install_or_update "$@"
     exit $?
   elif [[ $1 == "update" ]]; then
     shift
-    install_or_update "Updating" "$@"
+    update_mode="1"
+    install_or_update "$@"
     exit $?
   fi
 done
