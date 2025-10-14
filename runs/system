@@ -7,4 +7,6 @@ yay ${1:-"-S --noconfirm"} catppuccin-gtk-theme-mocha \
   pam-u2f \
   pcsc-tools \
   swaync \
-  yubikey-manger
+  yubikey-manger \
+  nfs-utils \
+  firewalld
