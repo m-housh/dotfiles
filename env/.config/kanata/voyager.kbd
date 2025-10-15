@@ -111,14 +111,22 @@
                                     @mlnums tab     @mhypr @mrnums
 )
 
+(defalias
+  ;; Number layer modifier keys - Left
+  nlctl (tap-hold $tap-time $hold-time [ lctl)
+  nlalt (tap-hold $tap-time $hold-time ] lalt)
+  nlmet (tap-hold $tap-time $hold-time S-[ lmet)
+  nlsft (tap-hold $tap-time $hold-time S-] lsft)
+)
+
 ;; Number and Symbols layer
 (deflayer nums_and_symbols
-;;----------------LEFT-----------------------;--------------------RIGHT-------------------;;
-  =      XX    XX    XX    XX     XX                    XX     XX   XX   XX   XX   -
-  S-grv  S-1   S-9   S-0   S-2    XX                    -      1    2    3    \    \
-  XX     [     ]     S-[   S-]    XX                    S-=    4    5    6    .    '
-  lsft   S-7   S-8   S-3   S-4    XX                    S-8    7    8    9    /    rsft
-                                @mlnums tab       @mhypr 0
+;;----------------LEFT---------------------------------;-------------------RIGHT-------------------;;
+  =      XX      XX     XX     XX        XX                    XX     XX   XX   XX   XX   -
+  S-grv  S-1     S-9    S-0    S-2       XX                    -      1    2    3    \    \
+  XX     @nlctl  @nlalt @nlmet @nlsft    XX                    S-=    4    5    6    .    '
+  lsft   S-7     S-8    S-3    S-4       XX                    S-8    7    8    9    /    rsft
+                                         @mlnums tab       @mhypr 0
 )
 
 (defalias
