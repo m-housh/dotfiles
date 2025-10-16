@@ -162,10 +162,10 @@ handle_selection() {
     log "Quitting..."
   elif [[ $choice == "Close window" ]]; then
     log "Closing window..."
-    "$SCRIPTS/hypr/close-windows" "$address"
+    "$SCRIPTS/hypr/utils/windows/close-windows" "$address"
   elif [[ $choice == "Close window and back" ]]; then
     log "Closing window and setting should go back flag."
-    "$SCRIPTS/hypr/close-windows" "$address"
+    "$SCRIPTS/hypr/utils/windows/close-windows" "$address"
     resp="back:close"
   elif [[ $choice == "Copy to clipboard" ]]; then
     log "Copied window address to the clipboard."
