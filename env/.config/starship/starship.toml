@@ -10,10 +10,8 @@ $hostname\
 [](bg:color_pink fg:color_orange)\
 $directory\
 [](fg:color_pink bg:color_bg1)\
-[](fg:color_bg1 bg:color_green)\
 $git_branch\
 $git_status\
-[ ](fg:color_green)\
 $line_break$character"""
 
 palette = 'catppuccin_mocha'
@@ -87,12 +85,12 @@ truncate_to_repo = true
 
 [git_branch]
 symbol = ""
-style = "bg:color_blue"
-format = '[[ $symbol $branch ](bold fg:color_text bg:color_green)]($style)'
+style = "bg:color_bg1"
+format = '[[ $symbol $branch ](bold fg:color_green bg:color_bg1)]($style)'
 
 [git_status]
-style = "bg:color_blue"
-format = '[[($all_status$ahead_behind )](bold fg:color_text bg:color_green)]($style)'
+style = "bg:color_bg1"
+format = '[[($all_status$ahead_behind )](bold fg:color_green bg:color_bg1)]($style)'
 
 [line_break]
 disabled = false
