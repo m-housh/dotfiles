@@ -89,7 +89,7 @@ style = "bg:color_bg1"
 format = '[[ $symbol $branch ](bold fg:color_green bg:color_bg1)]($style)'
 
 [git_status]
-style = "bg:color_bg1"
+style = "bold bg:color_bg1"
 format = '[[($all_status$ahead_behind )](bold fg:color_green bg:color_bg1)]($style)'
 
 [line_break]

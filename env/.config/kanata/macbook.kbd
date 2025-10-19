@@ -16,7 +16,7 @@
   log-layer-changes no
   danger-enable-cmd yes
   concurrent-tap-hold yes
-  rapid-event-delay 3
+  rapid-event-delay 10
   allow-hardware-repeat false
 
   ;; When any non-chord activation happens, this timeout begins. Until this timeout expires
@@ -67,12 +67,12 @@
   mretu (tap-hold $tap-time $hold-time tab ret)
 
   ;; number and symbols layer trigger keys.
-  mlnums (tap-hold-press $tap-time-plus $hold-time-plus esc (layer-while-held nums_and_symbols))
-  mrnums (tap-hold-press $tap-time-plus $hold-time-plus ret (layer-while-held nums_and_symbols))
+  mlnums (tap-hold-press $tap-time-plus $hold-time-plus lmet (layer-while-held nums_and_symbols))
+  mrnums (tap-hold-press $tap-time-plus $hold-time-plus rmet (layer-while-held nums_and_symbols))
 
   ;; mouse layer trigger keys.
-  mlms (tap-hold-press $tap-time $hold-time lsft (layer-while-held mouse))
-  mrms (tap-hold-press $tap-time $hold-time rsft (layer-while-held mouse))
+  mlms (tap-hold-press $tap-time $hold-time esc (layer-while-held mouse))
+  mrms (tap-hold-press $tap-time $hold-time ret (layer-while-held mouse))
 
   ;; Multi
   mhypr (tap-hold $tap-time $hold-time spc (multi lsft lctl lalt lmet)) ;; Hyper key
@@ -109,16 +109,16 @@
   esc     brdn    bru     XX      XX      XX   XX   XX       XX     XX     mute   vold  volu
   grv     1       2       3       4       5    6    7        8      9       0       -    =    bspc
   tab     q       w       e       r       t    y    u        i      o       p       [    ]    \
-  @mlnums @mlctl  @mlalt  @mlmet  @mlsft  g    h    @mrsft  @mrmet  @mralt  @mrctl  '    @mrnums
-  @mlms   z       x       c       v       b    n    m        ,      .       /       ▲    @mrms
-         lctl    lalt    lmet             spc               rmet   ralt     ◀       ▼    ▶
+  @mlms @mlctl  @mlalt  @mlmet  @mlsft  g    h    @mrsft  @mrmet  @mralt  @mrctl    '    @mrms
+  lsft    z       x       c       v       b    n    m        ,      .       /       ▲    rsft
+         lctl    lalt    @mlnums             spc          @mrnums   ralt     ◀      ▼    ▶
 )
 
 ;; Number and Symbols layer
 (deflayer nums_and_symbols
   esc    XX   XX     XX    XX    XX    XX    XX    XX    XX    XX    XX    XX
-  grv    XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    -     =     bspc
-  S-grv  S-1   S-9   S-0   S-2   XX    XX    1     2     3     \     XX    XX    XX
+  S-grv  XX    XX    XX    XX    XX    XX    XX    XX    XX    XX    -     =     bspc
+  grv    S-1   S-9   S-0   S-2   XX    XX    1     2     3     \     XX    XX    XX
   XX     [     ]     S-[   S-]   XX    XX    4     5     6     .     XX    ret
   lsft   S-7   S-8   S-4   S-3   XX    XX    7     8     9     /     XX   rsft
         lctl  lalt lmet             0        rmet     ralt ◀    ▼    ▶
