@@ -1,0 +1,70 @@
+# Maintainer: Your Name <you@example.com>
+pkgname=obs-studio-arm
+pkgver=30.2.3
+pkgrel=1
+pkgdesc="Free and open source software for live streaming and screen recording (ARM64, no browser)"
+arch=('aarch64')
+url="https://obsproject.com"
+license=('GPL2')
+depends=(
+  'qt5-base'
+  'qt5-svg'
+  'qt5-tools'
+  'ffmpeg'
+  'x264'
+  'x265'
+  'jansson'
+  'curl'
+  'pipewire'
+  'libpulse'
+  'alsa-lib'
+  'v4l-utils'
+  'libdrm'
+  'mesa'
+  'wayland'
+  'wayland-protocols'
+  'libx11'
+  'libxcb'
+  'libxcomposite'
+  'libxinerama'
+  'libxrandr'
+  'libxfixes'
+)
+makedepends=('git' 'cmake' 'base-devel')
+provides=('obs-studio')
+conflicts=('obs-studio' 'obs-studio-git')
+source=("git+https://github.com/obsproject/obs-studio.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd obs-studio
+  git describe --tags | sed 's/^v//;s/-/+/g'
+}
+
+build() {
+  cd obs-studio
+
+  # Initialize only required submodules, skip obs-browser
+  git submodule update --init --recursive
+  # remove the browser submodule so it won’t be built
+  #git submodule deinit plugins/obs-browser
+
+  mkdir -p build
+  cd build
+  cmake -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DENABLE_BROWSER=OFF \
+    -DENABLE_QSV=OFF \
+    -DENABLE_PIPEWIRE=ON \
+    -DENABLE_PULSEAUDIO=ON \
+    -DENABLE_ALSA=ON \
+    -DENABLE_V4L2=ON \
+    -DENABLE_WAYLAND=ON \
+    ..
+  make -j$(nproc)
+}
+
+package() {
+  cd obs-studio/build
+  make DESTDIR="$pkgdir" install
+}

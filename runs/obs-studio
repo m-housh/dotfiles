@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+cd $HOME/pkgbuilds/obs-studio-arm && makepkg -si
