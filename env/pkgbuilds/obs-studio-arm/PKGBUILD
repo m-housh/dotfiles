@@ -29,6 +29,7 @@ depends=(
   'libxinerama'
   'libxrandr'
   'libxfixes'
+  'libajantv2'
 )
 makedepends=('git' 'cmake' 'base-devel')
 provides=('obs-studio')
