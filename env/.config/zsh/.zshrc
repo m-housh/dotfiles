@@ -63,7 +63,7 @@ path_prepend \
   "$GOROOT/bin" \
   "$GOPATH/bin" \
   "$XDG_DATA_HOME/bin" \
-  "$XDG_DATA_HOME/npm" \
+  "$XDG_DATA_HOME/npm/bin" \
   "$HOME/.local/bin" \
   "$SCRIPTS" \
   "$SCRIPTS/hypr" \
