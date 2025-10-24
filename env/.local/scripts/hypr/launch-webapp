@@ -44,7 +44,7 @@ of the special workspace.
 EOF
 }
 
-browser="chromium.desktop"
+browser="brave-browser.desktop"
 url=""
 launch_args=()
 app_args=""
