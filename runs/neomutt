@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+yay ${1:-"-S --noconfirm"} neomutt \
+  abook \
+  mutt-wizard \
+  goimapnotify \
+  lynx \
+  notmuch \
+  urlview \
+  cronie \
+  protonmail-bridge \
+  isync \
+  msmtp \
+  pass \
+  ca-certificates \
+  gettext

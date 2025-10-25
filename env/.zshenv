@@ -70,7 +70,7 @@ export CARGO_HOME="$XDG_DATA_HOME/cargo"
 export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$HOME/.config/personal:$HOME/dev:$HOME/dev/homelab/utils:$HOME/dev/homelab/services"
 
 # Password-store
-export PASSWORD_STORE_DIR="$XDG_DATA_HOME/gopass/stores/root"
+# export PASSWORD_STORE_DIR="$XDG_DATA_HOME/gopass/stores/root"
 export PASSWORD_STORE_GENERATED_LENGTH=40
 export PASSWORD_STORE_ENABLE_EXTENSIONS=true
 
