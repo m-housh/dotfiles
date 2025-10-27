@@ -27,3 +27,5 @@
   [documentation](https://wiki.archlinux.org/title/Universal_2nd_Factor).
   - Note: that the directory this is stored in MUST be ~/.config/Yubico (I tried
     using ~/.config/yubico and it didn't work)
+- Move keyboard (kanata) systemd service to be started as a '--user' service, as
+  it seems to not work when used on a desktop (mac mini) vs. laptop.
