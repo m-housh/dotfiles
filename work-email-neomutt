@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Generate login tokens for using work email with neomutt, this only
+# needs to be ran once.
+
+/usr/share/neomutt/oauth2/mutt_oauth2.py \
+  --provider microsoft \
+  --authorize \
+  --verbose \
+  --authflow localhostauthcode \
+  --client-id='08162f7c-0fd2-4200-a84a-f25a4db0b584' \
+  --client-secret='TxRBilcHdC6WGBee]fs?QR:SJ8nI[g82' \
+  "$HOME/.config/mutt/mhoush@houshhomeenergy.com.tokens"

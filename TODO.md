@@ -29,3 +29,4 @@
     using ~/.config/yubico and it didn't work)
 - Move keyboard (kanata) systemd service to be started as a '--user' service, as
   it seems to not work when used on a desktop (mac mini) vs. laptop.
+- Add neomutt configuration files into the repo (or probably a private repo)
