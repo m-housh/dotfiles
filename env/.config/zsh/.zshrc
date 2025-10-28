@@ -182,8 +182,7 @@ alias l='eza --long --git --group --links --icons --all'                # better
 alias lfs='ls -lahH --color=auto "$ZDOTDIR/functions"'    # List functions.
 alias ls='eza --long --git --group --links --icons --all'
 alias lt='eza --long --git --group --links --icons --tree'
-alias pass='gopass'
-alias p='gopass'                        # run the pass command quickly.
+alias pass='PASSWORD_STORE_DIR=/home/michael/.local/share/gopass/stores/root gopass'
 alias pc='gopass show --clip'          # get an attribute of a password file and copy to the clipboard.
 alias reload='exec zsh -l'              # reload the shell, useful when making changes.
 alias s='swift'                         # shorthand to access swift commands
