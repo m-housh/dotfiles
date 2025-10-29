@@ -67,6 +67,7 @@ path_prepend \
   "$HOME/.local/bin" \
   "$SCRIPTS" \
   "$SCRIPTS/hypr" \
+  "$SCRIPTS/mail" \
   "$HOME/.local/pnpm" \
   "$CARGO_HOME/bin" \
   "$HOME/.local/bin"
