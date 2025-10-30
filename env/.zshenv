@@ -86,3 +86,4 @@ export _ZO_DATA_DIR="$XDG_DATA_HOME"
 unset _ZO_ECHO
 
 [ -f "$LOCAL_ENV" ] && source "$LOCAL_ENV"
+[ -f "$ZDOTDIR/personal.env" ] && source "$ZDOTDIR/personal.env"

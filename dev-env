@@ -120,8 +120,8 @@ copy_files $DEV_ENV/env/.config/systemd/user $XDG_CONFIG_HOME/systemd/user
 #       copying configuration.
 copy $DEV_ENV/env/.zshenv $HOME/.zshenv
 mkdir -p $XDG_CONFIG_HOME/zsh >/dev/null 2>&1
-update_dirs $DEV_ENV/env/.config/zsh $XDG_CONFIG_HOME/zsh
-copy_files $DEV_ENV/env/.config/zsh $XDG_CONFIG_HOME/zsh
+update_dirs $DEV_ENV/env/.config/zsh $XDG_CONFIG_HOME/zsh # copies sup-directories.
+copy_files $DEV_ENV/env/.config/zsh $XDG_CONFIG_HOME/zsh  # copies files in the root directory.
 
 # TMUX
 copy $DEV_ENV/env/.tmux.conf $HOME/.tmux.conf
