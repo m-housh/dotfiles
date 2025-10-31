@@ -81,11 +81,12 @@ copy() {
 # Copy all files from a directory into another directory.
 copy_files() {
   log "copying over files from: $1"
-  pushd $1 &>/dev/null
+  pushd "$1" &>/dev/null || exit 1
   (
     for f in $(find . -mindepth 1 -maxdepth 1 -type f); do
 
-      local dest="$2/$(basename $f)"
+      declare dest
+      dest="$2/$(basename "$f")"
 
       if [[ $dry_run == "0" ]]; then
         rm -rf $dest >/dev/null 2>&1
@@ -97,7 +98,7 @@ copy_files() {
       fi
     done
   )
-  popd &>/dev/null
+  popd &>/dev/null || exit 1
 }
 
 ############################## MAIN ##############################
@@ -107,8 +108,10 @@ update_dirs $DEV_ENV/env/.config $XDG_CONFIG_HOME
 update_dirs $DEV_ENV/env/.local $HOME/.local
 
 # SCRIPTS
-mkdir -p ~/.local/scripts >/dev/null 2>&1
-update_dirs $DEV_ENV/env/.local/scripts $HOME/.local/scripts
+mkdir -p ~/.local/scripts/{hypr,utils} >/dev/null 2>&1
+mkdir -p ~/.local/scripts/utils/kanatactl >/dev/null 2>&1
+update_dirs $DEV_ENV/env/.local/scripts/hypr $HOME/.local/scripts/hypr
+copy_files "$DEV_ENV/env/.local/scripts/utils/kanatactl" "$HOME/.local/scripts/utils/kanatactl"
 copy_files $DEV_ENV/env/.local/scripts $HOME/.local/scripts
 
 # SYSTEMD
