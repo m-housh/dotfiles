@@ -76,6 +76,7 @@ path_prepend \
 fpath_prepend \
   "$ZDOTDIR/completions" \
   "$HOME/.local/share/zsh/completions" \
+  "$HOME/.zsh/completions" \
   "$ZDOTDIR/functions"
 
 autoload -Uz $fpath[1]/*(.:t)
@@ -130,7 +131,8 @@ zsh_add_plugin "Aloxaf/fzf-tab"
 
 #------------------------------ completions ------------------------------
 # case insensitive path-completion 
-zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 
+#zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 
 # partial completion suggestions
 zstyle ':completion:*' list-suffixes
@@ -232,7 +234,7 @@ esac
 # pnpm end
 
 # The following lines have been added by Docker Desktop to enable Docker CLI completions.
-fpath=(/Users/michael/.docker/completions $fpath)
+# fpath=(/Users/michael/.docker/completions $fpath)
 autoload -Uz compinit
 compinit
 
