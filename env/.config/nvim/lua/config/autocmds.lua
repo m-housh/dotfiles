@@ -38,6 +38,16 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
 --   end,
 -- })
 
+-- Set neomutt compose email file types to markdown.
+vim.api.nvim_create_autocmd("BufRead", {
+  pattern = "neomutt*",
+  callback = function()
+    vim.cmd.setlocal("filetype=markdown")
+    vim.cmd.setlocal("textwidth=120")
+    vim.cmd.setlocal("spell spelllang=en_us")
+  end
+})
+
 -- Go
 createCmd("BufWritePre", {
   pattern = "*.go",
