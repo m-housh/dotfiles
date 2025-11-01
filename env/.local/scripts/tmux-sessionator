@@ -8,11 +8,13 @@ debug="${DEBUG}"
 
 declare -a paths=()
 declare chooseOpt=
+declare emailOpt=
 declare -a directory=()
 
 zparseopts -D -- \
   {c,-choose}=chooseOpt \
-  {d,-directory}:=directory
+  {d,-directory}:=directory \
+  {e,-email}=emailOpt
 
 #################### Helpers ####################
 
@@ -46,10 +48,14 @@ function create_session() {
   local selected=$2
 
   tmux new-session -ds "$selected_name" -c "$selected" -n "editor"
-  tmux send-keys -t editor 'n' Enter
-  tmux new-window -d -n "terminal" -c "$selected"
-  tmux new-window -d -n 'files' -c "$selected"
-  tmux send-keys -t files 'yazi' Enter
+  tmux send-keys -t "$selected_name.1" 'n' Enter
+  tmux new-window -t "$selected_name" -d -n "terminal" -c "$selected"
+}
+
+function create_email_session() {
+  tmux new-session -ds email -n work neomutt
+  tmux new-window -t email -d -n personal neomutt
+  tmux send-keys -t email.1 'i2'
 }
 
 #################### MAIN ####################
@@ -63,6 +69,9 @@ if [[ -n $choose ]]; then
     tmux list-sessions -F \#S | gum filter \
       --placeholder "Pick a session..."
   )
+elif [[ -n $emailOpt ]]; then
+  debug_print "Email option."
+  selected="email"
 elif [ ${#directory} -gt 0 ]; then
   debug_print "Using directory option."
   selected=${directory[-1]}
@@ -70,7 +79,6 @@ elif [ ${#directory} -gt 0 ]; then
     selected="${PWD}"
   fi
   debug_print "Directory: $selected"
-
 elif [[ "$#" -eq 1 ]]; then
   debug_print "Using existing session: $1"
   selected=$1
@@ -93,20 +101,13 @@ fi
 selected_name=$(basename "$selected" | tr . _)
 tmux_running=$(pgrep tmux)
 
-if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
-  create_session "$selected_name" "$selected"
-#   tmux new-session -s "$selected_name" -c "$selected"
-#   exit 0
-elif ! tmux has-session -t "$selected_name" 2> /dev/null; then
-  create_session "$selected_name" "$selected"
+if [[ -z $TMUX ]] && [[ -z $tmux_running ]] || ! tmux has-session -t "$selected_name" &>/dev/null; then
+  if [[ -n $emailOpt ]]; then
+    create_email_session
+  else
+    create_session "$selected_name" "$selected"
+  fi
 fi
-
-# Create a session if it doesn't exist.
-# if ! tmux has-session -t "$selected_name" 2> /dev/null; then
-#   tmux new-session -ds "$selected_name" -c "$selected" -n "editor"
-#   tmux send-keys -t editor 'n' Enter
-#   tmux new-window -d -n "terminal" -c "$selected"
-# fi
 
 [ -z $TMUX ] && tmux attach -t "$selected_name"  \
   || tmux switch-client -t "$selected_name"
