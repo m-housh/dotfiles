@@ -58,12 +58,12 @@ function create_email_session() {
   tmux send-keys -t email.1 'i2'
 }
 
-#################### MAIN ####################
+############################## MAIN ##############################
 
 declare choose="${chooseOpt[-1]}"
 declare selected=
 
-if [[ -n $choose ]]; then
+if [[ -n $choose ]] && [[ $# -eq 0 ]]; then
   debug_print "Choose from existing."
   selected=$(
     tmux list-sessions -F \#S | gum filter \
