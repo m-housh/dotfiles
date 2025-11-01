@@ -13,4 +13,5 @@ yay ${1:-"-S --noconfirm"} neomutt \
   msmtp \
   pass \
   ca-certificates \
-  gettext
+  gettext \
+  cyrus-sasl-xoauth2-git
