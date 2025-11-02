@@ -200,6 +200,7 @@ alias tls='tmux list-sessions'          # list tmux sessions
 alias tks='tmux kill-session -t'        # kill tmux session
 alias temp='cd $(mktemp -d)'            # create a temporary directory and move into it.
 alias vi='nvim'                         # set vi to open neovim
+alias neomutt='TERM=xterm-direct neomutt' # Allows neomutt colors to work properly.
 alias newf='"$SCRIPTS"/newx --function' # generate a new shell function
 alias nlnv='nvim "$LOCAL_ENV"'          # open local environment overrides file in neovime
 alias nvim='unset VIMINIT && unset MYVIMRC && nvim'   # alias nvim to unset vimrc, useful when using both vim & neovim
