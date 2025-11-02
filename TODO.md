@@ -29,4 +29,6 @@
     using ~/.config/yubico and it didn't work)
 - Move keyboard (kanata) systemd service to be started as a '--user' service, as
   it seems to not work when used on a desktop (mac mini) vs. laptop.
+  - [ ] Need to update kanatactl to generate udev rules, etc. (see
+        here)[https://github.com/jtroo/kanata/blob/main/docs/setup-linux.md]
 - Add neomutt configuration files into the repo (or probably a private repo)

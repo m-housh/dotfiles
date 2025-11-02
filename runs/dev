@@ -20,6 +20,7 @@ yay -S --noconfirm --needed \
   neovim \
   nodejs \
   npm \
+  pcre2 \
   starship \
   tldr \
   tmux \

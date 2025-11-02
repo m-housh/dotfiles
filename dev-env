@@ -111,6 +111,7 @@ update_dirs $DEV_ENV/env/.local $HOME/.local
 mkdir -p ~/.local/scripts/{hypr,utils} >/dev/null 2>&1
 mkdir -p ~/.local/scripts/utils/kanatactl >/dev/null 2>&1
 update_dirs $DEV_ENV/env/.local/scripts/hypr $HOME/.local/scripts/hypr
+copy_files $DEV_ENV/env/.local/scripts/hypr $HOME/.local/scripts/hypr
 copy_files "$DEV_ENV/env/.local/scripts/utils/kanatactl" "$HOME/.local/scripts/utils/kanatactl"
 copy_files $DEV_ENV/env/.local/scripts $HOME/.local/scripts
 
