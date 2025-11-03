@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 
+# Needs installed from AUR.
+if [[ ! $(yay -Q libajantv2 2>/dev/null) ]]; then
+  yay -S libajantv2
+fi
+
 cd $HOME/pkgbuilds/obs-studio-arm && makepkg -si
