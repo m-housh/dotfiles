@@ -2,6 +2,7 @@
 
 # A wrapper script to run swift-hpa in a docker container and
 # mount the correct volumes, etc.
+#
 
 DOCKER_IMAGE="git.housh.dev/michael/swift-hpa:latest"
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
