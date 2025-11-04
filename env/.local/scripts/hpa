@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# A wrapper script to run swift-hpa in a docker container and
+# mount the correct volumes, etc.
+
+DOCKER_IMAGE="git.housh.dev/michael/swift-hpa:latest"
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
+XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
+CONSULT_TEMPLATE_DIR="$XDG_DATA_HOME/hpa/template"
+CONSULT_TEMPLATE_URL="ssh://git@git.housh.dev:2222/hhe/consult-template.git"
+HPA_PLAYBOOK_DIR="$XDG_DATA_HOME/hpa/playbook"
+HPA_PLAYBOOK_URL="ssh://git@git.housh.dev:2222/michael/ansible-hpa-playbook.git"
+HPA_CONFIG_DIR="$XDG_CONFIG_HOME/hpa"
+CONSULTS_DIR=${CONSULTS_DIR:-$HOME/work/consults}
+HPA_VAULT_SECRET_KEY="${HPA_VAULT_SECRET_KEY:-vault-pass}"
+
+echoerr() {
+  echo -e "\e[31m[ERROR]:\e[0m $*"
+}
+
+# Ensure the dependencies are installed / setup.
+[[ "$(podman secret exists $HPA_VAULT_SECRET_KEY)" == "1" ]] &&
+  echoerr "Valut secret needs to be set for key: '$HPA_VAULT_SECRET_KEY'\nUse 'podman secret create '$HPA_VAULT_SECRET_KEY'" &&
+  exit 1
+[[ ! -d $CONSULTS_DIR ]] && mkdir -p "$CONSULTS_DIR"
+[[ ! -d "$XDG_DATA_HOME/hpa" ]] && mkdir "$XDG_DATA_HOME/hpa"
+[[ ! -d "$HPA_PLAYBOOK_DIR" ]] && git clone "$HPA_PLAYBOOK_URL" "$HPA_PLAYBOOK_DIR"
+[[ ! -d "$CONSULT_TEMPLATE_DIR" ]] && git clone "$CONSULT_TEMPLATE_URL" "$CONSULT_TEMPLATE_DIR"
+
+podman run --rm -it \
+  -v "$CONSULT_TEMPLATE_DIR":/template \
+  -v "$HPA_PLAYBOOK_DIR":/playbook \
+  -v "$HPA_CONFIG_DIR":/config \
+  -v "$CONSULTS_DIR":/consults \
+  --secret "$HPA_VAULT_SECRET_KEY" \
+  "$DOCKER_IMAGE" \
+  "$@"
