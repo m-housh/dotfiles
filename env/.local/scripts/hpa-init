@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+
+# Load environment / shared variables.
+. "$SCRIPTS/utils/hpa/hpa.env"
+
+usage() {
+  cat <<EOF
+
+Setup dependencies for running hpa script in docker.  This only needs to be
+ran once on a new machine.
+
+USAGE:
+  $ $THIS <flags> <shell> <completion-file>
+
+FLAGS:
+  -h | --help:          Show this help page.
+
+DEFAULTS:
+  shell:                Default is 'zsh', accepts 'zsh' | 'bash' | 'fish'
+  completion-file:      Default is '~/.zsh/completions/_hpa'
+
+ENVIRONMENT:
+  CONSULTS_DIR:         Set the directory where consults / projects are stored.
+                        (default: '~/work/consults')
+
+  HPA_DOCKER_TAG:       Set the docker image tag to use for the hpa docker image
+                        (default: 'latest')
+
+  HPA_VAULT_SECRET_KEY: Set the key used for the ansible-vault secret.
+                        (default: 'vault-pass')
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+generate-completion() {
+  local output_dir output type
+  type=${1:-"zsh"}
+  output=${2:-$HOME/.zsh/completions/_hpa}
+  output_dir=$(dirname "$output")
+
+  log "Generating completion: type: '$type', to: $output"
+
+  [[ ! -d "$output_dir" ]] && mkdir -p "$output_dir"
+  (
+    podman run --rm -it "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" \
+      --generate-completion-script "$type" |
+      tr -d '\r'
+  ) >"$output"
+}
+
+generate-secret() {
+  log "Generating vault secret for key: '$HPA_VAULT_SECRET_KEY'"
+  local secret
+  secret="$(pass -c ansible/vault-pass)"
+  printf "%s" "$secret" | podman secret create "$HPA_VAULT_SECRET_KEY" -
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+first_arg=${1:-""}
+if [[ $first_arg == "-h" ]] || [[ $first_arg == "--help" ]]; then
+  usage && exit 0
+else
+  # Setup logging file and label.
+  source "$SCRIPTS/hypr/logging"
+  setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+  log "Starting init..."
+
+  generate-completion "$@"
+  generate-secret
+
+  log "Generating directories, if they don't exist."
+  mkdir -p "$HPA_CONSULTS_DIR" &>/dev/null
+  mkdir "$HPA_DATA_DIR" &>/dev/null
+
+  log "Cloning required template and playbook, if they don't exist"
+  [[ ! -d "$HPA_DATA_DIR/playbook" ]] && git clone "$HPA_PLAYBOOK_URL" "$HPA_DATA_DIR/playbook"
+  [[ ! -d "$HPA_DATA_DIR/template" ]] && git clone "$HPA_CONSULT_TEMPLATE_URL" "$HPA_DATA_DIR/template"
+fi

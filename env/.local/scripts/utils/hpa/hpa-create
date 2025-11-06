@@ -14,8 +14,8 @@ THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
-CONSULTS_DIR=${CONSULTS_DIR:-$HOME/work/consults}
-CONSULT_ORIGIN_BASE_URL=${CONSULT_ORIGIN_BASE_URL:-"ssh://git@git.housh.dev:2222/consults"}
+# Load environment / shared variables.
+. "$SCRIPTS/utils/hpa/hpa.env"
 
 declare no_git_flag no_push_flag
 no_git_flag="0"
@@ -76,7 +76,7 @@ create() {
   container_dir=$(
     "$SCRIPTS/hpa" create --quiet "/consults/$(date '+%Y.%m.%m').$customer"
   )
-  echo "$CONSULTS_DIR/$(basename "$container_dir")"
+  echo "$HPA_CONSULTS_DIR/$(basename "$container_dir")"
 }
 
 initialize-git() {
@@ -98,7 +98,7 @@ initialize-git() {
       git init
       git add .
       git commit --all --message="Initial commit"
-      git remote add origin "$CONSULT_ORIGIN_BASE_URL/$(basename "$dir")"
+      git remote add origin "$HPA_CONSULT_ORIGIN_BASE_URL/$(basename "$dir")"
       if [[ $no_push_flag == "0" ]]; then
         git push --set-upstream origin main
       fi

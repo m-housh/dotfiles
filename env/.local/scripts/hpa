@@ -7,73 +7,29 @@ set -o pipefail
 # A wrapper script to run swift-hpa in a docker container and
 # mount the correct volumes, etc.
 #
-# To download templates, playbooks, setup secrets, generate shell completions, etc.
-# you can call this script with 'init'.
-#
-# Otherwise it will run the hpa script inside of a docker container with any passed
-# in arguments.
+# Make sure to run 'hpa-init' first on this machine to setup
+# dependencies, if you have not done so already.
 
+# XDG vars.
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
 XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
 
+# Docker vars.
 HPA_DOCKER_IMAGE="git.housh.dev/michael/swift-hpa"
 HPA_DOCKER_TAG=${HPA_DOCKER_TAG:-"latest"}
 
+# Local vars.
 HPA_DATA_DIR="$XDG_DATA_HOME/hpa"
 HPA_CONFIG_DIR="$XDG_CONFIG_HOME/hpa"
 CONSULTS_DIR=${CONSULTS_DIR:-$HOME/work/consults}
-
-CONSULT_TEMPLATE_URL="ssh://git@git.housh.dev:2222/hhe/consult-template.git"
-HPA_PLAYBOOK_URL="ssh://git@git.housh.dev:2222/michael/ansible-hpa-playbook.git"
 HPA_VAULT_SECRET_KEY="${HPA_VAULT_SECRET_KEY:-vault-pass}"
-
-generate-completion() {
-  local output_dir output type
-  type=${1:-"zsh"}
-  output=${2:-$HOME/.zsh/completions/_hpa}
-  output_dir=$(dirname "$output")
-
-  [[ ! -d "$output_dir" ]] && mkdir -p "$output_dir"
-  (
-    podman run --rm -it "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" \
-      --generate-completion-script "$type" |
-      tr -d '\r'
-  ) >"$output"
-}
-
-gnnerate-secret() {
-  local secret=""
-  secret="$(pass -c ansible/vault-pass)"
-  printf "%s" "$secret" | podman secret create "$HPA_VAULT_SECRET_KEY" -
-}
-
-# Ensure the dependencies are installed / setup.
-init() {
-  generate-completion "$@"
-  gnnerate-secret
-  mkdir -p "$CONSULTS_DIR" &>/dev/null
-  mkdir "$HPA_DATA_DIR" &>/dev/null
-  [[ ! -d "$HPA_DATA_DIR/playbook" ]] && git clone "$HPA_PLAYBOOK_URL" "$HPA_DATA_DIR/playbook"
-  [[ ! -d "$HPA_DATA_DIR/template" ]] && git clone "$CONSULT_TEMPLATE_URL" "$HPA_DATA_DIR/template"
-}
-
-run() {
-  podman run --rm -it \
-    --volume "$HPA_DATA_DIR/template":/template \
-    --volume "$HPA_DATA_DIR/playbook":/playbook \
-    --volume "$HPA_CONFIG_DIR":/config/hpa \
-    --volume "$CONSULTS_DIR":/consults \
-    --secret "$HPA_VAULT_SECRET_KEY" \
-    "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" "$@"
-}
 
 ############################## MAIN ##############################
 
-first_arg=${1:-""}
-
-if [[ $first_arg == "init" ]]; then
-  shift
-  init "$@"
-else
-  run "$@"
-fi
+podman run --rm --interactive --tty \
+  --volume "$HPA_DATA_DIR/template":/template \
+  --volume "$HPA_DATA_DIR/playbook":/playbook \
+  --volume "$HPA_CONFIG_DIR":/config/hpa \
+  --volume "$CONSULTS_DIR":/consults \
+  --secret "$HPA_VAULT_SECRET_KEY" \
+  "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" "$@"
