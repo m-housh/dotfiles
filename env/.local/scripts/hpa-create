@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# NB: This wrapper script is required for the spinner to work, otherwise if declared in
+#     the 'hpa' (container wrapper script) then it doesn't work.
+#     https://github.com/charmbracelet/gum/issues/419
+
+usage() {
+  cat <<'EOF'
+
+Create a home performance assesment project directory.  This handles creating the project using
+the preferred directory name (example '25.11.05.McTestface').  
+
+It show's a spinner while the project is being created and supresses all output except for the
+generated directory.  This allows the command to be called using `cd $(hpa-create McTestface)` to
+cd into the directory once it's created and get to work!
+
+USAGE:
+  $ hpa-create <FLAGS> <CUSTOMER>
+
+FLAGS:
+  -h | --help:          Show this help page.
+
+EOF
+}
+
+first_arg=${1:-""}
+if [[ $first_arg == "-h" ]] || [[ $first_arg == "--help" ]]; then
+  usage && exit 0
+else
+  gum spin --show-output --title "Creating project..." -- bash -c "hpa create $*" | tr -d '\r' | head -1
+fi

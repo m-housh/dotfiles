@@ -88,8 +88,17 @@ create() {
   [[ -z $project ]] && echoerr "Must supply a project name." && exit 1
 
   project_container_name="$(run create --quiet "/consults/$(date '+%Y.%m.%d').$project")"
-  dir_name="$(basename "$project_container_name")"
-  echo "$CONSULTS_DIR/$dir_name"
+  dir_name="$CONSULTS_DIR/$(basename "$project_container_name")"
+
+  # Initialize git repo in the project and the initial commit.
+  pushd "$(echo "$dir_name" | tr -d '\r' | head -1)" &>/dev/null || exit 1
+  (
+    git init
+    git add .
+    git commit --all --message="Initial commit"
+  ) &>/dev/null
+  popd &>/dev/null
+  echo "$dir_name"
 }
 
 ############################## MAIN ##############################
@@ -101,17 +110,7 @@ if [[ $first_arg == "init" ]]; then
   init "$@"
 elif [[ $first_arg == "create" ]]; then
   shift
-  dir=$(create "$@")
-  # Initialize project as a git repo.
-  pushd "$(echo "$dir" | tr -d '\r' | head -1)" &>/dev/null || exit 1
-  (
-    git init
-    git add .
-    git commit --all --message="Initial commit"
-  ) >&/dev/null
-  popd &>/dev/null
-  # Echo the project directory.
-  echo "$dir"
+  echo "$(create "$@")"
 else
   run "$@"
 fi
