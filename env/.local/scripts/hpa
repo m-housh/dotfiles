@@ -10,26 +10,26 @@ set -o pipefail
 # Make sure to run 'hpa-init' first on this machine to setup
 # dependencies, if you have not done so already.
 
-# XDG vars.
-XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
-XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
-
-# Docker vars.
-HPA_DOCKER_IMAGE="git.housh.dev/michael/swift-hpa"
-HPA_DOCKER_TAG=${HPA_DOCKER_TAG:-"latest"}
-
-# Local vars.
-HPA_DATA_DIR="$XDG_DATA_HOME/hpa"
-HPA_CONFIG_DIR="$XDG_CONFIG_HOME/hpa"
-CONSULTS_DIR=${CONSULTS_DIR:-$HOME/work/consults}
-HPA_VAULT_SECRET_KEY="${HPA_VAULT_SECRET_KEY:-vault-pass}"
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+. "$SCRIPTS/utils/hpa/hpa.env"
 
 ############################## MAIN ##############################
+
+last_pull="0"
+if [[ -f "$HPA_CONFIG_DIR/.lastpull" ]]; then
+  last_pull=$(cat "$HPA_CONFIG_DIR/.lastpull")
+fi
+curr=$(date +%s)
+diff=$((curr - last_pull))
+
+if [[ $HPA_AUTO_PULL == "1" ]] && [[ $diff -gt "$HPA_AUTO_PULL_INTERVAL" ]]; then
+  . "$SCRIPTS/hpa-pull" "$HPA_AUTO_PULL_OPTS"
+fi
 
 podman run --rm --interactive --tty \
   --volume "$HPA_DATA_DIR/template":/template \
   --volume "$HPA_DATA_DIR/playbook":/playbook \
   --volume "$HPA_CONFIG_DIR":/config/hpa \
-  --volume "$CONSULTS_DIR":/consults \
+  --volume "$HPA_CONSULTS_DIR":/consults \
   --secret "$HPA_VAULT_SECRET_KEY" \
   "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" "$@"
