@@ -43,14 +43,14 @@ warn_flag="0"
 error_flag="0"
 
 __msg() {
-  if [[ -z "$@" ]]; then
+  if [[ -z "$*" ]]; then
     echo -e "\e[31m[ERROR]:\e[0m No logs were supplied."
     exit 1
   fi
   if [[ $warn_flag == "1" ]]; then
-    echo -e "\e[33m[WARN]:\e[0m $@"
+    echo -e "\e[33m[WARN]:\e[0m $*"
   elif [[ $error_flag == "1" ]]; then
-    echo -e "\e[31m[ERROR]:\e[0m $@"
+    echo -e "\e[31m[ERROR]:\e[0m $*"
   else
     echo "$@"
   fi
@@ -72,6 +72,7 @@ logging() {
 
   # Reset flags
   log_flag="0"
+  echo_flag="0"
   warn_flag="0"
   error_flag="0"
   source_file=""
@@ -79,11 +80,11 @@ logging() {
 
   while [[ $# -gt 0 ]]; do
     if [[ $1 == "-w" ]] || [[ $1 == "--warn" ]] || [[ $1 == "--warning" ]]; then
-      log_flag="1"
       warn_flag="1"
     elif [[ $1 == "-e" ]] || [[ $1 =~ ^--error ]]; then
-      log_flag="1"
       error_flag="1"
+    elif [[ $1 =~ ^--echo ]]; then
+      echo_flag="1"
     elif [[ $1 == "-s" ]] || [[ $1 =~ ^--source ]]; then
       shift
       source_file="$1"
@@ -100,20 +101,21 @@ logging() {
     exit 1
   fi
 
-  if [[ -z $args ]]; then
+  if [[ -z "${args[*]}" ]]; then
     echo -e "\e[31m[ERROR]:\e[0m No log message supplied."
     exit 1
   fi
 
-  msg="$(__msg ${args[@]})"
+  msg="$(__msg "${args[@]}")"
 
-  if [[ $LOG_ENABLE_DRY_RUN == "0" ]]; then
+  if [[ $LOG_ENABLE_DRY_RUN == "0" ]] && [[ $log_flag == "1" ]]; then
     # Loop over log files logging message to each file.
     for i in "${!LOG_FILE[@]}"; do
       local file=${LOG_DIR}/${LOG_FILE[i]}
       local id=$LOG_INVOCATION_ID
       local label=${LOG_LABEL[i]:-"$LOG_LABEL"}
-      local time=$(date '+%D %H:%M:%S')
+      local time
+      time=$(date '+%D %H:%M:%S')
 
       if [[ -z $file ]] || [[ -z $id ]] || [[ -z $label ]]; then
         echo "Logging not properly setup."
@@ -130,6 +132,8 @@ logging() {
       echo -e "[id: $id]$msg"
     elif [[ $warn_flag == "1" ]]; then
       echo -e "[id: $id]$msg"
+    elif [[ $echo_flag == "1" ]]; then
+      echo -e "$msg"
     fi
   else
     # Dry run mode, so just log to the console
@@ -168,7 +172,7 @@ setup-logging() {
 
   if [[ -n $LOG_LABEL ]] && [[ ! $LOG_LABEL =~ $label ]]; then
     LOG_LABEL+=("${LOG_LABEL[@]}=>$label")
-  elif [[ ! $LOG_LABEL =~ $label ]]; then
+  elif [[ ! ${LOG_LABEL[*]} =~ $label ]]; then
     LOG_LABEL+=("$label")
   fi
 
@@ -179,9 +183,9 @@ setup-logging() {
 }
 
 print_logger_env() {
-  echo "LOG_FILE: ${LOG_FILE[@]}"
+  echo "LOG_FILE: ${LOG_FILE[*]}"
   echo "LOG_INVOCATION_ID: $LOG_INVOCATION_ID"
-  echo "LOG_LABEL: ${LOG_LABEL[@]}"
+  echo "LOG_LABEL: ${LOG_LABEL[*]}"
 }
 
 export -f setup-logging

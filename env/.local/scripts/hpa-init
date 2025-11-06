@@ -92,6 +92,6 @@ else
   mkdir "$HPA_DATA_DIR" &>/dev/null
 
   log "Cloning required template and playbook, if they don't exist"
-  [[ ! -d "$HPA_DATA_DIR/playbook" ]] && git clone "$HPA_PLAYBOOK_URL" "$HPA_DATA_DIR/playbook"
-  [[ ! -d "$HPA_DATA_DIR/template" ]] && git clone "$HPA_CONSULT_TEMPLATE_URL" "$HPA_DATA_DIR/template"
+  [[ ! -d "$HPA_PLAYBOOK_DIR" ]] && git clone "$HPA_PLAYBOOK_URL" "$HPA_PLAYBOOK_DIR"
+  [[ ! -d "$HPA_CONSULT_TEMPLATE_DIR" ]] && git clone "$HPA_CONSULT_TEMPLATE_URL" "$HPA_CONSULT_TEMPLATE_DIR"
 fi
