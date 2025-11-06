@@ -80,7 +80,11 @@ run() {
 # the container, otherwise the project fails to get created.
 #
 # We also suppress all output and then generate the actual directory path on the local
-# file system, so this command can be used like `cd -- $(hpa create Foo | tr -d '\r' | head -1)`.
+# file system.
+#
+# This is generally called by using the 'hpa-create' script, that shows a spinner and
+# cleans up the output. Which is generally used like: `cd $(hpa-create Foo)` to automatically
+# cd into the generated project and get to work.
 create() {
   local project project_container_name dir_name
   project=${1:-""}
