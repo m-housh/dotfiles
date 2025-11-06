@@ -27,10 +27,6 @@ CONSULT_TEMPLATE_URL="ssh://git@git.housh.dev:2222/hhe/consult-template.git"
 HPA_PLAYBOOK_URL="ssh://git@git.housh.dev:2222/michael/ansible-hpa-playbook.git"
 HPA_VAULT_SECRET_KEY="${HPA_VAULT_SECRET_KEY:-vault-pass}"
 
-echoerr() {
-  echo -e "\e[31m[ERROR]:\e[0m $*"
-}
-
 generate-completion() {
   local output_dir output type
   type=${1:-"zsh"}
@@ -71,40 +67,6 @@ run() {
     "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" "$@"
 }
 
-# Helper to generate the project directory properly.
-#
-# This allows project to be created using `hpa create Customer`, and the project
-# will be created with an actual directory named '25.11.05.Customer'.
-#
-# This also handles setting parent directory to the `/consults` directory inside
-# the container, otherwise the project fails to get created.
-#
-# We also suppress all output and then generate the actual directory path on the local
-# file system.
-#
-# This is generally called by using the 'hpa-create' script, that shows a spinner and
-# cleans up the output. Which is generally used like: `cd $(hpa-create Foo)` to automatically
-# cd into the generated project and get to work.
-create() {
-  local project project_container_name dir_name
-  project=${1:-""}
-
-  [[ -z $project ]] && echoerr "Must supply a project name." && exit 1
-
-  project_container_name="$(run create --quiet "/consults/$(date '+%Y.%m.%d').$project")"
-  dir_name="$CONSULTS_DIR/$(basename "$project_container_name")"
-
-  # Initialize git repo in the project and the initial commit.
-  pushd "$(echo "$dir_name" | tr -d '\r' | head -1)" &>/dev/null || exit 1
-  (
-    git init
-    git add .
-    git commit --all --message="Initial commit"
-  ) &>/dev/null
-  popd &>/dev/null
-  echo "$dir_name"
-}
-
 ############################## MAIN ##############################
 
 first_arg=${1:-""}
@@ -112,9 +74,6 @@ first_arg=${1:-""}
 if [[ $first_arg == "init" ]]; then
   shift
   init "$@"
-elif [[ $first_arg == "create" ]]; then
-  shift
-  echo "$(create "$@")"
 else
   run "$@"
 fi

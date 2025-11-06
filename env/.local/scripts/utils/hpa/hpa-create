@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+# NOTE: This script is required so that we can use 'gum spin' during creation
+#       of the project, otherwise the spinner doesn't actually show up when
+#       the utility functions live in the same file.
+#       https://github.com/charmbracelet/gum/issues/419
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+CONSULTS_DIR=${CONSULTS_DIR:-$HOME/work/consults}
+CONSULT_ORIGIN_BASE_URL=${CONSULT_ORIGIN_BASE_URL:-"ssh://git@git.housh.dev:2222/consults"}
+
+declare no_git_flag no_push_flag
+no_git_flag="0"
+no_push_flag="0"
+
+usage() {
+  cat <<EOF
+
+A utility script to generate a new home performance assessment project.
+
+All output from the 'hpa' command get suppressed so that this script can
+be piped / used to automatically cd into the directory after creation to
+quickly get to work on the new project.
+
+This generates projects directories with the format of '2025.11.06.Customer',
+will appropriately set the directory to use inside the docker container used
+to generate the project, and then echo the local directory that was created.
+
+It also initializes the project as a git repository.
+
+USAGE:
+  $ $THIS <flags> <customer>
+
+FLAGS:
+  -h | --help:          Show this help page.
+  -g | --no-git:        Do not initialize a git repository for the project.
+  -p | --no-push:       Do not push project to remote repository.
+
+ENVIRONMENT:
+  CONSULTS_DIR:             Sets the location of new porjects 
+                            (default: ~/work/consults)
+
+  CONSULT_ORIGIN_BASE_URL:  Sets the base url for the project git origin.
+                            (default: ssh://git@git.housh.dev:2222/consults)
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+create() {
+  local customer container_dir
+  customer=${1:-""}
+
+  [[ -z $customer ]] &&
+    log --error "Must supply a customer name for the project" &&
+    exit 1
+
+  [[ ! -f $SCRIPTS/hpa ]] &&
+    log --error "Unable to find the 'hpa' script." &&
+    exit 1
+
+  log "Generating project for: '$customer'"
+
+  container_dir=$(
+    "$SCRIPTS/hpa" create --quiet "/consults/$(date '+%Y.%m.%m').$customer"
+  )
+  echo "$CONSULTS_DIR/$(basename "$container_dir")"
+}
+
+initialize-git() {
+  local dir
+  read -r dir
+
+  dir=$(echo "$dir" | tr -d '\r' | head -1)
+
+  if [[ $no_git_flag == "0" ]]; then
+
+    [[ ! -d $dir ]] &&
+      log --error "Could not initialize git directory not found: '$dir'" &&
+      exit 1
+
+    log "Initializing git repository"
+
+    pushd "$dir" &>/dev/null || exit 1
+    (
+      git init
+      git add .
+      git commit --all --message="Initial commit"
+      git remote add origin "$CONSULT_ORIGIN_BASE_URL/$(basename "$dir")"
+      if [[ $no_push_flag == "0" ]]; then
+        git push --set-upstream origin main
+      fi
+    ) &>/dev/null
+    popd &>/dev/null
+  else
+    log "Skipping git initialization"
+  fi
+
+  echo "$dir"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+declare customer output
+
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    usage && exit 0
+  elif [[ $1 == "-g" ]] || [[ $1 == "--no-git" ]]; then
+    no_git_flag="1"
+  elif [[ $1 == "-p" ]] || [[ $1 == "--no-push" ]]; then
+    no_push_flag="1"
+  else
+    customer=$1
+  fi
+  shift
+done
+
+output=$(create "$customer" | initialize-git)
+echo "$output"
