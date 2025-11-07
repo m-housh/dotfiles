@@ -55,7 +55,9 @@ function create_session() {
 function create_email_session() {
   tmux new-session -ds email -n work neomutt
   tmux new-window -t email -d -n personal neomutt
+  tmux new-window -t email -d -n iCloud neomutt
   tmux send-keys -t email.1 'i2'
+  tmux send-keys -t email.3 'i3'
 }
 
 ############################## MAIN ##############################
