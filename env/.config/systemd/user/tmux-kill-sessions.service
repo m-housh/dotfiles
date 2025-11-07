@@ -1,0 +1,7 @@
+[Unit]
+Description=Tmux kill sessions service
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/scripts/tmux-kill-old-sessions

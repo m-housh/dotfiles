@@ -22,7 +22,7 @@ log() {
 }
 
 log_and_run() {
-  log "Running: \"$@\""
+  log "Running: \"$*\""
 
   if [[ $dry_run == "0" ]]; then
     eval $1
@@ -37,5 +37,6 @@ log_and_run "sudo setcap "cap_dac_override+p" $(which espanso)"
 
 log_and_run "systemctl --user enable --now logout-task.service"
 log_and_run "systemctl --user enable --now battery-monitor.timer"
+log_and_run "systemctl --user enable --now tmux-kill-sessions.timer"
 log_and_run "sudo systemctl enable --now pcscd.service"
 log_and_run "sudo systemctl enable --now firewalld.service"

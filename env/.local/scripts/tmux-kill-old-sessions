@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+# Kills tmux sessions that are past the threshold to free up resources.
+#
+# Adapted from https://gist.github.com/dhulihan/4c65e868851660fb0d8bfa2d059e7967
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+
+# Threshold
+TOO_OLD_THRESHOLD=7200 # 2 hours
+NOW=$(date +%s)
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+tmux ls -F '#{session_name}:#{session_activity}' | while read -r line; do
+  session_name=${line%:*}
+  last_activity=${line#*:}
+  elapsed=$((NOW - last_activity))
+
+  if [[ "$elapsed" -gt "$TOO_OLD_THRESHOLD" ]]; then
+    log "$session_name is ${elapsed}s inactive, killing..."
+    tmux kill-session -t "$session_name"
+  fi
+done

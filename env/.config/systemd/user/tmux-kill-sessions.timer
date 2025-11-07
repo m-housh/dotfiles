@@ -1,0 +1,11 @@
+[Unit]
+Description=Tmux kill sessions timer
+Requires=tmux-kill-sessions.service
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2hours
+AccuracySec=10sec
+
+[Install]
+WantedBy=timers.target
