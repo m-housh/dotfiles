@@ -74,7 +74,7 @@ createCmd("TextYankPost", {
   end,
 })
 
--- Force zsh scripts to use bash syntax hyighlighting.
+-- Force zsh scripts to use bash syntax highlighting.
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = "*",
   callback = function(args)
