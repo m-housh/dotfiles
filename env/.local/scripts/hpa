@@ -9,6 +9,17 @@ set -o pipefail
 #
 # Make sure to run 'hpa-init' first on this machine to setup
 # dependencies, if you have not done so already.
+#
+# This will mount my home directory inside the container, so
+# it should somewhat mirror like commands are run on the host os.
+#
+# To attach to a shell inside the container run:
+# `hpa bash`
+#
+# To run ansible vault commands inside the container run:
+# `hpa ansible-vault ...`
+#
+#
 
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 . "$SCRIPTS/utils/hpa/hpa.env"
@@ -27,9 +38,6 @@ if [[ $HPA_AUTO_PULL == "1" ]] && [[ $diff -gt "$HPA_AUTO_PULL_INTERVAL" ]]; the
 fi
 
 podman run --rm --interactive --tty \
-  --volume "$HPA_DATA_DIR/template":/template \
-  --volume "$HPA_DATA_DIR/playbook":/playbook \
-  --volume "$HPA_CONFIG_DIR":/config/hpa \
-  --volume "$HPA_CONSULTS_DIR":/consults \
+  --volume "$HOME":/root \
   --secret "$HPA_VAULT_SECRET_KEY" \
   "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" "$@"

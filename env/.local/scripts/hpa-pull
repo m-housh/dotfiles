@@ -105,4 +105,4 @@ fi
 [[ $docker_flag == "1" ]] && pull-docker
 [[ $playbook_flag == "1" ]] && pull-playbook
 [[ $template_flag == "1" ]] && pull-template
-echo "$(date +%s)" >>$HPA_CONFIG_DIR/.lastpull
+date +%s >"$HPA_CONFIG_DIR/.lastpull"

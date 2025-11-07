@@ -1,3 +1,5 @@
+# This config is setup for running inside the docker container.
+#
 # NOTE:
 # Configuration settings for the `hpa` command line tool.
 # You can delete settings that are not applicable to your use case.
@@ -42,8 +44,8 @@ useVaultArgs = true
 # instead of the provided / default playbook.
 
 [playbook]
-directory = '/playbook'
-inventory = '/playbook/inventory.ini'
+directory = '~/.local/share/hpa/playbook'
+inventory = '~/.local/share/hpa/playbook/inventory.ini'
 version = 'main'
 
 # NOTE:
@@ -51,7 +53,7 @@ version = 'main'
 # a remote git repository.
 [template]
 # The directory path on your local system to the template files.
-directory = '/template'
+directory = '~/.local/share/hpa/template'
 
 # The url to a git repository that contains your template files.
 # url = 'https://git.example.com/consult-template.git'
@@ -66,7 +68,7 @@ directory = '/template'
 [vault]
 # Arguments to pass to commands that use `ansible-vault`, such as encrypting or decrypting
 # files.
-args = [ '--vault-password-file=/run/secrets/vault-pass' ]
+args = ['--vault-password-file=/run/secrets/vault-pass']
 
 # An id to use when encrypting `ansible-vault` files.
 #encryptId = 'myId'
