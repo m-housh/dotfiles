@@ -22,11 +22,15 @@ vim.pack.add({
 	{ src = "https://github.com/neovim/nvim-lspconfig" },
 	{ src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
 	{ src = "https://github.com/mason-org/mason.nvim" },
+	{ src = "https://github.com/nvim-lua/plenary.nvim" },
+	{ src = "https://github.com/ThePrimeagen/harpoon",            version = "harpoon2" },
+	{ src = "https://github.com/christoomey/vim-tmux-navigator" },
 })
 
 require("mason").setup()
 require("mini.pick").setup()
 require("oil").setup()
+require("harpoon").setup({ settings = { save_on_toggle = true, sync_on_ui_close = true } })
 
 -- Set color scheme
 vim.cmd([[colorscheme catppuccin-mocha]])
@@ -58,14 +62,42 @@ vim.lsp.config("lua_ls", {
 
 -- Keymaps
 local map = vim.keymap.set
+local harpoon = require("harpoon")
 
-map('n', '<leader>e', ':Oil<CR>')
-map('n', '<leader>f', ':Pick files tool="git"<CR>')
-map('n', '<leader>h', ':Pick help<CR>')
-map('n', '<leader>lf', vim.lsp.buf.format)
-map('n', '<leader>o', ':update<CR> :source<CR>')
-map('n', '<leader>q', ':quit<CR>')
-map('n', '<leader>w', ':write<CR>')
+map('i', 'jk', '<ESC>')
+
+map('n', '<leader>a', function() harpoon:list():add() end, { desc = "[A]dd file to harpoon" })
+map('n', '<leader>bb', ':bprevious', { desc = "[B]uffer [b]ack" })
+map('n', '<leader>bn', ':bnext', { desc = "[B]uffer [n]ext" })
+map('n', '<leader>cf', vim.lsp.buf.format, { desc = "[F]ormat" })
+map('n', '<C-e>', function() harpoon.ui:toggle_quick_menu(harpoon:list()) end, { desc = "Open harpoon menu" })
+map('n', '<leader>e', ':Oil<CR>', { desc = "[E]xplore files" })
+map('n', '<leader>ff', ':Pick files tool="git"<CR>', { desc = "[F]ind file" })
+map('n', '<leader>fh', ':Pick help<CR>', { desc = "[H]elp search" })
+map('n', '<leader>hb', function() harpoon:list():prev() end, { desc = "[H]arpoon [b]ack" })
+map('n', '<leader>hn', function() harpoon:list():next() end, { desc = "[H]arpoon [n]ext" })
+map('n', '<leader>o', ':update<CR> :source<CR>', { desc = "Source current file" })
+
+-- Tmux / pane navigation
+map('n', "<C-h>", "<cmd><C-U>TmuxNavigateLeft<CR>")
+map('n', "<C-j>", "<cmd><C-U>TmuxNavigateDown<CR>")
+map('n', "<C-k>", "<cmd><C-U>TmuxNavigateUp<CR>")
+map('n', "<C-l>", "<cmd><C-U>TmuxNavigateRight<CR>")
+
+-- Move line(s) up or down.
+map('n', "J", ":move .+1<CR>==", { desc = "Move line down" })
+map('n', "K", ":move .-2<CR>==", { desc = "Move line up" })
+map("v", "K", ":move '<-2<CR>gv=gv", { desc = "Move selected block up.", silent = true, noremap = true })
+map("v", "J", ":move '>+1<CR>gv=gv", { desc = "Move selected block up.", silent = true, noremap = true })
+
+-- Harpoon extensions
+harpoon:extend({
+	UI_CREATE = function(cx)
+		vim.keymap.set("n", "<C-v>", function()
+			harpoon.ui:select_menu_item({ vsplit = true })
+		end, { buffer = cx.buffer, desc = "Open in [V]ertical split" })
+	end,
+})
 
 -- Auto commands.
 local defaultopts = { clear = true }
@@ -77,7 +109,8 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 	callback = function(args)
 		local first_line = vim.api.nvim_buf_get_lines(args.buf, 0, 1, false)[1] or ""
 		if first_line:match("^#!.*zsh") then
-			vim.bo[args.buf].filetype = "bash"
+			-- vim.bo[args.buf].filetype = "bash"
+			vim.cmd.setlocal("filetype=bash")
 		end
 	end,
 })
@@ -139,5 +172,33 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
 			cmd = { "hyprls" },
 			root_dir = vim.fn.getcwd(),
 		}
+	end
+})
+
+-- Highlight when yanking.
+vim.api.nvim_create_autocmd("TextYankPost", {
+	desc = "Highlight when yanking text.",
+	group = vim.api.nvim_create_augroup("my.highlight-yank", defaultopts),
+	callback = function()
+		vim.highlight.on_yank()
+	end,
+})
+
+-- Add '-' to be part of words.
+vim.api.nvim_create_autocmd("BufEnter", {
+	desc = "Add '-' to be part of word.",
+	group = vim.api.nvim_create_augroup('my.iskeyword', defaultopts),
+	pattern = "*",
+	callback = function()
+		vim.cmd.setlocal("iskeyword+=-")
+	end
+})
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+	desc = "Format on write.",
+	group = vim.api.nvim_create_augroup('my.format-on-write', defaultopts),
+	pattern = "*",
+	callback = function()
+		vim.lsp.buf.format()
 	end
 })

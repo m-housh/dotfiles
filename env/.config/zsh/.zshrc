@@ -19,17 +19,6 @@ zle -N down-line-or-beginning-search
 # Colors
 autoload -Uz colors && colors
 
-#------------------------------ pager ------------------------------
-#eval "$(batman --export-env)"
-# export LESS_TERMCAP_mb="[35m" # magenta
-# export LESS_TERMCAP_md="[33m" # yellow
-# export LESS_TERMCAP_me=""
-# export LESS_TERMCAP_se=""
-# export LESS_TERMCAP_so="[34m" # blue
-# export LESS_TERMCAP_ue=""
-# export LESS_TERMCAP_so="[4m" # underline
-# export LESSHISTFILE="-"
-
 #------------------------------ path ------------------------------
 
 # Helper function to prepend to the $PATH
@@ -97,8 +86,6 @@ export HISTFILESIZE=5000
 export SAVEHIST=5000
 export HISTFILE="$XDG_CONFIG_HOME/zsh/history"
 
-#set -o vi
-
 #------------------------------ cdpath ------------------------------
 setopt autocd
 
@@ -132,7 +119,6 @@ zsh_add_plugin "Aloxaf/fzf-tab"
 
 #------------------------------ completions ------------------------------
 # case insensitive path-completion 
-#zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 
 # partial completion suggestions
@@ -154,10 +140,8 @@ _source_if "$ZDOTDIR/plugins/fzf-tab/fzf-tab.plugin.zsh"
 
 #------------------------------ prompt ------------------------------
 
-# Prompt / managed by brew. (`brew install starship`)
 autoload -Uz promptinit; promptinit
 eval "$(starship init zsh)"
-#prompt pure
 
 #------------------------------ aliases ------------------------------
 
@@ -203,11 +187,6 @@ alias temp='cd $(mktemp -d)'            # create a temporary directory and move 
 alias vi='nvim'                         # set vi to open neovim
 alias newf='"$SCRIPTS"/newx --function' # generate a new shell function
 alias n='nvim'
-# alias nlnv='nvim "$LOCAL_ENV"'          # open local environment overrides file in neovime
-# alias nvim='unset VIMINIT && unset MYVIMRC && nvim'   # alias nvim to unset vimrc, useful when using both vim & neovim
-# alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'      # set neovim to use my config.
-# alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'    # set neovim to use kickstart config.
-# alias nvim-lazy='NVIM_APPNAME=lazy nvim'              # set neovim to use lazy config.
 alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"  # set wget history location.
 # GPG Yubikey restart relearn when switching keys and stubbed.
 alias yubikeyrestart='gpg-connect-agent killagent /bye && gpg-connect-agent "scd serialno" "learn --force" /bye && gpg --card-status'
@@ -237,11 +216,8 @@ esac
 # pnpm end
 
 # The following lines have been added by Docker Desktop to enable Docker CLI completions.
-# fpath=(/Users/michael/.docker/completions $fpath)
 autoload -Uz compinit
 compinit
-
-#eval "$(ssh-agent -s)" 1>/dev/null
 
 ########################################
 # Set things up for using gpg-agent

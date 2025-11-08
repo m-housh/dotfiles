@@ -19,9 +19,6 @@ export VISUAL=nvim
 export EDITOR_PREFIX=nvim
 export MANPAGER="bat"
 export BROWSER="brave"
-#export VIMINIT='source $MYVIMRC'
-#export MYVIMRC="$HOME/.vim/vimrc"
-#export NVIM_APPNAME="m-housh"
 
 # Git
 export GITUSER="m-housh"
@@ -36,6 +33,8 @@ export LOCAL_ENV="$XDG_DATA_HOME/zsh/env.zsh"
 export MYZSHRC="$ZDOTDIR/.zshrc"
 export SCRIPTS="$HOME/.local/scripts"
 export SKELETONDIR="$DOTFILES/skeleton"
+export REPOS="$HOME/dev"
+export WORK="$HOME/work"
 
 # NPM
 export NPM_CONFIG_CACHE="$XDG_DATA_HOME/npm"
@@ -68,10 +67,9 @@ export VAULT_ADDR="https://vault.housh.dev"
 export CARGO_HOME="$XDG_DATA_HOME/cargo"
 
 # Tmux-Sessionator path.
-export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$HOME/.config:$HOME/.config/personal:$HOME/dev:$HOME/dev/homelab/utils:$HOME/dev/homelab/services:$HOME/work/consults:$HOME/work"
+export TMUX_SESSIONATOR_PATH="$HOME:$SCRIPTS:$HOME/.config:$HOME/.config/personal:$REPOS:$REPOS/homelab/utils:$REPOS/homelab/services:$WORK/consults:$WORK"
 
 # Password-store
-# export PASSWORD_STORE_DIR="$XDG_DATA_HOME/gopass/stores/root"
 export PASSWORD_STORE_GENERATED_LENGTH=40
 export PASSWORD_STORE_ENABLE_EXTENSIONS=true
 
