@@ -11,6 +11,7 @@ fi
 # Packages
 yay -S --noconfirm --needed \
   bat \
+	bob \
   eza \
   fastfetch \
   fzf \
