@@ -30,11 +30,17 @@ require("oil").setup()
 
 -- Set color scheme
 vim.cmd([[colorscheme catppuccin-mocha]])
+vim.cmd(":hi statusline guibg=NONE")
 vim.cmd [[set completeopt+=menuone,noselect,popup]]
 
 -- LSP
 vim.lsp.enable({
-	"lua_ls", "tinymist", "marksman"
+	"lua_ls", "tinymist", "marksman", "bashls", "hyprls",
+})
+
+vim.lsp.config('bashls', {
+	filetypes = { "bash", "sh", "zsh" },
+	cmd = { 'bash-language-server', 'start' },
 })
 
 -- Fix warnings for 'vim' global keyword.
@@ -42,7 +48,9 @@ vim.lsp.config("lua_ls", {
 	settings = {
 		Lua = {
 			workspace = {
-				library = vim.api.nvim_get_runtime_file("", true),
+				library = {
+					vim.api.nvim_get_runtime_file("", true),
+				},
 			},
 		},
 	},
@@ -53,8 +61,11 @@ local map = vim.keymap.set
 
 map('n', '<leader>e', ':Oil<CR>')
 map('n', '<leader>f', ':Pick files tool="git"<CR>')
+map('n', '<leader>h', ':Pick help<CR>')
 map('n', '<leader>lf', vim.lsp.buf.format)
 map('n', '<leader>o', ':update<CR> :source<CR>')
+map('n', '<leader>q', ':quit<CR>')
+map('n', '<leader>w', ':write<CR>')
 
 -- Auto commands.
 local defaultopts = { clear = true }
@@ -117,4 +128,16 @@ vim.api.nvim_create_autocmd('LspAttach', {
 			vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
 		end
 	end,
+})
+
+-- Hyprlang LSP
+vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
+	pattern = { "*.hl", "hypr*.conf" },
+	callback = function(event)
+		vim.lsp.start {
+			name = "hyprlang",
+			cmd = { "hyprls" },
+			root_dir = vim.fn.getcwd(),
+		}
+	end
 })
