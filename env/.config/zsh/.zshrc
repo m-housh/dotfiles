@@ -70,7 +70,8 @@ path_prepend \
   "$SCRIPTS/mail" \
   "$HOME/.local/pnpm" \
   "$CARGO_HOME/bin" \
-  "$HOME/.local/bin"
+  "$HOME/.local/bin" \
+  "$XDG_DATA_HOME/bob/nvim-bin"
 
 # last arg will be first in $FPATH
 fpath_prepend \
@@ -201,11 +202,12 @@ alias tks='tmux kill-session -t'        # kill tmux session
 alias temp='cd $(mktemp -d)'            # create a temporary directory and move into it.
 alias vi='nvim'                         # set vi to open neovim
 alias newf='"$SCRIPTS"/newx --function' # generate a new shell function
-alias nlnv='nvim "$LOCAL_ENV"'          # open local environment overrides file in neovime
-alias nvim='unset VIMINIT && unset MYVIMRC && nvim'   # alias nvim to unset vimrc, useful when using both vim & neovim
-alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'      # set neovim to use my config.
-alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'    # set neovim to use kickstart config.
-alias nvim-lazy='NVIM_APPNAME=lazy nvim'              # set neovim to use lazy config.
+alias n='nvim'
+# alias nlnv='nvim "$LOCAL_ENV"'          # open local environment overrides file in neovime
+# alias nvim='unset VIMINIT && unset MYVIMRC && nvim'   # alias nvim to unset vimrc, useful when using both vim & neovim
+# alias nvim-mhoush='NVIM_APPNAME=m-housh && nvim'      # set neovim to use my config.
+# alias nvim-kickstart='NVIM_APPNAME=kickstart nvim'    # set neovim to use kickstart config.
+# alias nvim-lazy='NVIM_APPNAME=lazy nvim'              # set neovim to use lazy config.
 alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"  # set wget history location.
 # GPG Yubikey restart relearn when switching keys and stubbed.
 alias yubikeyrestart='gpg-connect-agent killagent /bye && gpg-connect-agent "scd serialno" "learn --force" /bye && gpg --card-status'
