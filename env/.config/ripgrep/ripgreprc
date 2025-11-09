@@ -1,0 +1,7 @@
+# Show hidden files
+--hidden
+# Ignore '.git' directory
+--glob=!.git/*
+--no-follow
+--color=never
+
