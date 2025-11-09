@@ -1,34 +1,18 @@
 # TODO
 
-- Add zsh functions to dots cli manager.
-- Add tmux plugins to dots cli manager.
-- Add tmux-powerline linking to `dots` cli manager.
-- Clean up zet commands, maybe make a gum / fzf filter script.
-- Update README to reflect ansible installation
-- Update ansible to do gpg installation.
-- Update ansible to include sketchybar.
+## Arch Todos
 
-# Arch Todos
-
-- Separate scripts that are used for configurations / store them somewhere aside
+- [x] Separate scripts that are used for configurations / store them somewhere aside
   from `~/.local/bin`
-- Clipse didn't work when installed on a new machine when I try to use the
+- [x] Clipse didn't work when installed on a new machine when I try to use the
   config in the dotfiles, but works if I use the default config. Need to explore
   why (current thoughts are it has to do with creating the
   clipboard_history.json file and not letting clipse do it automatically).
-- Set sddm login theme, currently it doesn't allow me to echo values into the
-  /etc/sddm.conf file, also need to edit the theme in
-  `/usr/share/sddm/themes/catppuccin-mocha/theme.conf` to use the wallpaper as a
-  background image.
-  - Note: The background needs to be copied into the theme's background
-    directory. It didn't seem to work when I just set the path to somewhere in
-    my home directory.
-- Add script to generate yubikey authentication using the pam-u2f module
-  [documentation](https://wiki.archlinux.org/title/Universal_2nd_Factor).
-  - Note: that the directory this is stored in MUST be ~/.config/Yubico (I tried
-    using ~/.config/yubico and it didn't work)
-- Move keyboard (kanata) systemd service to be started as a '--user' service, as
+- [ ] Move keyboard (kanata) systemd service to be started as a '--user' service, as
   it seems to not work when used on a desktop (mac mini) vs. laptop.
   - [ ] Need to update kanatactl to generate udev rules, etc. (see
         here)[https://github.com/jtroo/kanata/blob/main/docs/setup-linux.md]
-- Add neomutt configuration files into the repo (or probably a private repo)
+- [x] Add neomutt configuration files into the repo (or probably a private repo)
+- [ ] Need to confirm bootstrap does things properly with git submodules.
+    - [ ] Need to ensure ssh keys are setup before private submodules are loaded / installed,
+    so I need to make sure that Yubikey setup runs early and works for ssh authentication.
