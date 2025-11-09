@@ -2,6 +2,7 @@
 
 ## Arch Todos
 
+- [ ] Update README, it's way out of date.
 - [x] Separate scripts that are used for configurations / store them somewhere aside
   from `~/.local/bin`
 - [x] Clipse didn't work when installed on a new machine when I try to use the

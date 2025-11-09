@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
 
-yay ${1:-"-S --noconfirm"} hyprland hyprpaper hyrpidle hyprlock \
-  bc # used for some scripts.
+yay ${1:-"-S --noconfirm"} hyprland-git \
+	hyprpaper-git \
+	hypridle-git \
+	hyprlock-git \
+	hyprlauncher-git \
+	xdg-desktop-portal-hyprland-git \
+	bc # used for some scripts.
