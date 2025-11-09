@@ -121,7 +121,6 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 	callback = function(args)
 		local first_line = vim.api.nvim_buf_get_lines(args.buf, 0, 1, false)[1] or ""
 		if first_line:match("^#!.*zsh") then
-			-- vim.bo[args.buf].filetype = "bash"
 			vim.cmd.setlocal("filetype=bash")
 		end
 	end,
@@ -145,8 +144,6 @@ vim.api.nvim_create_autocmd("BufEnter", {
 	pattern = "neomutt*",
 	group = vim.api.nvim_create_augroup('my.neomutt', defaultopts),
 	callback = function(_)
-		-- HACK: Set filetype to markdown for '.md' files.
-		-- Not sure why it doesn't detect these as markdown files, but this fixes the issue.
 		vim.cmd.setlocal("filetype=markdown")
 		vim.cmd.setlocal("textwidth=120")
 		vim.cmd.setlocal("spell spelllang=en_us")
