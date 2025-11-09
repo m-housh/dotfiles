@@ -29,7 +29,19 @@ vim.pack.add({
 
 require("mason").setup()
 require("mini.pick").setup()
-require("oil").setup()
+require("oil").setup({
+	view_options = {
+		show_hidden = true,
+		is_always_hidden = function(name, bufnr)
+			local m = name:match("^%.git$")
+			if m ~= nil then
+				return true
+			else
+				return false
+			end
+		end
+	}
+})
 require("harpoon").setup({ settings = { save_on_toggle = true, sync_on_ui_close = true } })
 
 -- Set color scheme
