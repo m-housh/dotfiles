@@ -7,98 +7,108 @@
 dry_run="0"
 
 if [ -z "$XDG_CONFIG_HOME" ]; then
-  echo "no xdg config home"
-  echo "using ~/.config"
-  XDG_CONFIG_HOME=$HOME/.config
+	echo "no xdg config home"
+	echo "using ~/.config"
+	XDG_CONFIG_HOME=$HOME/.config
 fi
 
 if [ -z "$XDG_DATA_HOME" ]; then
-  echo "no xdg data home"
-  echo "using ~/.local/share"
-  XDG_DATA_HOME=$HOME/.local/share
+	echo "no xdg data home"
+	echo "using ~/.local/share"
+	XDG_DATA_HOME=$HOME/.local/share
 fi
 
 if [ -z "$DEV_ENV" ]; then
-  echo "env var DEV_ENV needs to be present"
-  exit 1
+	echo "env var DEV_ENV needs to be present"
+	exit 1
 fi
 
 if [[ $1 =~ ^--dry ]]; then
-  dry_run="1"
+	dry_run="1"
 fi
 
 log() {
-  if [[ $dry_run == "1" ]]; then
-    echo "[DRY_RUN]: $1"
-  else
-    echo "$1"
-  fi
+	if [[ $dry_run == "1" ]]; then
+		echo "[DRY_RUN]: $1"
+	else
+		echo "$1"
+	fi
 }
 
 log "env: $DEV_ENV"
 
 # Removes a destination directory and copies all files to the destination.
 update_dirs() {
-  log "copying over files from: $1"
-  pushd $1 &>/dev/null
-  (
-    # Copy everything except systemd, share, and zsh folders, they need treated differently.
-    configs=$(
-      find . -mindepth 1 -maxdepth 1 -type d \
-        \( -name "systemd" -o -name "zsh" -o -name "share" -o -name "scripts" -o -name "kanata" \) \
-        -prune -o -type d -print
-    )
-    for c in $configs; do
-      directory=${2%/}/${c#./}
-      log "    removing: rm -rf $directory"
+	log "copying over files from: $1"
+	pushd $1 &>/dev/null
+	(
+		# Copy everything except systemd, share, and zsh folders, they need treated differently.
+		configs=$(
+			find . -mindepth 1 -maxdepth 1 -type d \
+				\( -name "systemd" -o -name "zsh" -o -name "share" -o -name "scripts" -o -name "kanata" \) \
+				-prune -o -type d -print
+		)
+		for c in $configs; do
+			directory=${2%/}/${c#./}
+			log "    removing: rm -rf $directory"
 
-      if [[ $dry_run == "0" ]]; then
-        rm -rf $directory
-      fi
+			if [[ $dry_run == "0" ]]; then
+				rm -rf $directory
+			fi
 
-      log "    copying env: cp $c $2"
-      if [[ $dry_run == "0" ]]; then
-        cp -r ./$c $2
-      fi
-    done
+			log "    copying env: cp $c $2"
+			if [[ $dry_run == "0" ]]; then
+				cp -r ./$c $2
+			fi
+		done
 
-  )
-  popd &>/dev/null
+	)
+	popd &>/dev/null
 }
 
 # Removes a destination file and copies a single file to the destination.
 copy() {
-  log "removing: $2"
-  if [[ $dry_run == "0" ]]; then
-    rm $2 &>/dev/null
-  fi
-  log "copying: $1 to $2"
-  if [[ $dry_run == "0" ]]; then
-    cp $1 $2
-  fi
+	log "removing: $2"
+	if [[ $dry_run == "0" ]]; then
+		rm $2 &>/dev/null
+	fi
+	log "copying: $1 to $2"
+	if [[ $dry_run == "0" ]]; then
+		cp $1 $2
+	fi
 }
 
 # Copy all files from a directory into another directory.
 copy_files() {
-  log "copying over files from: $1"
-  pushd "$1" &>/dev/null || exit 1
-  (
-    for f in $(find . -mindepth 1 -maxdepth 1 -type f); do
+	log "copying over files from: $1"
+	pushd "$1" &>/dev/null || exit 1
+	(
+		for f in $(find . -mindepth 1 -maxdepth 1 -type f); do
 
-      declare dest
-      dest="$2/$(basename "$f")"
+			declare dest
+			dest="$2/$(basename "$f")"
 
-      if [[ $dry_run == "0" ]]; then
-        rm -rf $dest >/dev/null 2>&1
-      fi
+			if [[ $dry_run == "0" ]]; then
+				rm -rf $dest >/dev/null 2>&1
+			fi
 
-      log "    copying env: cp $f $dest"
-      if [[ $dry_run == "0" ]]; then
-        cp $f $dest
-      fi
-    done
-  )
-  popd &>/dev/null || exit 1
+			log "    copying env: cp $f $dest"
+			if [[ $dry_run == "0" ]]; then
+				cp $f $dest
+			fi
+		done
+	)
+	popd &>/dev/null || exit 1
+}
+
+email() {
+	if command -v mailctl; then
+		log "Updating using mailctl..."
+		[[ $dry_run == "0" ]] && mailctl update && mailctl config
+	else
+		log "Installing mailctl..."
+		[[ $dry_run == "0" ]] && . "$DEV_ENV/mail/install"
+	fi
 }
 
 ############################## MAIN ##############################
@@ -154,9 +164,12 @@ copy_files $DEV_ENV/env/.local/share/applications/icons $XDG_DATA_HOME/applicati
 mkdir $HOME/pkgbuilds
 update_dirs $DEV_ENV/env/pkgbuilds $HOME/pkgbuilds
 
+# Email.
+email
+
 if [[ $dry_run == "0" ]]; then
-  systemctl --user daemon-reload
-  hyprctl reload
-  espanso service restart
-  exec zsh -l
+	systemctl --user daemon-reload
+	hyprctl reload
+	espanso service restart
+	exec zsh -l
 fi

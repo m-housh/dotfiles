@@ -1,0 +1,3 @@
+[submodule "mail"]
+	path = mail
+	url = ssh://git@git.housh.dev:2222/michael/mail.git
