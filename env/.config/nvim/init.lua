@@ -1,5 +1,7 @@
 -- NOTE: This requires neovim >= 0.12, you can use bob to download nightly.
 --
+
+-- Options
 vim.g.netrw_browsex_viewer = "xdg-open"
 vim.g.mapleader = " "
 vim.opt.number = true
@@ -15,6 +17,8 @@ vim.opt.wrap = false
 vim.opt.smartindent = true
 vim.opt.termguicolors = true
 
+
+-- Plugins
 vim.pack.add({
 	{ src = "https://github.com/catppuccin/nvim" },
 	{ src = "https://github.com/nvim-mini/mini.pick" },
@@ -27,7 +31,6 @@ vim.pack.add({
 	{ src = "https://github.com/christoomey/vim-tmux-navigator" },
 	{ src = "https://github.com/stevearc/conform.nvim" },
 	{ src = 'https://github.com/MeanderingProgrammer/render-markdown.nvim' },
-
 })
 
 require("mason").setup({
@@ -95,6 +98,7 @@ vim.cmd(":hi statusline guibg=NONE")
 vim.cmd [[set completeopt+=menuone,noselect,popup]]
 
 -- LSP
+--
 vim.lsp.enable({
 	"lua_ls", "tinymist", "marksman", "bashls", "hyprls", "docker-language-server",
 })
