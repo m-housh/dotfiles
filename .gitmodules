@@ -1,3 +1,6 @@
 [submodule "mail"]
 	path = mail
 	url = ssh://git@git.housh.dev:2222/michael/mail.git
+[submodule "env/.config/nvim"]
+	path = env/.config/nvim
+	url = https://github.com/m-housh/mhoush.nvim.git
