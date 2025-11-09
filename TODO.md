@@ -17,3 +17,5 @@
 - [ ] Need to confirm bootstrap does things properly with git submodules.
     - [ ] Need to ensure ssh keys are setup before private submodules are loaded / installed,
     so I need to make sure that Yubikey setup runs early and works for ssh authentication.
+- [ ] Need to add the following system packages for neovim/render-markdown.nvim
+    - [ ] `libtexprintf`
