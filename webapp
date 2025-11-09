@@ -3,16 +3,26 @@
 # Installs or uninstalls webapps based on the spec in the './webapps' directory.
 #
 # This is used when setting up a new machine.
+#
+
+set -e
+set -o nounset
+set -o pipefail
+
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename $THIS_FILE)
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
 if [ -z "$DEV_ENV" ]; then
-  echo "env var DEV_ENV needs to be present"
-  exit 1
+	echo "env var DEV_ENV needs to be present"
+	exit 1
 fi
 
 if [ -z "$XDG_DATA_HOME" ]; then
-  echo "no xdg data home"
-  echo "using ~/.local/share"
-  XDG_DATA_HOME=~/.local/share
+	echo "no xdg data home"
+	echo "using ~/.local/share"
+	XDG_DATA_HOME=~/.local/share
 fi
 
 grep=""
@@ -20,83 +30,84 @@ dry_run="0"
 uninstall="0"
 
 while [[ $# -gt 0 ]]; do
-  echo "ARG: \"$1\""
+	echo "ARG: \"$1\""
 
-  # Handle a --dry or --dry-run argument
-  if [[ "$1" =~ ^--dry ]]; then
-    dry_run="1"
-  # Handle an --uninstall argument
-  elif [[ "$1" =~ ^--u ]]; then
-    uninstall="1"
-  # Handle an --install argument (default)
-  elif [[ ! "$1" =~ ^--i ]]; then
-    grep="$1"
-  fi
-  shift
+	# Handle a --dry or --dry-run argument
+	if [[ "$1" =~ ^--dry ]]; then
+		dry_run="1"
+	# Handle an --uninstall argument
+	elif [[ "$1" =~ ^--u ]]; then
+		uninstall="1"
+	# Handle an --install argument (default)
+	elif [[ ! "$1" =~ ^--i ]]; then
+		grep="$1"
+	fi
+	shift
 done
 
 log() {
-  if [[ $dry_run == "1" ]]; then
-    echo "[DRY_RUN]: $1"
-  else
-    echo "$1"
-  fi
+	logging log --source "$THIS_FILE" "$@"
 }
 
 install() {
-  local file=$DEV_ENV/env/webapps/$(basename $1)
-  local script="$DEV_ENV/env/.local/scripts/hypr/install-webapp"
+	local file=$DEV_ENV/env/webapps/$(basename $1)
+	local script="$DEV_ENV/env/.local/scripts/hypr/install-webapp"
 
-  if [[ ! -x $script ]]; then
-    log "Failed to find install web app script."
-    exit 1
-  fi
+	if [[ ! -x $script ]]; then
+		log "Failed to find install web app script."
+		exit 1
+	fi
 
-  # Install local icons if needed
-  mkdir -p $XDG_DATA_HOME/applications/icons
-  for i in $(find $DEV_ENV/env/.local/share/applications/icons -mindepth 1 -maxdepth 1 -type f); do
-    if [[ ! -f $XDG_DATA_HOME/applications/icons/$i ]] && [[ $dry_run == "0" ]]; then
-      cp $i $XDG_DATA_HOME/applications/icons
-    fi
-  done
+	# Install local icons if needed
+	mkdir -p $XDG_DATA_HOME/applications/icons
+	for i in $(find $DEV_ENV/env/.local/share/applications/icons -mindepth 1 -maxdepth 1 -type f); do
+		if [[ ! -f $XDG_DATA_HOME/applications/icons/$i ]] && [[ $dry_run == "0" ]]; then
+			cp $i $XDG_DATA_HOME/applications/icons
+		fi
+	done
 
-  log "Installing webapp from spec: $file"
+	log "Installing webapp from spec: $file"
 
-  if [[ $dry_run == "0" ]]; then
-    $script --file $file --no-interactive
-  fi
+	if [[ $dry_run == "0" ]]; then
+		$script --file $file --no-interactive
+	fi
 }
 
 uninstall() {
-  local file=$DEV_ENV/env/webapps/$(basename $1)
-  local script="$DEV_ENV/env/.local/scripts/hypr/uninstall-desktop-app"
+	local file=$DEV_ENV/env/webapps/$(basename $1)
+	local script="$DEV_ENV/env/.local/scripts/hypr/uninstall-desktop-app"
 
-  if [[ ! -x $script ]]; then
-    log "Failed to find uninstall web app script."
-    exit 1
-  fi
+	if [[ ! -x $script ]]; then
+		log "Failed to find uninstall web app script."
+		exit 1
+	fi
 
-  log "Uninstalling webapp from spec: $file"
+	log "Uninstalling webapp from spec: $file"
 
-  if [[ $dry_run == "0" ]]; then
-    $script --file $file
-  fi
+	if [[ $dry_run == "0" ]]; then
+		$script --file $file
+	fi
 }
 
 ############################## MAIN ##############################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+export LOG_ENABLE_DRY_RUN="$dry_run"
 
 log "WEBAPP: -- grep: $grep"
 
 apps_dir=$(find $DEV_ENV/env/webapps -mindepth 1 -maxdepth 1 -type f)
 for s in $apps_dir; do
-  if basename $s | grep -vq "$grep"; then
-    log "grep \"$grep\" filtered out $s"
-    continue
-  fi
+	if basename $s | grep -vq "$grep"; then
+		log "grep \"$grep\" filtered out $s"
+		continue
+	fi
 
-  if [[ $uninstall == "1" ]]; then
-    uninstall $s
-  else
-    install $s
-  fi
+	if [[ $uninstall == "1" ]]; then
+		uninstall $s
+	else
+		install $s
+	fi
 done
