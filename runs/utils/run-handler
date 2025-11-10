@@ -18,7 +18,7 @@ GREP_STR=${RUN_GREP_STR:-""}
 
 log() {
 	logging log --source "$THIS_FILE" --echo "$@"
-} && export -f log
+}
 
 run_before_or_after() {
 	local dir file run

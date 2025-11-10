@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+set -o nounset
+set -o pipefail
+
+uninstall() {
+	log "	Tearing down espanso."
+	espanso service stop
+	espanso service unregister
+}
+
+arg=${1:-""}
+[[ $arg == "uninstall" ]] && uninstall && exit 0

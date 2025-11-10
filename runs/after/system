@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+install() {
+	log "	Setting user shell to 'zsh'."
+	sudo chsh --shell "$(which zsh)"
+	log "	Enabling up systemd services."
+	systemctl --user daemon-reload
+	systemctl --user enable --now logout-task.service
+	systemctl --user enable --now battery-monitor.timer
+	systemctl --user enable --now tmux-kill-sessions.timer
+	sudo systemctl enable --now pcscd.service
+	sudo systemctl enable --now firewalld.service
+}
+
+arg=${1:-""}
+[[ $arg == "install" ]] && install

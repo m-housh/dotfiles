@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+install() {
+	log "	Setting up espanso."
+	sudo setcap "cap_dac_override+p" "$(which espanso)"
+	espanso service register
+	espanso service start
+}
+
+arg=${1:-""}
+[[ $arg == "install" ]] && install && exit 0
