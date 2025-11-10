@@ -15,7 +15,7 @@ DEV_ENV=${DEV_ENV:-""}
 KBD=${KBD:-""} # Keyboard config to use, either "voyager" or "macbook"
 
 usage() {
-  cat <<EOF
+	cat <<EOF
 
 Manages kanata qmk keyboard program, which needs to be built locally. Currently the linux builds
 are only for x86.  Also manages the kanata systemd service.
@@ -41,17 +41,17 @@ EOF
 
 # Logging utility function, use in place of echo.
 log() {
-  logging log --source "$THIS_FILE" "$@"
+	logging log --source "$THIS_FILE" "$@"
 }
 
 # Bootstrap a new machine, by building and installing the kanata executable,
 # installing the systemd service files, and enable / start the service.
 bootstrap() {
-  log "Bootstrapping new system..."
-  $THIS_FILE pkg install
-  $THIS_FILE service install
-  $THIS_FILE service enable
-  $THIS_FILE service start
+	log "Bootstrapping new system..."
+	$THIS_FILE pkg install
+	$THIS_FILE service install
+	$THIS_FILE service enable
+	$THIS_FILE service start
 }
 
 ################################################################################
@@ -63,29 +63,29 @@ source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
 while [[ $# -gt 0 ]]; do
-  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    usage && exit 0
-  elif [[ $1 == "bootstrap" ]]; then
-    bootstrap && exit 0
-  elif [[ $1 == "config" ]]; then
-    shift
-    THIS="$THIS config" $SCRIPTS/utils/kanatactl/config "$@"
-    exit $?
-  elif [[ $1 == "service" ]]; then
-    shift
-    THIS="$THIS service" $SCRIPTS/utils/kanatactl/service "$@"
-    exit $?
-  elif [[ $1 == "pkg" ]]; then
-    shift
-    THIS="$THIS pkg" $SCRIPTS/utils/kanatactl/pkg "$@"
-    exit $?
-  elif [[ $1 == "logs" ]]; then
-    bat ${LOG_DIR:-/tmp/logs}/$LOG_FILE && exit 0
-  elif [[ $1 == "update" ]]; then
-    install_or_update "Updating" && exit 0
-  else
-    break
-  fi
+	if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+		usage && exit 0
+	elif [[ $1 == "bootstrap" ]]; then
+		bootstrap && exit 0
+	elif [[ $1 == "config" ]]; then
+		shift
+		THIS="$THIS config" $SCRIPTS/utils/kanatactl/config "$@"
+		exit $?
+	elif [[ $1 == "service" ]]; then
+		shift
+		THIS="$THIS service" $SCRIPTS/utils/kanatactl/service "$@"
+		exit $?
+	elif [[ $1 == "pkg" ]]; then
+		shift
+		THIS="$THIS pkg" $SCRIPTS/utils/kanatactl/pkg "$@"
+		exit $?
+	elif [[ $1 == "logs" ]]; then
+		bat ${LOG_DIR:-/tmp/logs}/$LOG_FILE && exit 0
+	elif [[ $1 == "update" ]]; then
+		install_or_update "Updating" && exit 0
+	else
+		break
+	fi
 done
 
 # If we've made it here, then we didn't handle the command.

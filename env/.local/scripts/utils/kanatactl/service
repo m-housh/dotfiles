@@ -11,8 +11,15 @@ THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 DEV_ENV=${DEV_ENV:-""}
 
+declare user_flag system_flag prompt_flag mode
+declare -a args
+user_flag="1"
+system_flag="0"
+prompt_flag="0"
+mode=""
+
 usage() {
-  cat <<EOF
+	cat <<EOF
 Manages the kanata systemd service.
 
 USAGE:
@@ -21,6 +28,9 @@ USAGE:
 
 FLAGS:
   -h | --help:          Show this help page.
+	--user:								Setup systemd service as a user service (default).
+	--system:							Setup systemd service as a system service.
+	--prompt:							Prompt the user to install service as system or user service.
 
 COMMANDS:
   enable:               Enable the kanata service.
@@ -40,52 +50,90 @@ EOF
 
 # Logging utility function, use in place of echo.
 log() {
-  logging log --source "$THIS_FILE" "$@"
+	logging log --source "$THIS_FILE" "$@"
 }
 
 enable_service() {
-  log "Enabling kanata service..."
-  sudo systemctl enable kanata.service
+	log "Enabling kanata service..."
+	if [[ $user_flag == "1" ]]; then
+		systemctl --user enable --now kanata.service
+	else
+		sudo systemctl enable --now kanata.service
+	fi
 }
 
 get_status() {
-  log "Getting kanata service status..."
-  systemctl status kanata.service
+	log "Getting kanata service status..."
+	systemctl status kanata.service
+}
+
+prompt_user() {
+	log "Prompting user for how they would like to setup kanata systemd service..."
+	local choice
+	choice=$(echo -e "user\nsystem" | fzf --header "How would you like to setup the kanata systemd service?")
+	if [[ $choice == "system" ]]; then
+		user_flag="0"
+		system_flag="1"
+	elif [[ $choice == "user" ]]; then
+		user_flag="1"
+		system_flag="0"
+	else
+		exit 1
+	fi
 }
 
 install_service() {
-  if [[ -z $DEV_ENV ]]; then
-    log --error "DEV_ENV is not set properly." && exit 1
-  fi
+	local service_dir="user"
 
-  # Ensure the configuration is copied / setup otherwise the keyboard may not work.
-  "$SCRIPTS/kanatactl" config install "$@"
+	if [[ -z $DEV_ENV ]]; then
+		log --error "DEV_ENV is not set properly." && exit 1
+	fi
+	log "Starting install service..."
 
-  log "Installing kanata service..."
-  [[ -f /etc/systemd/system/kanata.service ]] && sudo rm -rf /etc/systemd/system/kanata.service
-  sudo cp "$DEV_ENV/env/etc/systemd/system/kanata.service" /etc/systemd/system
-  sudo systemctl daemon-reload
+	# Ensure the configuration is copied / setup otherwise the keyboard may not work.
+	"$SCRIPTS/kanatactl" config install "$@"
+
+	# Prompt the user for how they would like to install the systemd service, if the
+	# prompt flag is set.
+	[[ $prompt_flag == "1" ]] && prompt_user || exit 1
+
+	[[ $system_flag == "1" ]] && service_dir="system"
+
+	log "Installing kanata service as: '$service_dir' service..."
+
+	if [[ $service_dir == "system" ]]; then
+		[[ -f /etc/systemd/system/kanata.service ]] && sudo rm -rf /etc/systemd/system/kanata.service
+		sudo cp "$DEV_ENV/env/etc/systemd/system/kanata.service" /etc/systemd/system
+		sudo systemctl daemon-reload
+		sudo systemctl enable --now kanata.service
+	else
+		[[ -f ~/.config/systemd/user/kanata.service ]] && rm -rf ~/.config/systemd/user/kanata.service
+		mkdir -p ~/.config/systemd/user &>/dev/null
+		cp "$DEV_ENV/env/etc/systemd/user/kanata.service" ~/.config/systemd/user
+		systemctl --user daemon-reload
+		systemctl --user enable --now kanata.service
+	fi
 }
 
 start_service() {
-  log "Starting kanata service..."
-  systemctl start kanata.service
+	log "Starting kanata service..."
+	systemctl start kanata.service
 }
 
 stop_service() {
-  log "Stopping kanata service..."
-  sudo systemctl stop kanata.service
+	log "Stopping kanata service..."
+	sudo systemctl stop kanata.service
 }
 
 disable_service() {
-  log "Disabling kanata service..."
-  stop_service
-  sudo systemctl disable kanata.service
+	log "Disabling kanata service..."
+	stop_service
+	sudo systemctl disable kanata.service
 }
 
 restart_service() {
-  log "Restarting kanata service..."
-  sudo systemctl restart kanata.service
+	log "Restarting kanata service..."
+	sudo systemctl restart kanata.service
 }
 
 ################################################################################
@@ -96,26 +144,42 @@ restart_service() {
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
+# Parse flags / arguments.
 while [[ $# -gt 0 ]]; do
-  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    usage && exit 0
-  elif [[ $1 == "disable" ]]; then
-    disable_service && exit $?
-  elif [[ $1 == "enable" ]]; then
-    enable_service && exit $?
-  elif [[ $1 == "install" ]]; then
-    shift
-    install_service "$@" && exit $?
-  elif [[ $1 == "start" ]]; then
-    start_service && exit $?
-  elif [[ $1 == "status" ]]; then
-    get_status && exit $?
-  elif [[ $1 == "stop" ]]; then
-    stop_service && exit $?
-  elif [[ $1 == "restart" ]]; then
-    restart_service && exit $?
-  fi
+	if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+		usage && exit 0
+	elif [[ $1 == "--user" ]]; then
+		user_flag="1"
+	elif [[ $1 == "--system" ]]; then
+		system_flag="1"
+	elif [[ $1 == "--prompt" ]]; then
+		prompt_flag="1"
+	# Set first non-flag to the mode / subcommand.
+	elif [[ -z $mode ]]; then
+		mode="$1"
+	# Add any other arguments to the 'args' array.
+	else
+		args+=("$1")
+	fi
+	shift
 done
 
-# If we made it here, then none of the subcommands handled the args.
-usage && exit 1
+# Handle mode.
+if [[ $mode == "disable" ]]; then
+	disable_service && exit $?
+elif [[ $mode == "enable" ]]; then
+	enable_service && exit $?
+elif [[ $mode == "install" ]]; then
+	install_service "${args[@]}" && exit $?
+elif [[ $mode == "start" ]]; then
+	start_service && exit $?
+elif [[ $mode == "status" ]]; then
+	get_status && exit $?
+elif [[ $mode == "stop" ]]; then
+	stop_service && exit $?
+elif [[ $mode == "restart" ]]; then
+	restart_service && exit $?
+else
+	# If we made it here, then none of the subcommands handled the args.
+	usage && exit 1
+fi

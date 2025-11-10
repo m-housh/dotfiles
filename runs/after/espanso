@@ -8,6 +8,7 @@ install() {
 	log "	Setting up espanso."
 	sudo setcap "cap_dac_override+p" "$(which espanso)"
 	espanso service register
+	systemctl --user daemon-reload
 	espanso service start
 }
 
