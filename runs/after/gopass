@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME"/.local/share}
+
+uninstall() {
+	[[ -d "$XDG_DATA_HOME/gopass" ]] && rm -rf "$XDG_DATA_HOME/gopass"
+}
+
+arg=${1:-""}
+[[ $arg == "install" ]] && install

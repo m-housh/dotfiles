@@ -4,19 +4,66 @@ set -e
 set -o nounset
 set -o pipefail
 
+# Set scripts to be in the DEV_ENV folder encase they have not been
+# installed yet.
 SCRIPTS="${DEV_ENV}/env/.local/scripts"
+
+_setup-mounts() {
+	local line="nas.housh.dev:/var/nfs/shared/michael_share /mnt/michael nfs defaults 0 0"
+	if sudo cat /etc/fstab | grep -vq "$line"; then
+		log "	Setting up nas mount."
+		sudo mkdir -p /mnt/michael &>/dev/null
+		echo "$line" | sudo tee --append /etc/fstab
+		sudo systemctl daemon-reload
+		sudo mount -a ||
+			log --warning "You will need to make sure this computer's ip is in the allow list, then run 'sudo mount -a'"
+	fi
+}
+
+_setup-kanata() {
+	log "	Setting up kanata udev rules."
+	sudo groupadd --system uinput
+	sudo usermod -aG input "$USER"
+	sudo usermod -aG uinput "$USER"
+	[[ ! -f /etc/udev/rules.d/99-input.rules ]] &&
+		(
+			echo 'KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"' |
+				sudo tee /etc/udev/rules.d/99-input.rules
+		) &&
+		sudo udevadm control --reload-rules &&
+		sudo udevadm trigger &&
+		sudo modprobe uinput
+	log "	Setting up kanata, using kanatactl."
+	SCRIPTS="$SCRIPTS" "$SCRIPTS/kanatactl" service install --prompt
+}
+
+_setup-gpg() {
+	log "	Setting up gpg."
+	local dir=/tmp/gpg-public-key
+	mkdir -p ~/{.gnupg,.ssh} &>/dev/null
+	chmod 700 ~/.gnupg
+	chmod 700 ~/.ssh
+	git clone https://git.housh.dev/michael/gpg-public-key.git "$dir"
+	pushd "$dir" &>/dev/null || exit 1
+	(
+		source ./import
+	)
+	popd &>/dev/null || exit 1
+}
 
 install() {
 	log "	Setting user shell to 'zsh'."
 	sudo chsh --shell "$(which zsh)"
-	log "	Enabling up systemd services."
+	log "	Enabling systemd services."
 	sudo systemctl daemon-reload
 	sudo systemctl enable --now pcscd.service
 	sudo systemctl enable --now firewalld.service
 	systemctl --user enable --now logout-task.service
 	systemctl --user enable --now battery-monitor.timer
 	systemctl --user enable --now tmux-kill-sessions.timer
-	SCRIPTS="$SCRIPTS" "$SCRIPTS/kanatactl" service install --prompt
+	_setup-kanata
+	_setup-mounts
+	_setup-gpg
 }
 
 arg=${1:-""}
