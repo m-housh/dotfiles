@@ -1,36 +1,24 @@
-#!/usr/bin/env bash
-
-if ! command -v yay >/dev/null 2>&1; then
-	sudo pacman -S --noconfirm --needed git base-devel
-	git clone https://aur.archlinux.org/yay.git ~/yay
-	cd ~/yay
-	makepkg -si
-	rm -rf ~/yay
-fi
-
 # Packages
-yay -S --noconfirm --needed \
-	bat \
-	bob \
-	eza \
-	fastfetch \
-	fzf \
-	git-lfs \
-	gum \
-	jq \
-	neovim \
-	nodejs \
-	npm \
-	pcre2 \
-	ripgrep \
-	starship \
-	tldr \
-	tmux \
-	tree-sitter-cli \
-	zoxide
-
+bat
+bob
+eza
+fastfetch
+fzf
+git-lfs
+gum
+jq
+neovim
+nodejs
+npm
+pcre2
+ripgrep
+starship
+tldr
+tmux
+tree-sitter-cli
+yazi
+zoxide
 # Fonts
-yay -S --noconfirm \
-	ttf-jetbrains-mono-nerd \
-	ttf-firacode \
-	ttf-inconsolata-nerd
+ttf-jetbrains-mono-nerd
+ttf-firacode
+ttf-inconsolata-ne

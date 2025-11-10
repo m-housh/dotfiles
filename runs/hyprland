@@ -1,9 +1,9 @@
-#!/usr/bin/env bash
-
-yay ${1:-"-S --noconfirm"} hyprland-git \
-	hyprpaper-git \
-	hypridle-git \
-	hyprlock-git \
-	hyprlauncher-git \
-	xdg-desktop-portal-hyprland-git \
-	bc # used for some scripts.
+# Packages to install / uninstall with this run.
+hyprland-git
+hyprpaper-git
+hypridle-git
+hyprlock-git
+hyprlauncher-git
+xdg-desktop-portal-hyprland-git
+bc # used for some scripts.
+waybar

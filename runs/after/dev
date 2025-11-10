@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+install() {
+	# TODO: Handle install / uninstall.
+	bob install nightly &&
+		bob install stable &&
+		bob use nightly
+}
+
+uninstall() {
+	echo "FIX ME!"
+}
+
+arg=${1:-""}
+
+if [[ $arg == "install" ]]; then
+	install && exit $?
+elif [[ $arg == "uninstall" ]]; then
+	uninstall && exit $?
+else
+	# TODO: Using logging.
+	echo "Error, invalid option" && exit 1
+fi

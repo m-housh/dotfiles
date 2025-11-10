@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
+
+install() {
+	mkdir -p "$XDG_DATA_HOME/clipse"
+	setsid uwsm app -- clipse -listen
+}
+
+uninstall() {
+	rm -rf "$XDG_DATA_HOME/clipse"
+}
+
+arg=${1:-""}
+[[ $arg == "install" ]] && install && exit $?
+[[ $arg == "uninstall" ]] && uninstall && exit $?

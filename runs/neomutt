@@ -1,17 +1,17 @@
-#!/usr/bin/env bash
+# Packages to install / uninstall with this run.
 
-yay ${1:-"-S --noconfirm"} neomutt \
-  abook \
-  mutt-wizard \
-  goimapnotify \
-  lynx \
-  notmuch \
-  urlview \
-  cronie \
-  protonmail-bridge \
-  isync \
-  msmtp \
-  pass \
-  ca-certificates \
-  gettext \
-  cyrus-sasl-xoauth2-git
+neomutt
+abook
+mutt-wizard
+goimapnotify
+lynx
+notmuch
+urlview
+cronie
+protonmail-bridge
+isync
+msmtp
+pass
+ca-certificates
+gettext
+cyrus-sasl-xoauth2-git

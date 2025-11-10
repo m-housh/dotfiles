@@ -1,3 +1,2 @@
-#!/usr/bin/env bash
-
-yay ${1:-"-S --noconfirm"} localsend-bin
+# Packages to install / uninstall with this run.
+localsend-bin

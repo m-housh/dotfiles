@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-yay ${1:-"-S --noconfirm"} rustup
-
-$DEV_ENV/env/.local/scripts/kanatactl bootstrap

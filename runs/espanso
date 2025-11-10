@@ -1,3 +1,2 @@
-#!/usr/bin/env bash
-
-yay ${1:-"-S --noconfirm"} espanso-wayland-git
+# Packages to install / uninstall with this run.
+espanso-wayland-git

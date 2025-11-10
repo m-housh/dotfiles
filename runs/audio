@@ -1,8 +1,7 @@
-#!/usr/bin/env bash
-
-yay ${1:-"-S --noconfirm"} pipewire \
-  pavucontrol \
-  wireplumber \
-  pipewire-jack \
-  pipewire-pulse \
-  blueberry-wayland
+# Packages to install / uninstall with this run.
+pipewire
+pavucontrol
+wireplumber
+pipewire-jack
+pipewire-pulse
+blueberry-wayland
