@@ -36,7 +36,7 @@ A list of in-progress and completed todo's.
     - [ ] I would like to have a symbols layer that I can hold modifier keys with a symbol
           and would also like to possibly pass through underlying key / experiment so that
           I can use default keybinds in certain applications (i.e. neovim `[b`, etc.).  
-- [ ] Remove pkg sub-commands from kanatactl, it is available via package manager now.
+- [x] Remove pkg sub-commands from kanatactl, it is available via package manager now.
 
 ### Runs (package installs)
 
