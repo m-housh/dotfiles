@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+declare file
+declare -a yayflags
+
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=${LOG_LABEL:-$(basename $THIS_FILE)}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+DEV_ENV=${DEV_ENV:-""}
+
+MODE=${RUN_MODE:-"install"}
+DRY_RUN=${LOG_ENABLE_DRY_RUN:-"0"}
+GREP_STR=${RUN_GREP_STR:-""}
+
+log() {
+	logging log --source "$THIS_FILE" --echo "$@"
+} && export -f log
+
+run_before_or_after() {
+	local dir file run
+	dir=${1:-""}
+	run=${2:-""}
+
+	file=$(find "$dir" -mindepth 1 -maxdepth 1 -executable -name "$(basename "$run")" | head -1)
+	if [[ -n "$file" ]]; then
+		log "	running $(basename "$dir") script: '$file'"
+		[[ $DRY_RUN == "0" ]] && source "$file" "$mode"
+	fi
+}
+
+main() {
+	local line pkg
+
+	log "RUN: file: $file"
+
+	if [[ -z $GREP_STR ]] || [[ $file =~ $GREP_STR ]]; then
+
+		log "${MODE}ing packages from: $file"
+
+		run_before_or_after "$DEV_ENV/runs/before" "$file"
+
+		# Loop over lines in the file and install the packages.
+		while IFS= read -r line; do
+			# Skip lines that begin with '#' (comments)
+			if [[ ! $line =~ ^# ]]; then
+				# Remove any inline comments.
+				pkg=${line%% \#*}
+				if [[ -n $pkg ]]; then
+					log "	pkg: '$pkg'"
+					[[ $DRY_RUN == "0" ]] && yay "${yayflags[@]}" "$pkg"
+				fi
+			fi
+		done <"$file"
+
+		run_before_or_after "$DEV_ENV/runs/after" "$file"
+	else
+		log "Grep filtered out: '$file'"
+	fi
+}
+
+############################## MAIN ##############################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+file=${1:-""}
+yayflags=("-S" "--noconfirm" "--needed")
+
+[[ -z "$DEV_ENV" ]] &&
+	log --error "env var DEV_ENV needs to be present" && exit 1
+[[ ! -r $file ]] &&
+	log --error "File not readable." && exit 1
+
+# Change yay flags if mode is 'uninstall'
+[[ $MODE == "uninstall" ]] && yayflags=("-Rns")
+
+# Ensure yay is installed before proceeding.
+[[ $DRY_RUN == "0" ]] && . "$DEV_ENV/runs/before/yay"
+
+main

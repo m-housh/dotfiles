@@ -3,11 +3,13 @@
 XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
 
 install() {
-	mkdir -p "$XDG_DATA_HOME/clipse"
+	log "	Ensure clipse data directory exists, and start clipse."
+	mkdir -p "$XDG_DATA_HOME/clipse" &>/dev/null
 	setsid uwsm app -- clipse -listen
 }
 
 uninstall() {
+	log "	Removing clipse data directory."
 	rm -rf "$XDG_DATA_HOME/clipse"
 }
 

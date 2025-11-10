@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-yay -S --noconfirm --needed rustup
-rustup default stable
+# yay -S --noconfirm --needed rustup
+# rustup default stable

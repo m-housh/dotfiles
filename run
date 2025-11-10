@@ -2,10 +2,10 @@
 
 # Adapted from https://github.com/ThePrimeagen/dev/blob/master/run
 #
-# Runs scripts in the `./runs` directory, which will install or uninstall
-# packages.  It either runs a single script given an argument (filename in runs)
-# or all scripts in the runs directory.
-
+# Installs packages declared in the 'runs' directory, will run scripts matching the
+# file name in the 'runs/before' and 'runs/after', respectively, to handle setting up or
+# tearing down based on the run mode.
+#
 set -e
 set -o nounset
 set -o pipefail
@@ -14,109 +14,11 @@ THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename $THIS_FILE)
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
-declare dry_run grep uninstall
+declare dry_run grepstr mode
 
 log() {
-	logging log --source "$THIS_FILE" "$@"
-}
-
-# TODO: Remove.
-run() {
-	local script=$1
-	local flag=$2
-	log "running script: $script $flag"
-
-	local actual_flags="-S --noconfirm"
-
-	if [[ $flag == "--uninstall" ]]; then
-		actual_flags="-Rns"
-	fi
-	log "ok, here's the actual script:: $s $actual_flags"
-
-	if [[ $dry_run == "0" ]]; then
-		$script $actual_flags
-	fi
-}
-
-after() {
-	local after
-	local file=${1:-""}
-	local arg=${2:-""}
-
-	# Check for after script, and run it if found.
-	after=$(find "$DEV_ENV/runs/after" -mindepth 1 -maxdepth 1 -executable -name "$(basename "$file")" | head -1)
-	if [[ -n "$after" ]]; then
-		log --echo "	running after script: '$after'"
-		[[ $dry_run == "0" ]] && source "$after" "$arg"
-	fi
-}
-
-before() {
-	local before
-	local file=${1:-""}
-	local arg=${2:-""}
-
-	before=$(find "$DEV_ENV/runs/before" -mindepth 1 -maxdepth 1 -executable -name "$(basename "$file")" | head -1)
-	if [[ -n "$before" ]]; then
-		log --echo "	running before script: '$before'"
-		[[ $dry_run == "0" ]] && source "$before" "$arg"
-	fi
-}
-
-install() {
-	local file line pkg after before
-
-	# Ensure yay is installed before proceeding.
-	[[ $dry_run == "0" ]] && . "$DEV_ENV/runs/before/yay"
-
-	file=${1:-""}
-	# Early out if the file is not readable.
-	[[ ! -r $file ]] && exit 1
-	log --echo "Installing packages from: $file"
-
-	before "$file" install
-
-	# Loop over lines in the file and install the packages.
-	while read -r line; do
-		# Skip lines that begin with '#' (comments)
-		if [[ ! $line =~ ^# ]]; then
-			# Remove any inline comments.
-			pkg=${line%% \#*}
-			if [[ -n $pkg ]]; then
-				log --echo "	pkg: '$pkg'"
-				[[ $dry_run == "0" ]] && yay -S --noconfirm --needed "$pkg"
-			fi
-		fi
-	done <"$file"
-
-	after "$file" install
-}
-
-uninstall() {
-	local file line pkg
-
-	file=${1:-""}
-	# Early out if the file is not readable.
-	[[ ! -r $file ]] && exit 1
-
-	log --echo "Uninstalling packages from: $file"
-
-	before "$file" uninstall
-
-	# Loop over lines in the file and uninstall the packages.
-	while read -r line; do
-		# Skip lines that begin with '#' (comments)
-		if [[ ! $line =~ ^# ]]; then
-			# Remove any inline comments.
-			pkg=${line%% \#*}
-			log --echo "	pkg: '$pkg'"
-			[[ $dry_run == "0" ]] && yay -Rns "$pkg"
-		fi
-	done <"$file"
-
-	after "$file" uninstall
-
-}
+	logging log --source "$THIS_FILE" --echo "$@"
+} && export -f log
 
 ############################## MAIN ##############################
 
@@ -124,57 +26,35 @@ uninstall() {
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
-if [ -z "$DEV_ENV" ]; then
-	log --error "env var DEV_ENV needs to be present" && exit 1
-fi
+[ -z "$DEV_ENV" ] &&
+	log --error "env var DEV_ENV needs to be present" &&
+	exit 1
 
-# if i just did DEV_ENV=$(pwd) ./run then this is needed for the rest of the
-# scripts
-export DEV_ENV="$DEV_ENV"
-
-grep=""
+grepstr=""
 dry_run="0"
-uninstall="0"
+mode="install"
 
 while [[ $# -gt 0 ]]; do
-	echo "ARG: \"$1\""
-
-	# TODO: Fix some of these arguments, should we add a '--grep' option, should '[un]install' be args / not options?
-	# Handle a --dry or --dry-run argument
 	if [[ "$1" =~ ^--dry ]]; then
 		dry_run="1"
-	# Handle an --uninstall argument
-	elif [[ "$1" =~ ^--u ]]; then
-		uninstall="1"
-	# Handle an --install argument (default)
-	elif [[ ! "$1" =~ ^--i ]]; then
-		grep="$1"
-	else
-		grep="$1"
+	elif [[ "$1" == "uninstall" ]]; then
+		mode="uninstall"
+		yayflags=("-Rns")
+	elif [[ ! "$1" == "install" ]]; then
+		grepstr="$1"
 	fi
 	shift
 done
 
+export DEV_ENV="$DEV_ENV"
 export LOG_ENABLE_DRY_RUN="$dry_run"
+export RUN_GREP_STR="$grepstr"
+export RUN_MODE="$mode"
 
-log --echo "RUN: -- grep: '$grep'"
-runs_dir=$(find $DEV_ENV/runs -mindepth 1 -maxdepth 1 -type f) # TODO: keep
+log "RUN: -- grep: '$grepstr'"
 
-#runs_dir=$(find $DEV_ENV/runs -mindepth 1 -maxdepth 1 -executable) # TODO: remove.
-
-for s in $runs_dir; do
-	if basename $s | grep -vq "$grep"; then
-		log "grep \"$grep\" filtered out $s"
-		continue
-	fi
-
-	if [[ $uninstall == "1" ]]; then
-		# TODO: Use function instead.
-		# run $s --uninstall
-		uninstall "$s"
-	else
-		# TODO: Use function instead.
-		# run $s --install
-		install "$s"
-	fi
-done
+find "$DEV_ENV/runs" \
+	-mindepth 1 \
+	-maxdepth 1 \
+	-type f \
+	-exec bash -xc "$DEV_ENV/runs/utils/run-handler {}" \;
