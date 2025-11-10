@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if ! command -v yay >/dev/null 2>&1; then
+	sudo pacman -S --noconfirm --needed git base-devel
+	git clone https://aur.archlinux.org/yay.git ~/yay
+	cd ~/yay
+	makepkg -si
+	rm -rf ~/yay
+fi
