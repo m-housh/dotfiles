@@ -4,8 +4,8 @@
 #
 
 if [ -z "$DEV_ENV" ]; then
-  echo "env var DEV_ENV needs to be present"
-  exit 1
+	echo "env var DEV_ENV needs to be present"
+	exit 1
 fi
 
 # if i just did DEV_ENV=$(pwd) ./run then this is needed for the rest of the
@@ -15,15 +15,16 @@ export DEV_ENV="$DEV_ENV"
 args=""
 
 while [[ $# -gt 0 ]]; do
-  if [[ "$1" =~ dry ]]; then
-    args="--dry-run"
-  fi
+	if [[ "$1" =~ dry ]]; then
+		args="--dry-run"
+	fi
 done
 
 echo "Args to bootstrap scripts: $args"
 echo "Installing packages may require your password multiple times."
 
-echo "Running packages" && $DEV_ENV/run "$args"
 echo "Installing configuration" && $DEV_ENV/dev-env "$args"
+# TODO: Need to run system run early, then once ssh keys are setup pull
+# 			git submodules, then run config install again.
+echo "Running packages" && $DEV_ENV/run "$args"
 echo "Installing webapps" && $DEV_ENV/webapp "$args"
-echo "Starting system services" && $DEV_ENV/system "$args"
