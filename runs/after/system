@@ -49,6 +49,7 @@ _setup-gpg() {
 		source ./import
 	)
 	popd &>/dev/null || exit 1
+	rm -rf "$dir"
 }
 
 install() {
