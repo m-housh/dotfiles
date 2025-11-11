@@ -39,7 +39,6 @@ while [[ $# -gt 0 ]]; do
 		dry_run="1"
 	elif [[ "$1" == "uninstall" ]]; then
 		mode="uninstall"
-		yayflags=("-Rns")
 	elif [[ ! "$1" == "install" ]]; then
 		grepstr="$1"
 	fi
