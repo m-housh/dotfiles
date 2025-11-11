@@ -39,10 +39,10 @@ _setup-kanata() {
 
 _setup-gpg() {
 	log "	Setting up gpg."
-	local dir=/tmp/gpg-public-key
 	mkdir -p ~/{.gnupg,.ssh} &>/dev/null
 	chmod 700 ~/.gnupg
 	chmod 700 ~/.ssh
+	local dir=/tmp/gpg-public-key
 	git clone https://git.housh.dev/michael/gpg-public-key.git "$dir"
 	pushd "$dir" &>/dev/null || exit 1
 	(
@@ -50,6 +50,13 @@ _setup-gpg() {
 	)
 	popd &>/dev/null || exit 1
 	rm -rf "$dir"
+}
+
+_setup-home-dir() {
+	log "	Setting up home directory."
+	rm -rf "$HOME/Desktop" &>/dev/null
+	mkdir "$HOME/{containers,dev}" &>/dev/null
+	mkdir -p "$HOME/work/consults" &>/dev/null
 }
 
 install() {
@@ -65,6 +72,7 @@ install() {
 	_setup-kanata
 	_setup-mounts
 	_setup-gpg
+	_setup-home-dir
 }
 
 arg=${1:-""}
