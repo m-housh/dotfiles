@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+
+usage() {
+	cat <<EOF
+Utility for launching or installing a progressive web app.
+
+	USAGE:
+		$ $THIS <flags> <command>
+
+	FLAGS:
+		-h | --help:					Show this help page.
+
+	COMMANDS:
+		install:							Generate a '.desktop' file for a web app.
+		launch:								Launch a url as a web app.
+
+RUN '$THIS <command> --help' for more information about a command.
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+  logging log --source "$THIS_FILE" "$@"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+while [[ $# -gt 0 ]]; do
+	if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+		usage
+	elif [[ $1 == "install" ]]; then
+		shift
+		THIS="$THIS install" "$SCRIPTS/hypr/utils/webapp/install" "$@"
+	elif [[ $1 == "launch" ]]; then
+		shift
+		THIS="$THIS launch" "$SCRIPTS/hypr/utils/webapp/launch" "$@"
+	fi
+	shift
+done
+

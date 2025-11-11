@@ -51,7 +51,7 @@ log() {
 
 install() {
 	local file=$DEV_ENV/env/webapps/$(basename $1)
-	local script="$DEV_ENV/env/.local/scripts/hypr/install-webapp"
+	local script="$DEV_ENV/env/.local/scripts/hypr/webapp"
 
 	if [[ ! -x $script ]]; then
 		log "Failed to find install web app script."
@@ -69,7 +69,7 @@ install() {
 	log "Installing webapp from spec: $file"
 
 	if [[ $dry_run == "0" ]]; then
-		$script --file $file --no-interactive
+		$script install --file $file --no-interactive
 	fi
 }
 

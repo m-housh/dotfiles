@@ -4,7 +4,7 @@
 SCRIPTS="${SCRIPTS:-$HOME/.local/scripts}"
 THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename "$THIS_FILE")
-THIS=$(basename "$THIS_FILE")
+THIS=${THIS:-$(basename "$THIS_FILE")}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
 usage() {
@@ -29,7 +29,7 @@ NOTES:
 
 Any extra arguments after '--' get passed directly to the browser invocation.
   
-  $ launch-webapp https://example.com -- --some-random-flag-for-browser=1
+  $ $THIS https://example.com -- --some-random-flag-for-browser=1
 
 Any options passed in prior to the '--' get sent to the 'launch' script, so you can pass
 options that are not specifically shown here, but the ones shown would be the most commonly
@@ -94,9 +94,9 @@ fi
 # Any left over args after "--"
 app_args="$@"
 
-log "URL: $url"
-log "Launch args: ${launch_args[@]}"
-log "App args: ${app_args}"
+log "Launching URL: $url"
+log "	Launch args: ${launch_args[@]}"
+log "	App args: ${app_args}"
 
 $SCRIPTS/hypr/launch "${launch_args[@]}" "$(pattern)" \
   setsid uwsm app -- $(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1) --app="$url" "$app_args"

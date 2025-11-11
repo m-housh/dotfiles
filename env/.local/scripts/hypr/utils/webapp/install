@@ -3,7 +3,9 @@
 # Adapted from https://github.com/basecamp/omarchy/tree/master?tab=readme-ov-file
 
 THIS_FILE=${BASH_SOURCE[0]}
-THIS=$(basename "$THIS_FILE")
+THIS=${THIS:-$(basename "$THIS_FILE")}
+LOG_FILE=${LOG_FILE:-"$THIS.log"}
+LOG_LABEL=$(basename "$THIS_FILE")
 
 function usage() {
   cat <<EOF
@@ -237,7 +239,7 @@ EOF
 
 # Setup logging file and label
 source "$SCRIPTS/hypr/logging"
-setup-logging "$THIS.log" "$THIS"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
 export LOG_ENABLE_DRY_RUN="$dry_run"
 
 if [[ -z "$XDG_DATA_HOME" ]]; then
@@ -287,7 +289,7 @@ set_icon_ref
 
 # Check that an exec command is set, or default to the 'launch-webapp' script.
 if [[ -z $exec_cmd ]]; then
-  exec_cmd="$SCRIPTS/hypr/launch-webapp $app_url"
+  exec_cmd="$SCRIPTS/hypr/webapp launch $app_url"
 fi
 
 log "\e[032mCreating web app:\e[0m $desktop_file"
