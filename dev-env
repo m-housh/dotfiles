@@ -154,7 +154,7 @@ mkdir $HOME/Pictures >/dev/null 2>&1
 mkdir -p $XDG_DATA_HOME/clipse/tmp_files
 copy $DEV_ENV/dev-env $HOME/.local/scripts/dev-env
 copy $DEV_ENV/env/.markdownlint.jsonc $HOME/.markdownlint.jsonc
-copy $DEV_ENV/env/.prettierrc.yaml $HOME/.prettierrc.yaml
+copy $DEV_ENV/env/.prettierrc $HOME/.prettierrc
 
 mkdir -p $XDG_DATA_HOME/applications/icons
 copy_files $DEV_ENV/env/.local/share/applications $XDG_DATA_HOME/applications
