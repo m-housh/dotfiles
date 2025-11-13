@@ -8,5 +8,10 @@ install() {
 	xdg-mime default org.pwmt.zathura.desktop application/pdf
 }
 
+uninstall() {
+	xdg-mime default brave-browser.desktop application/pdf
+}
+
 arg=${1:-""}
 [[ $arg == "install" ]] && install
+[[ $arg == "uninstall" ]] && uninstall
