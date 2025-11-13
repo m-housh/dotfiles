@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+install() {
+	xdg-mime default org.pwmt.zathura.desktop application/pdf
+}
+
+arg=${1:-""}
+[[ $arg == "install" ]] && install
