@@ -30,6 +30,7 @@
   default = simple
 	autoSetupRemote = true
   followTags = true
+	recurseSubmodules = on-demand
 
 [fetch]
 	prune = true
@@ -65,3 +66,6 @@
   autoSquash = true
   autoStash = true
   updateRefs = true
+
+[submodule]
+	recurse = true
