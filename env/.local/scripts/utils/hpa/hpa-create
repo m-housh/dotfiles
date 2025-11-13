@@ -23,7 +23,7 @@ no_push_flag="0"
 date_opt=$(date '+%Y.%m.%d')
 
 usage() {
-  cat <<EOF
+	cat <<EOF
 
 A utility script to generate a new home performance assessment project.
 
@@ -47,7 +47,7 @@ FLAGS:
   -p | --no-push:       Do not push project to remote repository.
 
 ENVIRONMENT:
-  CONSULTS_DIR:             Sets the location of new porjects 
+  CONSULTS_DIR:             Sets the location of new projects 
                             (default: ~/work/consults)
 
   CONSULT_ORIGIN_BASE_URL:  Sets the base url for the project git origin.
@@ -58,59 +58,62 @@ EOF
 
 # Logging utility function, use in place of echo.
 log() {
-  logging log --source "$THIS_FILE" "$@"
+	logging log --source "$THIS_FILE" "$@"
 }
 
 create() {
-  local customer container_dir
-  customer=${1:-""}
+	local customer container_dir
+	customer=${1:-""}
 
-  [[ -z $customer ]] &&
-    log --error "Must supply a customer name for the project" &&
-    exit 1
+	[[ -z $customer ]] &&
+		log --error "Must supply a customer name for the project" &&
+		exit 1
 
-  [[ ! -f $SCRIPTS/hpa ]] &&
-    log --error "Unable to find the 'hpa' script." &&
-    exit 1
+	[[ ! -f $SCRIPTS/hpa ]] &&
+		log --error "Unable to find the 'hpa' script." &&
+		exit 1
 
-  log "Generating project for: '$customer'"
+	log "Generating project for: '$customer'"
 
-  container_dir=$(
-    "$SCRIPTS/hpa" create --quiet "/consults/$date_opt.$customer"
-  )
-  echo "$HPA_CONSULTS_DIR/$(basename "$container_dir")"
+	container_dir=$(
+		"$SCRIPTS/hpa" create --quiet "/consults/$date_opt.$customer"
+	)
+	echo "$HPA_CONSULTS_DIR/$(basename "$container_dir")"
 }
 
 initialize-git() {
-  local dir
-  read -r dir
+	local dir
+	read -r dir
 
-  dir=$(echo "$dir" | tr -d '\r' | head -1)
+	dir=$(echo "$dir" | tr -d '\r' | head -1)
 
-  if [[ $no_git_flag == "0" ]]; then
+	if [[ $no_git_flag == "0" ]]; then
 
-    [[ ! -d $dir ]] &&
-      log --error "Could not initialize git directory not found: '$dir'" &&
-      exit 1
+		[[ ! -d $dir ]] &&
+			log --error "Could not initialize git directory not found: '$dir'" &&
+			exit 1
 
-    log "Initializing git repository"
+		log "Initializing git repository"
 
-    pushd "$dir" &>/dev/null || exit 1
-    (
-      git init
-      git add .
-      git commit --all --message="Initial commit"
-      git remote add origin "$HPA_CONSULT_ORIGIN_BASE_URL/$(basename "$dir")"
-      if [[ $no_push_flag == "0" ]]; then
-        git push --set-upstream origin main
-      fi
-    ) &>/dev/null
-    popd &>/dev/null
-  else
-    log "Skipping git initialization"
-  fi
+		pushd "$dir" &>/dev/null || exit 1
+		(
+			git init
+			git lfs install
+			git lfs track '*.png'
+			git lfs track '*.pdf'
+			git add .
+			git commit --all --message="Initial commit"
+			git remote add origin "$HPA_CONSULT_ORIGIN_BASE_URL/$(basename "$dir")"
+			if [[ $no_push_flag == "0" ]]; then
+				git push --set-upstream origin main
+			fi
+		) &>/dev/null
+		popd &>/dev/null
+	else
+		log "Skipping git initialization"
+	fi
 
-  echo "$dir"
+	echo "$dir"
 }
 
 ################################################################################
@@ -124,19 +127,19 @@ setup-logging "$LOG_FILE" "$LOG_LABEL"
 declare customer output
 
 while [[ $# -gt 0 ]]; do
-  if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    usage && exit 0
-  elif [[ $1 == "-d" ]] || [[ $1 == "--date" ]]; then
-    shift
-    date_opt="$1"
-  elif [[ $1 == "-g" ]] || [[ $1 == "--no-git" ]]; then
-    no_git_flag="1"
-  elif [[ $1 == "-p" ]] || [[ $1 == "--no-push" ]]; then
-    no_push_flag="1"
-  else
-    customer=$1
-  fi
-  shift
+	if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+		usage && exit 0
+	elif [[ $1 == "-d" ]] || [[ $1 == "--date" ]]; then
+		shift
+		date_opt="$1"
+	elif [[ $1 == "-g" ]] || [[ $1 == "--no-git" ]]; then
+		no_git_flag="1"
+	elif [[ $1 == "-p" ]] || [[ $1 == "--no-push" ]]; then
+		no_push_flag="1"
+	else
+		customer=$1
+	fi
+	shift
 done
 
 output=$(create "$customer" | initialize-git)

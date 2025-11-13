@@ -44,8 +44,8 @@ useVaultArgs = true
 # instead of the provided / default playbook.
 
 [playbook]
-directory = '~/.local/share/hpa/playbook'
-inventory = '~/.local/share/hpa/playbook/inventory.ini'
+directory = '/root/.local/share/hpa/playbook'
+inventory = '/root/.local/share/hpa/playbook/inventory.ini'
 version = 'main'
 
 # NOTE:
@@ -53,7 +53,8 @@ version = 'main'
 # a remote git repository.
 [template]
 # The directory path on your local system to the template files.
-directory = '~/.local/share/hpa/template'
+directory = '/root/.local/share/hpa/template'
+vars = 'repo_vars'
 
 # The url to a git repository that contains your template files.
 # url = 'https://git.example.com/consult-template.git'

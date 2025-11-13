@@ -10,15 +10,11 @@ set -o pipefail
 # Make sure to run 'hpa-init' first on this machine to setup
 # dependencies, if you have not done so already.
 #
-# This will mount my home directory inside the container, so
-# it should somewhat mirror like commands are run on the host os.
-#
 # To attach to a shell inside the container run:
 # `hpa bash`
 #
 # To run ansible vault commands inside the container run:
 # `hpa ansible-vault ...`
-#
 #
 
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
@@ -28,16 +24,19 @@ SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 last_pull="0"
 if [[ -f "$HPA_CONFIG_DIR/.lastpull" ]]; then
-  last_pull=$(cat "$HPA_CONFIG_DIR/.lastpull")
+	last_pull=$(cat "$HPA_CONFIG_DIR/.lastpull")
 fi
 curr=$(date +%s)
 diff=$((curr - last_pull))
 
 if [[ $HPA_AUTO_PULL == "1" ]] && [[ $diff -gt "$HPA_AUTO_PULL_INTERVAL" ]]; then
-  . "$SCRIPTS/hpa-pull" "$HPA_AUTO_PULL_OPTS"
+	. "$SCRIPTS/hpa-pull" "$HPA_AUTO_PULL_OPTS"
 fi
 
 podman run --rm --interactive --tty \
-  --volume "$HOME":/root \
-  --secret "$HPA_VAULT_SECRET_KEY" \
-  "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" "$@"
+	--volume "$HPA_CONFIG_DIR":/root/.config/hpa:ro \
+	--volume "$HPA_DATA_DIR":/root/.local/share/hpa:ro \
+	--volume "$HPA_CONSULTS_DIR":/consults \
+	--volume "$PWD":/root/project \
+	--secret "$HPA_VAULT_SECRET_KEY" \
+	"$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" "$@"
