@@ -1,2 +1,3 @@
 # Packages to be installed with this run.
 pika-backup
+gnome-keyring
