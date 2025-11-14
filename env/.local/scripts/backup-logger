@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+LOG_DIR="/tmp/logs"
+
+usage() {
+	cat <<EOF
+
+Utility for logging backup runs.
+
+USAGE:
+	$ $THIS <flags> <msg...>
+
+FLAGS:
+	-h | --help:					Show this help page.
+	-s | --show:					Show the log messages.
+	--rm:									Remove the log file
+
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+	logging log --source "$THIS_FILE" "$@"
+}
+
+show() {
+	[[ ! -f "$LOG_DIR/$LOG_FILE" ]] &&
+		log --warning "Empty log file." &&
+		exit 0
+
+	bat "$LOG_DIR/$LOG_FILE"
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+declare -a msg
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+while [[ $# -gt 0 ]]; do
+	if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+		usage && exit 0
+	elif [[ $1 == "-s" ]] || [[ $1 == "--show" ]]; then
+		show && exit 0
+	elif [[ $1 == "--rm" ]]; then
+		rm "$LOG_DIR/$LOG_FILE" && exit 0
+	else
+		msg+=("$1")
+	fi
+	shift
+done
+
+[[ -z "${msg[*]}" ]] && log --error "No message passed to log." && exit 1
+
+log "${msg[@]}"
