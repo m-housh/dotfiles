@@ -177,6 +177,7 @@ alias reload='exec zsh -l'              # reload the shell, useful when making c
 alias s='swift'                         # shorthand to access swift commands
 alias st='swift test'                   # swift test
 alias sb='swift build'                  # swift build
+alias syu='yay -Syu'										# Update packages.
 alias t='tmux'                          # access tmux quickly
 alias tka='tmux kill-server'            # kill tmux server and all sessions.
 alias ts='$SCRIPTS/tmux-sessionator'    # create new tmux session, fuzzy finding common locations.
