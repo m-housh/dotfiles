@@ -54,7 +54,8 @@
 #cpu,
 #memory,
 #custom-lock,
-#custom-power {
+#custom-power,
+#idle_inhibitor {
   background-color: @background;
   padding: 0.5rem 1rem;
   margin: 5px 0;
@@ -69,10 +70,16 @@
   font-weight: 900;
 }
 
+
 #pulseaudio {
   color: @red;
   border-radius: 10px 0px 0px 10px;
   margin-left: 1rem;
+}
+
+#idle_inhibitor {
+	border-radius: 0px;
+	margin: 0px;
 }
 
 #tray {

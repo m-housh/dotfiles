@@ -6,6 +6,7 @@
   "modules-center": ["clock"],
   "modules-right": [
     "pulseaudio",
+		"idle_inhibitor",
     "tray",
     "cpu",
     "memory",
@@ -76,4 +77,12 @@
     // "format-full": "",
     "format-icons": ["", "", "", "", ""],
   },
+	"idle_inhibitor": {
+    "format": "{icon}",
+    "format-icons": {
+        "activated": "",
+        "deactivated": ""
+    },
+	}
+}
 }
