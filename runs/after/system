@@ -18,6 +18,15 @@ _setup-mounts() {
 		sudo mount -a ||
 			log --warning "You will need to make sure this computer's ip is in the allow list, then run 'sudo mount -a'"
 	fi
+	line="nas.housh.dev:/var/nfs/shared/Customer_Share /mnt/customers nfs defaults 0 0"
+	if sudo cat /etc/fstab | grep -vq "$line"; then
+		log "	Setting up nas mount."
+		sudo mkdir -p /mnt/customers &>/dev/null
+		echo "$line" | sudo tee --append /etc/fstab
+		sudo systemctl daemon-reload
+		sudo mount -a ||
+			log --warning "You will need to make sure this computer's ip is in the allow list, then run 'sudo mount -a'"
+	fi
 }
 
 _setup-kanata() {
