@@ -5,7 +5,7 @@ set -o nounset
 set -o pipefail
 
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
-THIS_FILE=${BASH_SOURCE[0]}
+THIS_FILE=${BASH_SOURCE[0]} && export THIS_FILE
 LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
@@ -13,26 +13,32 @@ LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 # Setup environment
 source "$SCRIPTS/utils/shorten-url/env"
 
-declare url shortCode
 declare -a tags
+url=""
 shortCode=""
+expire=""
 
 usage() {
 	cat <<EOF
-FIX ME!!!
+$THIS FIX ME!!!
 EOF
-}
-
-# Logging utility function, use in place of echo.
-log() {
-	logging log --source "$THIS_FILE" "$@"
 }
 
 generate_json() {
 	local tagsJson
 	tagsJson=$(printf '%s\n' "${tags[@]}" | jq -R . | jq -s .)
-	jq -n --arg longUrl "$url" --arg shortCode "$shortCode" --argjson tags "$tagsJson" \
-		'{longUrl: $longUrl, shortCode: $shortCode, tags: $tags, findIfExists: true}'
+	log "Generating json data..."
+	if [[ -n $expire ]]; then
+		expire="$(date --iso-8601=seconds -d "+ $expire")"
+		log "Set valid until date: $expire"
+		# NB: 'validUntil' can not be set to an empty string, or it immediately expires the link.
+		jq -n --arg longUrl "$url" --arg shortCode "$shortCode" --argjson tags "$tagsJson" \
+			--arg validUntil "$expire" \
+			'{longUrl: $longUrl, shortCode: $shortCode, tags: $tags, findIfExists: true, validUntil: $validUntil}'
+	else
+		jq -n --arg longUrl "$url" --arg shortCode "$shortCode" --argjson tags "$tagsJson" \
+			'{longUrl: $longUrl, shortCode: $shortCode, tags: $tags, findIfExists: true}'
+	fi
 }
 
 create_url() {
@@ -44,7 +50,7 @@ create_url() {
 
 	json="$(generate_json)"
 
-	log "Creating url with json: $json"
+	log "Creating url: '$url' with json: $json"
 
 	curl "$BASE_URL/short-urls" \
 		--request 'POST' \
@@ -63,6 +69,8 @@ create_url() {
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
+log "Creating url with args: $*"
+
 while [[ $# -gt 0 ]]; do
 	if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
 		usage && exit 0
@@ -72,6 +80,10 @@ while [[ $# -gt 0 ]]; do
 	elif [[ $1 == "-t" ]] || [[ $1 == "--tag" ]]; then
 		shift
 		tags+=("$1")
+	elif [[ $1 == "-e" ]] || [[ $1 == "--expire" ]]; then
+		shift
+		expire="$1 $2"
+		shift
 	else
 		url="$1"
 	fi

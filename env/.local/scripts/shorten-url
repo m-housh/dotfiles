@@ -4,18 +4,41 @@ set -e
 set -o nounset
 set -o pipefail
 
+# Global variables
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
-LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"} && export LOG_FILE
 
+# Local variables
 declare -a args
 no_spin_flag="0"
+create_flag="0"
+
+usage() {
+	cat <<EOF
+FIX ME!!!
+EOF
+}
 
 # Logging utility function, use in place of echo.
+#
+# This gets exported for subcommands to use.
 log() {
 	logging log --source "$THIS_FILE" "$@"
+} && export -f log
+
+create() {
+	script="$SCRIPTS/utils/shorten-url/create"
+	export THIS="${THIS} create"
+
+	if [[ $no_spin_flag == "1" ]]; then
+		bash -c "$script ${args[*]}"
+	else
+		title="Generating short url..."
+		gum spin --show-output --title="$title" -- bash -c "$script ${args[*]}"
+	fi
 }
 
 ################################################################################
@@ -29,17 +52,20 @@ setup-logging "$LOG_FILE" "$LOG_LABEL"
 while [[ $# -gt 0 ]]; do
 	if [[ $1 == "--no-spin" ]]; then
 		no_spin_flag="1"
+	elif [[ $1 == "create" ]]; then
+		create_flag="1"
+	elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+		no_spin_flag="1"
+		args+=("$1")
 	else
 		args+=("$1")
 	fi
 	shift
 done
 
-script="$SCRIPTS/utils/shorten-url/create"
-
-if [[ $no_spin_flag == "1" ]]; then
-	bash -c "$script ${args[*]}"
+if [[ $create_flag == "1" ]]; then
+	create
 else
-	title="Generating short url..."
-	gum spin --show-output --title="$title" -- bash -c "$script ${args[*]}"
+	# If we made it here, no subcommands were executed.
+	usage
 fi
