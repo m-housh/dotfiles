@@ -10,6 +10,9 @@ LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
+declare -a args
+no_spin_flag="0"
+
 # Logging utility function, use in place of echo.
 log() {
 	logging log --source "$THIS_FILE" "$@"
@@ -23,7 +26,20 @@ log() {
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
-script="$SCRIPTS/utils/shorten-url/create"
-title="Generating short url..."
+while [[ $# -gt 0 ]]; do
+	if [[ $1 == "--no-spin" ]]; then
+		no_spin_flag="1"
+	else
+		args+=("$1")
+	fi
+	shift
+done
 
-gum spin --show-output --title="$title" -- bash -c "$script $*"
+script="$SCRIPTS/utils/shorten-url/create"
+
+if [[ $no_spin_flag == "1" ]]; then
+	bash -c "$script ${args[*]}"
+else
+	title="Generating short url..."
+	gum spin --show-output --title="$title" -- bash -c "$script ${args[*]}"
+fi

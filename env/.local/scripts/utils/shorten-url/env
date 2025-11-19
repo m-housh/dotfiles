@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+API_KEY=$(/bin/gopass show --password Keys/shlink/api-key)
+BASE_URL="https://l.housh.dev/rest/v3"
+
+export API_KEY
+export BASE_URL

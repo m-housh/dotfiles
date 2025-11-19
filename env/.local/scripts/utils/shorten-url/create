@@ -10,8 +10,8 @@ LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
-API_KEY=$(/bin/gopass show --password Keys/shlink/api-key)
-BASE_URL="https://l.housh.dev/rest/v3"
+# Setup environment
+source "$SCRIPTS/utils/shorten-url/env"
 
 declare url shortCode
 declare -a tags

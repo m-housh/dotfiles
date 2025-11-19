@@ -119,11 +119,12 @@ update_dirs $DEV_ENV/env/.local $HOME/.local
 
 # SCRIPTS
 mkdir -p ~/.local/scripts/{hypr,utils} >/dev/null 2>&1
-mkdir -p ~/.local/scripts/utils/{kanatactl,hpa} >/dev/null 2>&1
+mkdir -p ~/.local/scripts/utils/{kanatactl,hpa,shorten-url} >/dev/null 2>&1
 update_dirs $DEV_ENV/env/.local/scripts/hypr $HOME/.local/scripts/hypr
 copy_files $DEV_ENV/env/.local/scripts/hypr $HOME/.local/scripts/hypr
 copy_files "$DEV_ENV/env/.local/scripts/utils/kanatactl" "$HOME/.local/scripts/utils/kanatactl"
 copy_files "$DEV_ENV/env/.local/scripts/utils/hpa" "$HOME/.local/scripts/utils/hpa"
+copy_files "$DEV_ENV/env/.local/scripts/utils/shorten-url" "$HOME/.local/scripts/utils/shorten-url"
 copy_files $DEV_ENV/env/.local/scripts $HOME/.local/scripts
 
 # SYSTEMD
