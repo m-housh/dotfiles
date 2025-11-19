@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]} && export THIS_FILE
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+
+rm_flag="0"
+
+usage() {
+	cat <<EOF
+View or remove the logs.
+
+USAGE:
+  $THIS <flags> <command>
+
+FLAGS:
+	-h | --help:     Show this help page.
+
+COMMAND:
+	show:            Show the logs (default).
+	rm | remove:     Remove the log file.
+
+EOF
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+[[ -z ${LOG_DIR:-""} ]] &&
+	log --error "Log directory not set." &&
+	exit 1
+
+while [[ $# -gt 0 ]]; do
+	if [[ $1 == "rm" ]] || [[ $1 == "remove" ]]; then
+		rm_flag="1"
+	elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+		usage && exit 0
+	fi
+	shift
+done
+
+file="$LOG_DIR/$LOG_FILE"
+
+[[ ! -f "$file" ]] &&
+	echo "No log file at: '$file'" &&
+	exit 0
+
+if [[ $rm_flag == "1" ]]; then
+	log --echo "Removing logs..."
+	rm -f "$file"
+else
+	log "Showing logs"
+	bat "$file"
+fi

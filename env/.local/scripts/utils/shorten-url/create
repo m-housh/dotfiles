@@ -4,15 +4,16 @@ set -e
 set -o nounset
 set -o pipefail
 
+# Global variables.
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
-THIS_FILE=${BASH_SOURCE[0]} && export THIS_FILE
+THIS_FILE=${BASH_SOURCE[0]} && export THIS_FILE # Export for log function to work properly.
 LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
-
 # Setup environment
 source "$SCRIPTS/utils/shorten-url/env"
 
+# Local variables.
 declare -a tags
 url=""
 shortCode=""
@@ -20,7 +21,25 @@ expire=""
 
 usage() {
 	cat <<EOF
-$THIS FIX ME!!!
+Create a shortened url, returns / echo's the generated url.
+
+USAGE:
+    $THIS <flags> <url>
+
+FLAGS:
+	-c | --code:            Set a custom short-code for the link.
+	-e | --expire <time>:   Set the expiration for the link.
+	-t | --tag <tag>:       Add tag(s) to the link (can be passed multiple times).
+	-h | --help:            Show this help page.
+
+EXMAPLES:
+
+  Generate a link and set the expiration for 30 days from now:
+    $ $THIS --expire 30 days https://example.com
+
+  Generate a link with multiple tags:
+    $ $THIS --tag consult --tag test https://example.com
+
 EOF
 }
 
