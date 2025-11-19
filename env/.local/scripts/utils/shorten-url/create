@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+THIS_FILE=${BASH_SOURCE[0]}
+LOG_LABEL=$(basename "$THIS_FILE")
+THIS=${THIS:-$LOG_LABEL}
+LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
+
+API_KEY=$(/bin/gopass show --password Keys/shlink/api-key)
+BASE_URL="https://l.housh.dev/rest/v3"
+
+declare url shortCode
+declare -a tags
+shortCode=""
+
+usage() {
+	cat <<EOF
+FIX ME!!!
+EOF
+}
+
+# Logging utility function, use in place of echo.
+log() {
+	logging log --source "$THIS_FILE" "$@"
+}
+
+generate_json() {
+	local tagsJson
+	tagsJson=$(printf '%s\n' "${tags[@]}" | jq -R . | jq -s .)
+	jq -n --arg longUrl "$url" --arg shortCode "$shortCode" --argjson tags "$tagsJson" \
+		'{longUrl: $longUrl, shortCode: $shortCode, tags: $tags, findIfExists: true}'
+}
+
+create_url() {
+	local json
+
+	[[ -z $url ]] &&
+		log --error "Url not supplied." &&
+		exit 1
+
+	json="$(generate_json)"
+
+	log "Creating url with json: $json"
+
+	curl "$BASE_URL/short-urls" \
+		--request 'POST' \
+		--header 'Content-Type: application/json' \
+		--header 'accept: application/json' \
+		--header "X-Api-Key: $API_KEY" \
+		--no-progress-meter \
+		--data "$json" | jq '.shortUrl'
+}
+
+################################################################################
+# MAIN
+################################################################################
+
+# Setup logging file and label.
+source "$SCRIPTS/hypr/logging"
+setup-logging "$LOG_FILE" "$LOG_LABEL"
+
+while [[ $# -gt 0 ]]; do
+	if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+		usage && exit 0
+	elif [[ $1 == "-c" ]] || [[ $1 == "--code" ]]; then
+		shift
+		shortCode="$1"
+	elif [[ $1 == "-t" ]] || [[ $1 == "--tag" ]]; then
+		shift
+		tags+=("$1")
+	else
+		url="$1"
+	fi
+	shift
+done
+
+create_url
