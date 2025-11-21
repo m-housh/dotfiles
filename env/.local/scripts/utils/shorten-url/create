@@ -56,7 +56,7 @@ generate_json() {
 			'{longUrl: $longUrl, shortCode: $shortCode, tags: $tags, findIfExists: true, validUntil: $validUntil}'
 	else
 		jq -n --arg longUrl "$url" --arg shortCode "$shortCode" --argjson tags "$tagsJson" \
-			'{longUrl: $longUrl, shortCode: $shortCode, tags: $tags, findIfExists: true}'
+			'{longUrl: $longUrl, customSlug: $shortCode, tags: $tags, findIfExists: true}'
 	fi
 }
 
