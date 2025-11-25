@@ -5,6 +5,7 @@ eza
 fastfetch
 fzf
 git-lfs
+github-cli
 gum
 jq
 libtexprintf
