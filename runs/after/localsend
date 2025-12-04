@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+install() {
+	sudo firewall-cmd --zone=public --permanent --add-port=53317/tcp
+	sudo firewall-cmd --zone=public --permanent --add-port=53317/udp
+	sudo firewall-cmd --reload
+}
+
+uninstall() {
+	sudo firewall-cmd --zone=public --permanent --remove-port=53317/tcp
+	sudo firewall-cmd --zone=public --permanent --remove-port=53317/udp
+	sudo firewall-cmd --reload
+}
+
+arg=${1:-""}
+[[ $arg == "install" ]] && install
+[[ $arg == "uninstall" ]] && uninstall
