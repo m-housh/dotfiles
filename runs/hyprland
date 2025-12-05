@@ -1,10 +1,10 @@
 # Packages to install / uninstall with this run.
-hyprland-git
-hyprpaper-git
-hypridle-git
-hyprlock-git
-hyprlauncher-git
-hyprshot-git
+hyprland
+hyprpaper
+hypridle
+hyprlock
+hyprlauncher
+hyprshot
 xdg-desktop-portal-hyprland-git
 bc # used for some scripts.
 waybar

@@ -49,3 +49,7 @@ A list of in-progress and completed todo's.
 - [ ] Look into install packages with `nvim --headless`, not sure if this possible when using the new package
     manager builtin to neovim as it prompts for user input to install packages.
     - With lazy this was done with `nvim --headless "+Lazy! sync" +qa`
+
+### Mail
+
+- [ ] Remove outlook / office email setup, this has been moved to proton.
