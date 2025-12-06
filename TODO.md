@@ -14,6 +14,9 @@ A list of in-progress and completed todo's.
   clipboard_history.json file and not letting clipse do it automatically).
 - [x] Need to add the following system packages for neovim/render-markdown.nvim
     - [x] `libtexprintf`
+- [ ] Add pipewire-zeroconf to runs.
+    - [ ] Setup pipewire config to allow streaming output to homepod's.
+    - [See arch.wiki](https://wiki.archlinux.org/title/PipeWire)
 
 ### Bootstrapping a new machine
 
