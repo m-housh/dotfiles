@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Launches jellyfin-tui in a new ghostty terminal.
+# USAGE: $ music
+
+SCRIPTS=${SCRIPTS:-"$HOME/.local/scripts"}
+
+"$SCRIPTS"/hypr/launch --special music \
+	com.ghostty.music \
+	uwsm app -- ghostty --class=com.ghostty.music -e jellyfin-tui

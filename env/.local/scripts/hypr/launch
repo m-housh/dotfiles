@@ -11,7 +11,7 @@ THIS=$(basename "$THIS_FILE")
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
 usage() {
-  cat <<EOF
+	cat <<EOF
 
 Launch or focus / close a window based on pattern contained within the window
 class name. (Default is to focus the window). 
@@ -61,57 +61,57 @@ special_flag="0"
 special=""
 
 while [[ $# -gt 0 ]]; do
-  if [[ $1 == "-c" ]] || [[ $1 == "--or-close" ]]; then
-    close_flag="1"
-    action="closewindow"
-  elif [[ $1 == "-f" ]] || [[ $1 == "--or-focus" ]]; then
-    focus_flag="1"
-    action="focuswindow"
-  elif [[ $1 == "-s" ]] || [[ $1 == "--special" ]]; then
-    shift
-    special_flag="1"
-    special=$1
-  elif [[ $1 == "-o" ]] || [[ $1 == "--focus-active-only" ]]; then
-    focus_flag="1"
-    focus_active_only_flag="1"
-    action="focuswindow"
-  elif [[ $1 == "-x" ]] || [[ $1 == "--close-active-only" ]]; then
-    close_flag="1"
-    close_active_only_flag="1"
-    action="closewindow"
-  elif [[ $1 == "-n" ]] || [[ $1 == "--new" ]]; then
-    new_instance_flag="1"
-  elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    usage && exit 0
-  elif [[ -z $pattern ]]; then
-    pattern=$1
-  else
-    launch_cmd+=("$1")
-  fi
-  shift
+	if [[ $1 == "-c" ]] || [[ $1 == "--or-close" ]]; then
+		close_flag="1"
+		action="closewindow"
+	elif [[ $1 == "-f" ]] || [[ $1 == "--or-focus" ]]; then
+		focus_flag="1"
+		action="focuswindow"
+	elif [[ $1 == "-s" ]] || [[ $1 == "--special" ]]; then
+		shift
+		special_flag="1"
+		special=$1
+	elif [[ $1 == "-o" ]] || [[ $1 == "--focus-active-only" ]]; then
+		focus_flag="1"
+		focus_active_only_flag="1"
+		action="focuswindow"
+	elif [[ $1 == "-x" ]] || [[ $1 == "--close-active-only" ]]; then
+		close_flag="1"
+		close_active_only_flag="1"
+		action="closewindow"
+	elif [[ $1 == "-n" ]] || [[ $1 == "--new" ]]; then
+		new_instance_flag="1"
+	elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+		usage && exit 0
+	elif [[ -z $pattern ]]; then
+		pattern=$1
+	else
+		launch_cmd+=("$1")
+	fi
+	shift
 done
 
 log() {
-  logging log --source "$THIS_FILE" "$@"
+	logging log --source "$THIS_FILE" "$@"
 }
 
 # Redirects all output of hyprctl dispatch commands.
 hypr_dispatch() {
-  hyprctl dispatch "$@" >/dev/null 2>&1
+	hyprctl dispatch "$@" >/dev/null 2>&1
 }
 
 toggle_special() {
-  if [[ -z $special ]]; then
-    log --error " No name supplied for special workspace."
-    exit 1
-  fi
-  hypr_dispatch togglespecialworkspace $special
+	if [[ -z $special ]]; then
+		log --error " No name supplied for special workspace."
+		exit 1
+	fi
+	hypr_dispatch togglespecialworkspace $special
 }
 
 launch_application() {
-  log "Launching..."
-  log "'${launch_cmd[@]}'"
-  eval exec ${launch_cmd[@]}
+	log "Launching..."
+	log "'${launch_cmd[*]}'"
+	eval exec "${launch_cmd[*]}"
 }
 
 ################################################################################
@@ -123,11 +123,11 @@ source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
 if [[ -z $pattern ]]; then
-  log --error "Must supply a pattern to match the window class."
-  usage && exit 1
+	log --error "Must supply a pattern to match the window class."
+	usage && exit 1
 elif [[ -z $launch_cmd ]]; then
-  log --error "Must supply a launch command to match the window class."
-  usage && exit 1
+	log --error "Must supply a launch command to match the window class."
+	usage && exit 1
 fi
 
 log "Pattern: $pattern"
@@ -135,13 +135,13 @@ addresses=$(hyprctl clients -j | jq ".[] | select(.class | contains(\"$pattern\"
 
 # If no addresses, then launch the application.
 if [[ -z $addresses ]] || [[ $new_instance_flag == "1" ]]; then
-  log "No addresses found or new instance flag set."
-  # Toggle special workspace if applicable.
-  if [[ $special_flag == "1" ]]; then
-    log "Toggling special workspace."
-    toggle_special
-  fi
-  launch_application && exit 0
+	log "No addresses found or new instance flag set."
+	# Toggle special workspace if applicable.
+	if [[ $special_flag == "1" ]]; then
+		log "Toggling special workspace."
+		toggle_special
+	fi
+	launch_application && exit 0
 fi
 
 active_window_workspace=$(hyprctl activewindow -j | jq -r '.workspace.name')
@@ -150,45 +150,45 @@ active_window_workspace=$(hyprctl activewindow -j | jq -r '.workspace.name')
 # we just toggle the special workspace.  This keeps "special" apps alive, but closes and / opens
 # the special workspace when invoked.
 if [[ $special_flag == "1" ]] && [[ $active_window_workspace =~ $special ]]; then
-  toggle_special && exit 0
+	toggle_special && exit 0
 fi
 
 # Check if both close and focus flags were passed, so we don't do the
 # wrong thing.
 if [[ $focus_flag == "1" ]] && [[ $close_flag == "1" ]]; then
-  log --error "Both focus and close flag were passed."
-  exit 1
+	log --error "Both focus and close flag were passed."
+	exit 1
 fi
 
 for address in ${addresses[@]}; do
-  # Clean the address of quotes.
-  address=${address//\"/}
-  log "Handling address: '$address'"
+	# Clean the address of quotes.
+	address=${address//\"/}
+	log "Handling address: '$address'"
 
-  if [[ $focus_active_only_flag == "1" ]] || [[ $close_active_only_flag == "1" ]]; then
-    # get the workspace name for the address.
-    workspace=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$address\") | .workspace.name")
+	if [[ $focus_active_only_flag == "1" ]] || [[ $close_active_only_flag == "1" ]]; then
+		# get the workspace name for the address.
+		workspace=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$address\") | .workspace.name")
 
-    # check that the window is on the active workspace.
-    if [[ $active_window_workspace == $workspace ]]; then
-      log "Performing action: '$action', on window: '$address'"
-      hypr_dispatch $action "address:$address"
-      # early out if focusing a window.
-      [[ $focus_active_only_flag ]] && exit 0
-    else
-      # the window is not on the active workspace, so skip it.
-      log "Skipping window: $address"
-    fi
-  else
-    # We don't have the focus_active_only_flag or close_active_only_flag set, so we perform
-    # the action on the window.
-    log "Performing action: '$action', on window: '$address'"
-    hypr_dispatch $action "address:$address"
-  fi
+		# check that the window is on the active workspace.
+		if [[ $active_window_workspace == $workspace ]]; then
+			log "Performing action: '$action', on window: '$address'"
+			hypr_dispatch $action "address:$address"
+			# early out if focusing a window.
+			[[ $focus_active_only_flag ]] && exit 0
+		else
+			# the window is not on the active workspace, so skip it.
+			log "Skipping window: $address"
+		fi
+	else
+		# We don't have the focus_active_only_flag or close_active_only_flag set, so we perform
+		# the action on the window.
+		log "Performing action: '$action', on window: '$address'"
+		hypr_dispatch $action "address:$address"
+	fi
 done
 
 # If we made it here and focus_active_only_flag was set, then we did not
 # find a window on the active workspace, so we launch a new window.
 if [[ $focus_active_only_flag == "1" ]]; then
-  launch_application
+	launch_application
 fi

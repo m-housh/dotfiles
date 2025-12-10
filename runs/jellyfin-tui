@@ -1,3 +1,1 @@
-#!/usr/bin/env bash
-
-yay ${1:-"-S --noconfirm"} jellyfin-tui
+jellyfin-tui
