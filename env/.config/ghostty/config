@@ -3,7 +3,7 @@ theme = Catppuccin Mocha
 confirm-close-surface = false
 
 font-family = "Fira Code"
-font-size = 13
+font-size = 18
 font-thicken = false
 
 window-save-state = always

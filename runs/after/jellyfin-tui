@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+DEV_ENV=${DEV_ENV:-""}
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
+
+install() {
+	[[ -z $DEV_ENV ]] && echo "[ERROR]: DEV_ENV not set" && exit 1
+	mkdir -p "$XDG_CONFIG_HOME"/jellyfin-tui &>/dev/null
+	gpg --output "$XDG_CONFIG_HOME"/jellyfin-tui/config.yaml --decrypt "$DEV_ENV"/env/jellyfin-tui/config.gpg
+}
+
+uninstall() {
+	rm -rf ~/.config/jellyfin-tui
+}
+
+arg=${1:-""}
+[[ $arg == "install" ]] && install
+[[ $arg == "uninstall" ]] && uninstall
