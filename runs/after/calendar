@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+install() {
+	mkdir ~/pkgbuilds &>/dev/null
+	git clone https://github.com/psic4t/qcal.git ~/pkgbuilds/qcal
+	pushd ~/pkgbuilds/qcal || exit 1
+	(
+		make && sudo make install
+	)
+	popd 
+}
+
+uninstall() {
+	sudo rm /usr/local/bin/qcal
+	rm -rf ~/pkgbuilds/qcal
+}
+
+arg=${1:-""}
+[[ $arg == "install" ]] && install
+[[ $arg == "uninstall" ]] && uninstall
