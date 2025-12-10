@@ -1,13 +1,24 @@
 #!/usr/bin/env bash
 
+DEV_ENV=${DEV_ENV:-""}
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
+
 install() {
+
+	[[ -z $DEV_ENV ]] && echo -e "\e[031m[ERROR]:\e[0m 'DEV_ENV' not set." && exit 1
+
+	# Clone and build qcal locally, as it didn't work for me when downloading from the aur.
 	mkdir ~/pkgbuilds &>/dev/null
 	git clone https://github.com/psic4t/qcal.git ~/pkgbuilds/qcal
-	pushd ~/pkgbuilds/qcal || exit 1
+	pushd ~/pkgbuilds/qcal &>/dev/null || exit 1
 	(
 		make && sudo make install
 	)
-	popd 
+	popd &>/dev/null || exit 1
+
+	# Decrypt and copy configuration file for qcal.
+	mkdir "$XDG_CONFIG_HOME"/qcal &>/dev/null
+	gpg --output "$XDG_CONFIG_HOME"/qcal/config.json --decrypt "$DEV_ENV"/env/qcal/config.json.gpg
 }
 
 uninstall() {
