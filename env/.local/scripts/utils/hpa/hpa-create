@@ -77,7 +77,7 @@ create() {
 	# Setup approriate configuration and project suffix.
 	if [[ $airflow_flag == "1" ]]; then
 		suffix="AAP"
-		script="$SCRIPTS/utils/hpa/aap"
+		script="$SCRIPTS/aap"
 	else
 		suffix="HPA"
 		script="$SCRIPTS/hpa"
