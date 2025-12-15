@@ -4,7 +4,8 @@ title="Creating project..."
 script="${SCRIPTS:-$HOME/.local/scripts}/utils/hpa/hpa-create"
 first_arg=${1:-""}
 if [[ $first_arg == "-h" ]] || [[ $first_arg == "--help" ]]; then
-  . "$script" $*
+	. "$script" $*
 else
-  gum spin --show-output --title "$title" -- bash -c "$script $*" | tr -d '\r' | head -1
+	# bash -c "$script $*" | tr -d '\r' | head -1
+	gum spin --show-output --title "$title" -- bash -c "$script $*" | tr -d '\r' | head -1
 fi

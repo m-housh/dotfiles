@@ -17,7 +17,8 @@ LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 # Load environment / shared variables.
 . "$SCRIPTS/utils/hpa/hpa.env"
 
-declare no_git_flag no_push_flag date_opt
+declare airflow_flag no_git_flag no_push_flag date_opt
+airflow_flag="0"
 no_git_flag="0"
 no_push_flag="0"
 date_opt=$(date '+%Y.%m.%d')
@@ -25,7 +26,8 @@ date_opt=$(date '+%Y.%m.%d')
 usage() {
 	cat <<EOF
 
-A utility script to generate a new home performance assessment project.
+A utility script to generate a new home performance assessment project or
+airflow assessment project.
 
 All output from the 'hpa' command get suppressed so that this script can
 be piped / used to automatically cd into the directory after creation to
@@ -41,6 +43,7 @@ USAGE:
   $ $THIS <flags> <customer>
 
 FLAGS:
+  -a | --airflow:       Generate using the airflow assessment project template.
   -d | --date:          Override the date the project was started.
   -g | --no-git:        Do not initialize a git repository for the project.
   -h | --help:          Show this help page.
@@ -62,21 +65,32 @@ log() {
 }
 
 create() {
-	local customer container_dir
+	local customer container_dir script suffix
 	customer=${1:-""}
 
 	[[ -z $customer ]] &&
 		log --error "Must supply a customer name for the project" &&
 		exit 1
 
-	[[ ! -f $SCRIPTS/hpa ]] &&
-		log --error "Unable to find the 'hpa' script." &&
-		exit 1
-
 	log "Generating project for: '$customer'"
 
+	# Setup approriate configuration and project suffix.
+	if [[ $airflow_flag == "1" ]]; then
+		suffix="AAP"
+		script="$SCRIPTS/utils/hpa/aap"
+	else
+		suffix="HPA"
+		script="$SCRIPTS/hpa"
+	fi
+
+	[[ ! -f $SCRIPTS/hpa ]] &&
+		log --error "Unable to find the script: '$script'." &&
+		exit 1
+
+	log "Using script: '$script'"
+
 	container_dir=$(
-		"$SCRIPTS/hpa" create --quiet "/consults/$date_opt.$customer"
+		"$script" create --quiet "/consults/$date_opt.$customer.$suffix"
 	)
 	echo "$HPA_CONSULTS_DIR/$(basename "$container_dir")"
 }
@@ -129,6 +143,8 @@ declare customer output
 while [[ $# -gt 0 ]]; do
 	if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
 		usage && exit 0
+	elif [[ $1 == "-a" ]] || [[ $1 == "--airflow" ]]; then
+		airflow_flag="1"
 	elif [[ $1 == "-d" ]] || [[ $1 == "--date" ]]; then
 		shift
 		date_opt="$1"

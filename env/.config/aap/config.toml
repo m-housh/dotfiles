@@ -1,0 +1,75 @@
+# This config is setup for running inside the docker container.
+#
+# NOTE:
+# Configuration settings for the `hpa` command line tool.
+# You can delete settings that are not applicable to your use case.
+
+# Default arguments / options that get passed into `ansible-playbook` commands.
+# WARNING: Do not put arguments / options that contain spaces in the same string,
+#          they should be separate strings, for example do not do something like
+#          ['--tags debug'], instead use ['--tags', 'debug'].
+#
+args = ['--tags', 'debug']
+
+# Set to true if you want to pass the vault args to `ansible-playbook` commands.
+useVaultArgs = true
+
+# NOTE:
+# Configuration for running the generate command(s). This allows custimizations
+# to the files that get used to generate the final output (generally a pdf).
+# See `pandoc --help`.  Below are the defaults that get used, which only need
+# adjusted if your template does not follow the default template design or if
+# you add extra files to your template that need to be included in the final
+# output. Also be aware that any of the files specified in the `files` or
+# `includeInHeader` options, need to be inside the `buildDirectory` when generating
+# the final output file.
+
+# [generate]
+# this relative to the project directory.
+# buildDirectory = '.build'
+# pdfEngine = 'xelatex'
+# includeInHeader = [
+#   'head.tex',
+#   'footer.tex'
+# ]
+# files = [
+#   'Report.md',
+#   'Definitions.md'
+# ]
+# outputFileName = 'Report'
+
+# NOTE:
+# These are more for local development of the ansible playbook and should not be needed
+# in most cases. Uncomment the lines if you want to customize the playbook and use it
+# instead of the provided / default playbook.
+
+[playbook]
+directory = '/root/.local/share/hpa/playbook'
+inventory = '/root/.local/share/hpa/playbook/inventory.ini'
+version = 'main'
+
+# NOTE:
+# These are to declare where your template files are either on your local system or
+# a remote git repository.
+[template]
+# The directory path on your local system to the template files.
+directory = '/root/.local/share/hpa/airflow-assessment-template'
+vars = 'repo_vars'
+
+# The url to a git repository that contains your template files.
+# url = 'https://git.example.com/consult-template.git'
+
+# The version, tag, branch, or sha of the template files to clone from the remote
+# template repository. In general it is best practice to use a version instead of a
+# branch.
+# version = '1.0.0'
+
+# NOTE:
+# Holds settings for `ansible-vault` commands.
+[vault]
+# Arguments to pass to commands that use `ansible-vault`, such as encrypting or decrypting
+# files.
+args = ['--vault-password-file=/run/secrets/vault-pass']
+
+# An id to use when encrypting `ansible-vault` files.
+#encryptId = 'myId'

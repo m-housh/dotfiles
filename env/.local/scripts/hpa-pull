@@ -13,7 +13,7 @@ LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 . "$SCRIPTS/utils/hpa/hpa.env"
 
 usage() {
-  cat <<EOF
+	cat <<EOF
 
 Pulls / updates template, playbook, docker image, etc.
 
@@ -34,35 +34,38 @@ EOF
 
 # Logging utility function, use in place of echo.
 log() {
-  logging log --source "$THIS_FILE" "$@"
+	logging log --source "$THIS_FILE" "$@"
 }
 
 pull-repo() {
-  local dir=${1:-""}
-  [[ -z "$dir" ]] &&
-    log --error "Directory not supplied to pull git repo." &&
-    exit 1
+	local dir=${1:-""}
+	[[ -z "$dir" ]] &&
+		log --error "Directory not supplied to pull git repo." &&
+		exit 1
 
-  pushd "$dir" &>/dev/null || exit 1
-  (
-    git pull
-  )
-  popd &>/dev/null
+	pushd "$dir" &>/dev/null || exit 1
+	(
+		git pull
+	)
+	popd &>/dev/null
 }
 
 pull-docker() {
-  log --echo "Pulling docker image: '$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG'"
-  podman pull "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG"
+	log --echo "Pulling docker image: '$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG'"
+	podman pull "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG"
 }
 
 pull-playbook() {
-  log --echo "Pulling playbook: '$HPA_PLAYBOOK_DIR'"
-  pull-repo "$HPA_PLAYBOOK_DIR"
+	log --echo "Pulling playbook: '$HPA_PLAYBOOK_DIR'"
+	pull-repo "$HPA_PLAYBOOK_DIR"
 }
 
 pull-template() {
-  log --echo "Pulling template: '$HPA_CONSULT_TEMPLATE_DIR'"
-  pull-repo "$HPA_CONSULT_TEMPLATE_DIR"
+	log --echo "Pulling template: '$HPA_CONSULT_TEMPLATE_DIR'"
+	pull-repo "$HPA_CONSULT_TEMPLATE_DIR"
+
+	log --echo "Pulling airflow assessment template: '$HPA_AIRFLOW_TEMPLATE_DIR'"
+	pull-repo "$HPA_AIRFLOW_TEMPLATE_DIR"
 }
 
 ################################################################################
@@ -78,31 +81,32 @@ playbook_flag="0"
 template_flag="0"
 
 while [[ $# -gt 0 ]]; do
-  if [[ $1 == "-a" ]] || [[ $1 == "--all" ]]; then
-    all_flag="1"
-    break
-  elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    usage && exit 0
-  elif [[ $1 == "-d" ]] || [[ $1 == "--docker" ]]; then
-    all_flag="0"
-    docker_flag="1"
-  elif [[ $1 == "-p" ]] || [[ $1 == "--playbook" ]]; then
-    all_flag="0"
-    playbook_flag="1"
-  elif [[ $1 == "-t" ]] || [[ $1 == "--template" ]]; then
-    all_flag="0"
-    template_flag="1"
-  fi
-  shift
+	if [[ $1 == "-a" ]] || [[ $1 == "--all" ]]; then
+		all_flag="1"
+		break
+	elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+		usage && exit 0
+	elif [[ $1 == "-d" ]] || [[ $1 == "--docker" ]]; then
+		all_flag="0"
+		docker_flag="1"
+	elif [[ $1 == "-p" ]] || [[ $1 == "--playbook" ]]; then
+		all_flag="0"
+		playbook_flag="1"
+	elif [[ $1 == "-t" ]] || [[ $1 == "--template" ]]; then
+		all_flag="0"
+		template_flag="1"
+	fi
+	shift
 done
 
 if [[ $all_flag == "1" ]]; then
-  docker_flag="1"
-  playbook_flag="1"
-  template_flag="1"
+	docker_flag="1"
+	playbook_flag="1"
+	template_flag="1"
 fi
 
 [[ $docker_flag == "1" ]] && pull-docker
 [[ $playbook_flag == "1" ]] && pull-playbook
 [[ $template_flag == "1" ]] && pull-template
 date +%s >"$HPA_CONFIG_DIR/.lastpull"
+date +%s >"$HPA_AIRFLOW_CONFIG_DIR/.lastpull"

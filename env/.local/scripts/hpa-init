@@ -14,7 +14,7 @@ LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 . "$SCRIPTS/utils/hpa/hpa.env"
 
 usage() {
-  cat <<EOF
+	cat <<EOF
 
 Setup dependencies for running hpa script in docker.  This only needs to be
 ran once on a new machine.
@@ -44,30 +44,30 @@ EOF
 
 # Logging utility function, use in place of echo.
 log() {
-  logging log --source "$THIS_FILE" "$@"
+	logging log --source "$THIS_FILE" "$@"
 }
 
 generate-completion() {
-  local output_dir output type
-  type=${1:-"zsh"}
-  output=${2:-$HOME/.zsh/completions/_hpa}
-  output_dir=$(dirname "$output")
+	local output_dir output type
+	type=${1:-"zsh"}
+	output=${2:-$HOME/.zsh/completions/_hpa}
+	output_dir=$(dirname "$output")
 
-  log "Generating completion: type: '$type', to: $output"
+	log "Generating completion: type: '$type', to: $output"
 
-  [[ ! -d "$output_dir" ]] && mkdir -p "$output_dir"
-  (
-    podman run --rm -it "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" \
-      --generate-completion-script "$type" |
-      tr -d '\r'
-  ) >"$output"
+	[[ ! -d "$output_dir" ]] && mkdir -p "$output_dir"
+	(
+		podman run --rm -it "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" \
+			--generate-completion-script "$type" |
+			tr -d '\r'
+	) >"$output"
 }
 
 generate-secret() {
-  log "Generating vault secret for key: '$HPA_VAULT_SECRET_KEY'"
-  local secret
-  secret="$(pass -c ansible/vault-pass)"
-  printf "%s" "$secret" | podman secret create "$HPA_VAULT_SECRET_KEY" -
+	log "Generating vault secret for key: '$HPA_VAULT_SECRET_KEY'"
+	local secret
+	secret="$(pass -c ansible/vault-pass)"
+	printf "%s" "$secret" | podman secret create "$HPA_VAULT_SECRET_KEY" -
 }
 
 ################################################################################
@@ -76,22 +76,23 @@ generate-secret() {
 
 first_arg=${1:-""}
 if [[ $first_arg == "-h" ]] || [[ $first_arg == "--help" ]]; then
-  usage && exit 0
+	usage && exit 0
 else
-  # Setup logging file and label.
-  source "$SCRIPTS/hypr/logging"
-  setup-logging "$LOG_FILE" "$LOG_LABEL"
+	# Setup logging file and label.
+	source "$SCRIPTS/hypr/logging"
+	setup-logging "$LOG_FILE" "$LOG_LABEL"
 
-  log "Starting init..."
+	log "Starting init..."
 
-  generate-completion "$@"
-  generate-secret
+	generate-completion "$@"
+	generate-secret
 
-  log "Generating directories, if they don't exist."
-  mkdir -p "$HPA_CONSULTS_DIR" &>/dev/null
-  mkdir "$HPA_DATA_DIR" &>/dev/null
+	log "Generating directories, if they don't exist."
+	mkdir -p "$HPA_CONSULTS_DIR" &>/dev/null
+	mkdir "$HPA_DATA_DIR" &>/dev/null
 
-  log "Cloning required template and playbook, if they don't exist"
-  [[ ! -d "$HPA_PLAYBOOK_DIR" ]] && git clone "$HPA_PLAYBOOK_URL" "$HPA_PLAYBOOK_DIR"
-  [[ ! -d "$HPA_CONSULT_TEMPLATE_DIR" ]] && git clone "$HPA_CONSULT_TEMPLATE_URL" "$HPA_CONSULT_TEMPLATE_DIR"
+	log "Cloning required template and playbook, if they don't exist"
+	[[ ! -d "$HPA_PLAYBOOK_DIR" ]] && git clone "$HPA_PLAYBOOK_URL" "$HPA_PLAYBOOK_DIR"
+	[[ ! -d "$HPA_CONSULT_TEMPLATE_DIR" ]] && git clone "$HPA_CONSULT_TEMPLATE_URL" "$HPA_CONSULT_TEMPLATE_DIR"
+	[[ ! -d "$HPA_AIRFLOW_TEMPLATE_DIR" ]] && git clone "$HPA_AIRFLOW_TEMPLATE_URL" "$HPA_AIRFLOW_TEMPLATE_DIR"
 fi
