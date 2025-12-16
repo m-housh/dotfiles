@@ -1,5 +1,6 @@
 # Packages to install / uninstall with this run
 catppuccin-gtk-theme-mocha
+cifs-utils
 kanata
 nwg-look
 wl-clipboard

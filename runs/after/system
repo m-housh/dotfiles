@@ -8,25 +8,29 @@ set -o pipefail
 # installed yet.
 SCRIPTS="${DEV_ENV}/env/.local/scripts"
 
+_ensure_mount() {
+	local line=${1:-""}
+	local mount=${2:-""}
+	if [[ -n $line ]] && [[ -d $mount ]]; then
+		if sudo cat /etc/fstab | grep -vq "$line"; then
+			log "	Setting up nas mount."
+			# sudo mkdir -p $mount &>/dev/null
+			echo "$line" | sudo tee --append /etc/fstab
+			sudo systemctl daemon-reload
+			sudo mount -a ||
+				log --warning "You will need to make sure this computer's ip is in the allow list, then run 'sudo mount -a'"
+		fi
+	fi
+}
+
 _setup-mounts() {
-	local line="nas.housh.dev:/var/nfs/shared/michael_share /mnt/michael nfs defaults 0 0"
-	if sudo cat /etc/fstab | grep -vq "$line"; then
-		log "	Setting up nas mount."
-		sudo mkdir -p /mnt/michael &>/dev/null
-		echo "$line" | sudo tee --append /etc/fstab
-		sudo systemctl daemon-reload
-		sudo mount -a ||
-			log --warning "You will need to make sure this computer's ip is in the allow list, then run 'sudo mount -a'"
-	fi
-	line="nas.housh.dev:/var/nfs/shared/Customer_Share /mnt/customers nfs defaults 0 0"
-	if sudo cat /etc/fstab | grep -vq "$line"; then
-		log "	Setting up nas mount."
-		sudo mkdir -p /mnt/customers &>/dev/null
-		echo "$line" | sudo tee --append /etc/fstab
-		sudo systemctl daemon-reload
-		sudo mount -a ||
-			log --warning "You will need to make sure this computer's ip is in the allow list, then run 'sudo mount -a'"
-	fi
+
+	sudo mkdir -p /mnt/{michael,customers} &>/dev/null
+	mkdir -p "$HOME/work" &>/dev/null
+
+	_ensure_mount "nas.housh.dev:/var/nfs/shared/michael_share /mnt/michael nfs defaults 0 0" /mnt/michael
+	_ensure_mount "//nas.housh.dev/michael_share/work $HOME/work cifs credentials=$HOME/.config/.smbcredentials,uid=$(id -u),gid=$(id -g),iocharset=utf8 0 0" "$HOME/work"
+	_ensure_mount "nas.housh.dev:/var/nfs/shared/Customer_Share /mnt/customers nfs defaults 0 0" /mnt/customers
 }
 
 _setup-kanata() {
@@ -65,7 +69,9 @@ _setup-home-dir() {
 	log "	Setting up home directory."
 	rm -rf "$HOME/Desktop" &>/dev/null
 	mkdir "$HOME/{containers,dev}" &>/dev/null
-	mkdir -p "$HOME/work/consults" &>/dev/null
+	mkdir -p "$HOME/work" &>/dev/null
+	gpg --decrypt --output "$HOME/.config/.smbcredentials" "$DEV_ENV/env/smbcredentials.gpg"
+	chmod 600 "$HOME/.config/.smbcredentials"
 }
 
 install() {
