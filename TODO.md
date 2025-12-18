@@ -27,6 +27,7 @@ A list of in-progress and completed todo's.
     - [ ] Need to ensure ssh keys are setup before private submodules are loaded / installed,
     so I need to make sure that Yubikey setup runs early and works for ssh authentication.
     - [ ] Setup a new machine / virtual machine to test, as it's hard to test the scripts once a machine is setup.
+    - [ ] Need to add `repos` script when bootstrapping.
 
 ### Keyboard / kanata
 

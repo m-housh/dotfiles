@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+DEST="$HOME/dev"
+dry_run_flag="0"
+
+log() {
+	if [[ $dry_run_flag == "1" ]]; then
+		echo "[DRY RUN]: $*"
+	else
+		echo "$*"
+	fi
+}
+
+clone() {
+	local src=${1:-""}
+	local dest=${2:-$DEST}
+	log "Cloning '$src' in '$dest'"
+	if [[ $dry_run_flag == "0" ]]; then
+		pushd "$dest" || exit 1 &>/dev/null
+		(
+			git clone "$src"
+		)
+		popd &>/dev/null
+	fi
+}
+
+install-psychrometrics() {
+	log "Installing psychrometrics cli."
+	if [[ $dry_run_flag == "0" ]]; then
+		local src="$DEST/psychrometrics-cli"
+		pushd "$src" || exit 1 &>/dev/null
+		(
+			./install-linux.sh
+		)
+		popd &>/dev/null
+		rm -rf "$src"
+	fi
+
+}
+
+##### MAIN #####
+
+while [[ $# -gt 0 ]]; do
+	if [[ $1 =~ ^-d ]] || [[ $1 =~ ^--dry ]]; then
+		dry_run_flag="1"
+	fi
+	shift
+done
+
+mkdir -p "$DEST/sites" &>/dev/null
+clone "git@github.com:m-housh/mhoush.com.git" "$DEST/sites"
+clone "git@github.com:swift-psychrometrics/psychrometrics-cli.git" && install-psychrometrics
