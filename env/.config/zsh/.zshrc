@@ -207,6 +207,7 @@ source <(fzf --zsh)
 _source_if "$ZDOTDIR/.zshrc-local"
 _source_if "$LOCAL_ENV"
 _source_if "$SCRIPTS/catppuccin-colors"
+_source_if "$XDG_DATA_HOME/swiftly/env.sh"
 
 # pnpm
 export PNPM_HOME="$XDG_DATA_HOME/pnpm"
