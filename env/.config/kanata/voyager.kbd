@@ -27,7 +27,7 @@
 ;; Variables
 (defvar
  tap-higher 400
- tap-time 200
+ tap-time 150
  tap-time-plus 300
  hold-time-plus 300
  hold-time 200
