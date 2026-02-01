@@ -175,7 +175,8 @@ alias pass='PASSWORD_STORE_DIR=/home/michael/.local/share/gopass/stores/root gop
 alias pc='gopass show --clip'          # get an attribute of a password file and copy to the clipboard.
 alias reload='exec zsh -l'              # reload the shell, useful when making changes.
 alias s='swift'                         # shorthand to access swift commands
-alias st='swift test'                   # swift test
+alias st='swift test' 									# swift test
+alias ste='swift test --enable-code-coverage' # swift test with code coverage enabled.
 alias sb='swift build'                  # swift build
 alias syu='yay -Syu'										# Update packages.
 alias t='tmux'                          # access tmux quickly
