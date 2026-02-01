@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+set -o pipefail
+
+# Intsalls appropriate dotfiles inside a devcontainer context.
+
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
+DEV_ENV=${DEV_ENV:-""}
+
+if [ ! -d $DEV_ENV ]; then
+	echo "[ERROR]: DEV_ENV variable does not exist."
+	exit 1
+fi
+
+log() {
+	echo "$*"
+}
+
+copy_dir() {
+	local dir=${1:-""}
+	local path="${DEV_ENV}/${dir}"
+
+	if [ -z "$dir" ] || [ ! -d "$path" ]; then
+		log "[ERROR]: Directory does not exist: $dir"
+		exit 1
+	else
+		log "Copying dir: $dir"
+		cp -R "$path" "$XDG_CONFIG_HOME"
+	fi
+}
+
+copy_file() {
+	local file=${1:-""}
+
+	if [[ -z "$file" ]] || [[ ! -f "$file" ]]; then
+		log "[ERROR]: file does not exist: $file"
+		exit 1
+	else
+		log "Copying file: $file"
+		cp "$DEV_ENV/$file" "$HOME"
+	fi
+}
+
+# MAIN
+dirs=(
+	env/.config/eza
+	env/.config/git
+	env/.config/ripgrep
+	env/.config/starship
+	env/.config/yazi
+	env/.config/zsh
+)
+
+files=(
+	env/.markdownlint.jsonc
+	env/.prettierrc
+	env/.zshenv
+)
+
+for dir in "${dirs[@]}"; do
+	copy_dir "$dir"
+done
+
+for file in "${files[@]}"; do
+	copy_file "$file"
+done
+
+# Install neovim config
+source env/.config/nvim/install.sh
+
+# Install my scripts
+cp -R env/.local/scripts "$HOME/.local"
