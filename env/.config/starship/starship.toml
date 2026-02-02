@@ -5,6 +5,7 @@ command_timeout = 1000
 format = """
 [](color_orange)\
 $os\
+$container\
 $username\
 $hostname\
 [](bg:color_pink fg:color_orange)\
@@ -32,6 +33,10 @@ color_grey = '#585b70'
 color_maroon = '#eba0ac'
 color_pink = '#f5c2e7'
 color_text = '#585b70'
+
+[container]
+disabled = false
+style = '[$symbol \[$name\]]($style) '
 
 [os]
 disabled = false
