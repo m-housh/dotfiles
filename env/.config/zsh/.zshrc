@@ -239,3 +239,7 @@ use-gpg-agent-for-ssh
 
 command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
 command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init --cmd cd zsh)"
+
+if [[ -n "$DEVPOD_WORKSPACE_ID" ]]; then
+	export TERM=xterm-256color
+fi
