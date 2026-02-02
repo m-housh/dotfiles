@@ -5,9 +5,9 @@ command_timeout = 1000
 format = """
 [](color_orange)\
 $os\
-$container\
 $username\
 $hostname\
+$devpod\
 [](bg:color_pink fg:color_orange)\
 $directory\
 [](fg:color_pink bg:color_bg1)\
@@ -34,9 +34,13 @@ color_maroon = '#eba0ac'
 color_pink = '#f5c2e7'
 color_text = '#585b70'
 
-[container]
+[custom.devpod]
+description = "Displays the active Devpod workspace"
+command = "echo $(echo $DEVPOD_WORKSPACE_ID | sed 's/.*://')"
+when = "[[ -n $DEVPOD_WORKSPACE_ID ]]"
+style = "bold blue"
+format = "[📦 $output]($style) "
 disabled = false
-style = '[$symbol \[$name\]]($style) '
 
 [os]
 disabled = false
