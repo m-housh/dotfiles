@@ -7,8 +7,9 @@ format = """
 $os\
 $username\
 $hostname\
-$devpod\
-[](bg:color_pink fg:color_orange)\
+[](bg:color_lavender fg:color_orange)\
+${custom.devpod}\
+[](bg:color_pink fg:color_lavender)\
 $directory\
 [](fg:color_pink bg:color_bg1)\
 $git_branch\
@@ -38,8 +39,8 @@ color_text = '#585b70'
 description = "Displays the active Devpod workspace"
 command = "echo $(echo $DEVPOD_WORKSPACE_ID | sed 's/.*://')"
 when = "[[ -n $DEVPOD_WORKSPACE_ID ]]"
-style = "bold blue"
-format = "[📦 $output]($style) "
+style = "bold bg:color_lavender fg:color_text"
+format = "[ 📦 $output ]($style)"
 disabled = false
 
 [os]
