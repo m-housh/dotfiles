@@ -152,6 +152,7 @@ alias clear='printf "\e[H\e[2J"'        # clear the terminal
 alias czets='cd "${ZETDIR}"'            # move into zettlekasten notes
 alias d='docker'                        # run docker commands quickly
 alias dc='docker compose'               # run docker-compose commands quickly
+alias devpod='TERM=xterm-256color devpod'	# fixes term getting set to xterm-ghostty in devcontainers.
 alias dv='dirs -v'                      # list directory info
 alias essh='edit-ssh-config'            # edit ssh config quickly
 alias email='tmux-sessionator --email'  # Open email tmux session.
