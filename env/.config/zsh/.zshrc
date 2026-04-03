@@ -228,6 +228,14 @@ compinit
 export GPG_TTY=$(tty)
 
 function use-gpg-agent-for-ssh {
+    # Allow selected shells (for example assistant tmux sessions) to preserve
+    # an explicitly provisioned ssh-agent instead of forcing zsh back onto the
+    # gpg-agent SSH socket.
+    if [[ "${PRESERVE_SSH_AUTH_SOCK:-0}" == "1" && -n "${SSH_AUTH_SOCK:-}" ]]
+    then
+        return 0
+    fi
+
     SOCK="$( gpgconf --list-dirs agent-ssh-socket )"
     if [[ -n "${SOCK:-}" ]]
     then
