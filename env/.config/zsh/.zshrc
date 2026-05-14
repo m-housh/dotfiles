@@ -245,5 +245,11 @@ function use-gpg-agent-for-ssh {
 }
 use-gpg-agent-for-ssh
 
+# Backward-compatible marker for prompts/scripts that predate git-identity's
+# GIT_IDENTITY_HUMAN_SHELL variable.
+if [[ "${GIT_IDENTITY_HUMAN_SHELL:-0}" == "1" ]]; then
+    export GIT_HUMAN_IDENTITY=1
+fi
+
 command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
 command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init --cmd cd zsh)"

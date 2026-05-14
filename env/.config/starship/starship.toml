@@ -12,7 +12,8 @@ $directory\
 [](fg:color_pink bg:color_bg1)\
 $git_branch\
 $git_status\
-$line_break$character"""
+$line_break$custom\
+$character"""
 
 palette = 'catppuccin_mocha'
 
@@ -94,6 +95,11 @@ format = '[[($all_status$ahead_behind )](bold fg:color_green bg:color_bg1)]($sty
 
 [line_break]
 disabled = false
+
+[custom.git_identity_lock]
+command = 'printf "🔒"'
+when = 'test "${GIT_HUMAN_IDENTITY:-}" = "1" || test "${GIT_IDENTITY_HUMAN_SHELL:-}" = "1"'
+format = '[$output](bold fg:color_yellow) '
 
 [character]
 disabled = false
