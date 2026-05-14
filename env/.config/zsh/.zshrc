@@ -229,6 +229,14 @@ compinit
 export GPG_TTY=$(tty)
 
 function use-gpg-agent-for-ssh {
+    # Allow selected shells (for example assistant tmux sessions) to preserve
+    # an explicitly provisioned ssh-agent instead of forcing zsh back onto the
+    # gpg-agent SSH socket.
+    if [[ "${PRESERVE_SSH_AUTH_SOCK:-0}" == "1" && -n "${SSH_AUTH_SOCK:-}" ]]
+    then
+        return 0
+    fi
+
     SOCK="$( gpgconf --list-dirs agent-ssh-socket )"
     if [[ -n "${SOCK:-}" ]]
     then
@@ -237,6 +245,12 @@ function use-gpg-agent-for-ssh {
     fi
 }
 use-gpg-agent-for-ssh
+
+# Backward-compatible marker for prompts/scripts that predate git-identity's
+# GIT_IDENTITY_HUMAN_SHELL variable.
+if [[ "${GIT_IDENTITY_HUMAN_SHELL:-0}" == "1" ]]; then
+    export GIT_HUMAN_IDENTITY=1
+fi
 
 command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
 command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init --cmd cd zsh)"

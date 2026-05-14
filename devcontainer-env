@@ -33,13 +33,14 @@ copy_dir() {
 
 copy_file() {
 	local file=${1:-""}
+	local path="${DEV_ENV}/${file}"
 
-	if [[ -z "$file" ]] || [[ ! -f "$file" ]]; then
+	if [[ -z "$file" ]] || [[ ! -f "$path" ]]; then
 		log "[ERROR]: file does not exist: $file"
 		exit 1
 	else
 		log "Copying file: $file"
-		cp "$DEV_ENV/$file" "$HOME"
+		cp "$path" "$HOME"
 	fi
 }
 
@@ -69,8 +70,9 @@ for file in "${files[@]}"; do
 done
 
 # Install neovim config
-git submodule update --init --remote env/.config/nvim
-source env/.config/nvim/install.sh
+git -C "$DEV_ENV" submodule update --init --remote env/.config/nvim
+source "$DEV_ENV/env/.config/nvim/install.sh"
 
 # Install my scripts
-cp -R env/.local/scripts "$HOME/.local"
+mkdir -p "$HOME/.local"
+cp -R "$DEV_ENV/env/.local/scripts" "$HOME/.local"

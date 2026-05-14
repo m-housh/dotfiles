@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Personal helper for safely editing a GPG-encrypted file in-place.
+# The basic approach is: decrypt to a locked-down temp file, edit plaintext,
+# re-encrypt to a second temp file, then replace the original only after a
+# successful encrypt. Temp files are always cleaned up on exit/signals.
+
+usage() {
+  cat >&2 <<EOF
+Usage: ${0##*/} <encrypted-file>
+
+Safely edit a GPG-encrypted file using your configured editor.
+
+What it does:
+  1. Resolves the input path to its real file location
+  2. Decrypts the file with gpg into a temporary plaintext file
+  3. Opens that temporary file in \$EDITOR
+  4. Re-encrypts the edited contents with gpg
+  5. Replaces the original encrypted file with the new ciphertext
+  6. Cleans up temporary files on exit or interruption
+
+Requirements:
+  - gpg must be installed
+  - mktemp must be installed
+  - EDITOR must be set
+  - EDIT_SECURE_RECIPIENT must be set to a GPG recipient
+
+Environment:
+  EDITOR                   Editor command used to edit the decrypted temp file
+  EDIT_SECURE_RECIPIENT    GPG recipient used when re-encrypting the file
+  TMPDIR                   Optional temp directory base
+
+Notes:
+  - The filename does not need a specific extension; it only needs to be a
+    file that gpg can decrypt.
+  - Symlinks are resolved to their real target path before editing.
+  - Temporary plaintext cleanup uses shred when available, but secure deletion
+    is best-effort only and may not be guaranteed on all filesystems.
+EOF
+}
+
+error() {
+  printf 'Error: %s\n' "$*" >&2
+  exit 1
+}
+
+# Resolve symlinks before doing any work so we always operate on the real file
+# rather than accidentally replacing the symlink itself on the final mv.
+resolve_path() {
+  local path="$1"
+
+  if command -v realpath >/dev/null 2>&1; then
+    realpath -- "$path"
+  elif command -v readlink >/dev/null 2>&1; then
+    readlink -f -- "$path"
+  else
+    error 'realpath or readlink is required to resolve symlinks'
+  fi
+}
+
+# Best-effort plaintext cleanup. shred is preferred when available, but is not
+# guaranteed to fully erase data on all storage/filesystem types.
+secure_remove() {
+  local path="$1"
+
+  [[ -e "$path" ]] || return 0
+
+  if command -v shred >/dev/null 2>&1; then
+    shred -u -- "$path" 2>/dev/null || rm -f -- "$path"
+  else
+    rm -f -- "$path"
+  fi
+}
+
+# These are initialized early so cleanup can safely run even if the script
+# exits before temp files are created.
+plaintext_tmp=''
+ciphertext_tmp=''
+
+# EXIT trap covers normal completion and most failures; signal traps help when
+# the script is interrupted during editing or encryption.
+cleanup() {
+  secure_remove "$plaintext_tmp"
+  secure_remove "$ciphertext_tmp"
+}
+
+trap cleanup EXIT INT TERM HUP
+
+if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+[[ $# -eq 1 ]] || {
+  usage
+  exit 1
+}
+
+input_path="$1"
+recipient="${EDIT_SECURE_RECIPIENT:-}"
+
+command -v gpg >/dev/null 2>&1 || error 'gpg is required'
+command -v mktemp >/dev/null 2>&1 || error 'mktemp is required'
+[[ -n "${EDITOR:-}" ]] || error 'EDITOR must be set'
+[[ -n "$recipient" ]] || error 'EDIT_SECURE_RECIPIENT must be set'
+[[ -e "$input_path" ]] || error "input file not found: $input_path"
+
+input_file="$(resolve_path "$input_path")"
+
+[[ -f "$input_file" ]] || error "input file is not a regular file: $input_file"
+[[ -r "$input_file" ]] || error "input file is not readable: $input_file"
+
+# Ensure temp files are created with owner-only permissions because plaintext
+# will exist on disk briefly while the editor is open.
+umask 077
+plaintext_tmp="$(mktemp "${TMPDIR:-/tmp}/edit-secure.plain.XXXXXX")"
+ciphertext_tmp="$(mktemp "${TMPDIR:-/tmp}/edit-secure.cipher.XXXXXX")"
+
+if ! gpg --quiet --batch --yes --decrypt --output "$plaintext_tmp" -- "$input_file"; then
+  error "failed to decrypt: $input_file"
+fi
+
+if ! "$EDITOR" "$plaintext_tmp"; then
+  error 'editor exited unsuccessfully'
+fi
+
+if ! gpg --quiet --batch --yes --encrypt --recipient "$recipient" --output "$ciphertext_tmp" -- "$plaintext_tmp"; then
+  error 'failed to re-encrypt edited content'
+fi
+
+# Only replace the original after encryption succeeds, so a failed re-encrypt
+# never destroys the existing ciphertext.
+mv -f -- "$ciphertext_tmp" "$input_file"
+ciphertext_tmp=''
