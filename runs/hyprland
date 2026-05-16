@@ -5,6 +5,7 @@ hypridle
 hyprlock
 hyprlauncher
 hyprshot
-xdg-desktop-portal-hyprland-git
+hyprshutdown
+xdg-desktop-portal-hyprland
 bc # used for some scripts.
 waybar

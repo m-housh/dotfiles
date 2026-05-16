@@ -1,13 +1,16 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
 command_timeout = 1000
+scan_timeout = 1000
 
 format = """
 [](color_orange)\
 $os\
 $username\
 $hostname\
-[](bg:color_pink fg:color_orange)\
+[](bg:color_lavender fg:color_orange)\
+${custom.devpod}\
+[](bg:color_pink fg:color_lavender)\
 $directory\
 [](fg:color_pink bg:color_bg1)\
 $git_branch\
@@ -33,6 +36,14 @@ color_grey = '#585b70'
 color_maroon = '#eba0ac'
 color_pink = '#f5c2e7'
 color_text = '#585b70'
+
+[custom.devpod]
+description = "Displays the active Devpod workspace"
+command = "echo $(echo $DEVPOD_WORKSPACE_ID | sed 's/.*://')"
+when = "[[ -n $DEVPOD_WORKSPACE_ID ]]"
+style = "bold bg:color_lavender fg:color_text"
+format = "[ 📦 $output ]($style)"
+disabled = false
 
 [os]
 disabled = false
