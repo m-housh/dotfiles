@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: new-stack [options] <repo-name>
+
+Create a new private homelab stack repository from homelab/stack-template.
+
+Options:
+  --no-clone              Only create the remote repository; do not clone it
+  --public                Create a public repository instead of private
+  --description, --desc   Repository description
+  --owner                 Repository owner/org (default: homelab)
+  --template              Template repository (default: homelab/stack-template)
+  --clone-dir             Parent directory for clone (default: /home/michael/dev/homelab)
+  -v, --verbose           Show tea/git command output
+  -h, --help              Show this help
+
+Examples:
+  new-stack paperless
+  new-stack --no-clone actual-budget
+  new-stack --public --description "Homepage stack" homepage
+USAGE
+}
+
+owner="homelab"
+template="homelab/stack-template"
+clone_dir="/home/michael/dev/homelab"
+clone=true
+private=true
+description=""
+name=""
+verbose=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --no-clone)
+      clone=false
+      shift
+      ;;
+    --public)
+      private=false
+      shift
+      ;;
+    --description|--desc)
+      [[ $# -ge 2 ]] || { echo "error: $1 requires a value" >&2; exit 2; }
+      description="$2"
+      shift 2
+      ;;
+    --owner)
+      [[ $# -ge 2 ]] || { echo "error: $1 requires a value" >&2; exit 2; }
+      owner="$2"
+      shift 2
+      ;;
+    --template)
+      [[ $# -ge 2 ]] || { echo "error: $1 requires a value" >&2; exit 2; }
+      template="$2"
+      shift 2
+      ;;
+    --clone-dir)
+      [[ $# -ge 2 ]] || { echo "error: $1 requires a value" >&2; exit 2; }
+      clone_dir="$2"
+      shift 2
+      ;;
+    -v|--verbose)
+      verbose=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "error: unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+    *)
+      if [[ -n "$name" ]]; then
+        echo "error: unexpected extra argument: $1" >&2
+        usage >&2
+        exit 2
+      fi
+      name="$1"
+      shift
+      ;;
+  esac
+done
+
+if [[ $# -gt 0 ]]; then
+  if [[ -z "$name" ]]; then
+    name="$1"
+    shift
+  fi
+  if [[ $# -gt 0 ]]; then
+    echo "error: unexpected extra argument: $1" >&2
+    usage >&2
+    exit 2
+  fi
+fi
+
+if [[ -z "$name" ]]; then
+  echo "error: repo name is required" >&2
+  usage >&2
+  exit 2
+fi
+
+if [[ -z "$description" ]]; then
+  description="Homelab stack for $name"
+fi
+
+cmd=(
+  tea repos create-from-template
+  --template "$template"
+  --name "$name"
+  --owner "$owner"
+  --description "$description"
+  --content
+)
+
+if [[ "$private" == true ]]; then
+  cmd+=(--private)
+fi
+
+printf 'Creating %s/%s from %s...\n' "$owner" "$name" "$template" >&2
+if [[ "$verbose" == true ]]; then
+  "${cmd[@]}" >&2
+else
+  "${cmd[@]}" >/dev/null
+fi
+
+if [[ "$clone" == true ]]; then
+  mkdir -p "$clone_dir"
+  target="$clone_dir/$name"
+  if [[ -e "$target" ]]; then
+    echo "error: clone target already exists: $target" >&2
+    exit 1
+  fi
+
+  clone_url="$(tea repos search --owner "$owner" --fields name,ssh --output csv "$name" | awk -F, -v repo="$name" 'NR > 1 && $1 == repo { print $2; exit }')"
+  if [[ -z "$clone_url" ]]; then
+    echo "error: could not determine clone URL for $owner/$name" >&2
+    exit 1
+  fi
+
+  printf 'Cloning into %s...\n' "$target" >&2
+  if [[ "$verbose" == true ]]; then
+    git clone "$clone_url" "$target" >&2
+  else
+    git clone --quiet "$clone_url" "$target"
+  fi
+  printf '%s\n' "$target"
+else
+  repo_url="$(tea repos search --owner "$owner" --fields name,url --output csv "$name" | awk -F, -v repo="$name" 'NR > 1 && $1 == repo { print $2; exit }')"
+  if [[ -n "$repo_url" ]]; then
+    printf '%s\n' "$repo_url"
+  fi
+fi
+
+printf 'Done.\n' >&2
