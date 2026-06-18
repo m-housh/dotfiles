@@ -59,6 +59,23 @@ resolve_path() {
   fi
 }
 
+# Return the apparent plaintext file extension so editors can infer syntax from
+# the temporary filename. For example, somefile.conf.gpg becomes *.conf.
+syntax_suffix_for() {
+  local path="$1"
+  local name="${path##*/}"
+
+  case "$name" in
+    *.gpg | *.pgp | *.asc)
+      name="${name%.*}"
+      ;;
+  esac
+
+  if [[ "$name" == *.* ]]; then
+    printf '.%s' "${name##*.}"
+  fi
+}
+
 # Best-effort plaintext cleanup. shred is preferred when available, but is not
 # guaranteed to fully erase data on all storage/filesystem types.
 secure_remove() {
@@ -114,7 +131,8 @@ input_file="$(resolve_path "$input_path")"
 # Ensure temp files are created with owner-only permissions because plaintext
 # will exist on disk briefly while the editor is open.
 umask 077
-plaintext_tmp="$(mktemp "${TMPDIR:-/tmp}/edit-secure.plain.XXXXXX")"
+plaintext_suffix="$(syntax_suffix_for "$input_file")"
+plaintext_tmp="$(mktemp "${TMPDIR:-/tmp}/edit-secure.plain.XXXXXX${plaintext_suffix}")"
 ciphertext_tmp="$(mktemp "${TMPDIR:-/tmp}/edit-secure.cipher.XXXXXX")"
 
 if ! gpg --quiet --batch --yes --decrypt --output "$plaintext_tmp" -- "$input_file"; then
