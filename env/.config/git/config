@@ -76,3 +76,6 @@
 
 [lfs "ssh"]
 	automultiplex = false
+
+[url "git@gitea:"]
+	insteadOf = https://git.housh.dev/
