@@ -69,3 +69,10 @@
 
 [submodule]
 	recurse = true
+
+[lfs]
+	cachecredentials = true
+	concurrenttransfers = 1
+
+[lfs "ssh"]
+	automultiplex = false
