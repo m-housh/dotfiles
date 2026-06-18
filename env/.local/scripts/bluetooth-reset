@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Reset the Apple/Broadcom Bluetooth PCI controller used on this machine.
+# This intentionally does not reconnect devices; many headphones power off if
+# connect attempts fail while they are unavailable.
+
+DRIVER="hci_bcm4377"
+DEVICE="${BLUETOOTH_PCI_DEVICE:-}"
+
+if [[ -z "$DEVICE" ]]; then
+  DEVICE="$({
+    for path in /sys/bus/pci/drivers/${DRIVER}/*:*; do
+      [[ -e "$path" ]] || continue
+      basename "$path"
+      break
+    done
+  })"
+fi
+
+if [[ -z "$DEVICE" ]]; then
+  echo "No PCI device bound to ${DRIVER} found." >&2
+  exit 1
+fi
+
+if [[ ! -e "/sys/bus/pci/drivers/${DRIVER}/${DEVICE}" ]]; then
+  echo "Device ${DEVICE} is not bound to ${DRIVER}." >&2
+  exit 1
+fi
+
+echo "Stopping bluetooth.service..."
+sudo systemctl stop bluetooth
+
+echo "Resetting Bluetooth controller ${DEVICE} via ${DRIVER}..."
+echo "$DEVICE" | sudo tee "/sys/bus/pci/drivers/${DRIVER}/unbind" >/dev/null
+sleep 3
+echo "$DEVICE" | sudo tee "/sys/bus/pci/drivers/${DRIVER}/bind" >/dev/null
+sleep 3
+
+echo "Starting bluetooth.service..."
+sudo systemctl start bluetooth
+
+echo "Bluetooth reset complete."
