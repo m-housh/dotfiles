@@ -75,7 +75,7 @@
 	concurrenttransfers = 1
 
 [lfs "ssh"]
-	automultiplex = false
+	automultiplex = true
 
 [url "git@gitea:"]
 	insteadOf = https://git.housh.dev/
