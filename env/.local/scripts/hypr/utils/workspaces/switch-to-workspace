@@ -33,6 +33,13 @@ log() {
   logging log --source "$THIS_FILE" "$@"
 }
 
+lua_quote() {
+  local value=$1
+  value=${value//\\/\\\\}
+  value=${value//\"/\\\"}
+  printf '"%s"' "$value"
+}
+
 ################################################################################
 # MAIN
 ################################################################################
@@ -47,7 +54,14 @@ active_workspace=$(hyprctl activewindow -j | jq -r '.workspace.name')
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^-h ]] || [[ $1 =~ ^--help ]]; then
     usage && exit 0
-  elif [[ $1 =~ ^-t ]] || [[ $1 =~ ^--to ]]; then
+  elif [[ $1 == "--to="* ]]; then
+    target_workspace=${1#--to=}
+  elif [[ $1 == "-t" ]] || [[ $1 == "--to" ]]; then
+    shift
+    if [[ $# -eq 0 ]]; then
+      log --error "Missing workspace after $1."
+      usage && exit 1
+    fi
     target_workspace=$1
   elif [[ $1 =~ ^-p ]] || [[ $1 =~ ^--previous ]]; then
     target_workspace="previous"
@@ -62,15 +76,15 @@ if [[ -z $target_workspace ]]; then
   read -p "Workspace: " target_workspace
 fi
 
-if [[ -z target_workspace ]]; then
-  log --error "Must supply a workpsace to switch to."
+if [[ -z $target_workspace ]]; then
+  log --error "Must supply a workspace to switch to."
   usage && exit 1
 fi
 
 # If active window is on a special workspace, then toggle the special workspace off.
 if [[ $active_workspace =~ ^special ]]; then
   log "Toggling special workspace: '$active_workspace'"
-  hyprctl dispatch togglespecialworkspace ${active_workspace#special:} >/dev/null 2>&1
+  hyprctl dispatch "hl.dsp.workspace.toggle_special($(lua_quote "${active_workspace#special:}"))" >/dev/null 2>&1
 
   # Only toggle the special workspace if trying to switch to previous and we're currently
   # on a special workspace.
@@ -80,4 +94,4 @@ if [[ $active_workspace =~ ^special ]]; then
 fi
 
 log "Switching to workspace: $target_workspace"
-hyprctl dispatch workspace $target_workspace >/dev/null 2>&1
+hyprctl dispatch "hl.dsp.focus({ workspace = $(lua_quote "$target_workspace") })" >/dev/null 2>&1
