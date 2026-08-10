@@ -48,10 +48,26 @@ action_footer() {
 EOF
 }
 
-# Prevent hyprctl dispatch calls from printing to the console.
-hypr_dispatch() {
-  hyprctl dispatch "$@" >/dev/null 2>&1
-  return $?
+lua_quote() {
+  local value=$1
+  value=${value//\\/\\\\}
+  value=${value//\"/\\\"}
+  printf '"%s"' "$value"
+}
+
+lua_value() {
+  local value=$1
+  if [[ $value =~ ^-?[0-9]+([.][0-9]+)?$ ]]; then
+    printf '%s' "$value"
+  else
+    lua_quote "$value"
+  fi
+}
+
+move_window_dispatch() {
+  local workspace=$1
+  local silent=$2
+  hyprctl dispatch "hl.dsp.window.move({ workspace = $(lua_value "$workspace"), window = $(lua_quote "address:$address"), silent = $silent })" >/dev/null 2>&1
 }
 
 parse_workspace_id() {
@@ -84,10 +100,15 @@ move_to_workspace() {
     action="movetoworkspacesilent"
   fi
 
-  $SCRIPTS/hypr/workspacectl picker --return-name-if-special --header="Select a workspace to move window to:" |
-    parse_workspace_id |
-    xargs -I{} hyprctl dispatch "$action" "{},address:$address" >/dev/null 2>&1
+  local workspace=""
+  workspace=$($SCRIPTS/hypr/workspacectl picker --return-name-if-special --header="Select a workspace to move window to:" | parse_workspace_id)
 
+  local silent="false"
+  if [[ $action == "movetoworkspacesilent" ]]; then
+    silent="true"
+  fi
+
+  move_window_dispatch "$workspace" "$silent"
   return $?
 }
 

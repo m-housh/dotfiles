@@ -2,7 +2,7 @@
 {
   "layer": "top",
   "position": "top",
-  "modules-left": ["hyprland/workspaces"],
+  "modules-left": ["ext/workspaces"],
   "modules-center": ["clock"],
   "modules-right": [
     "pulseaudio",
@@ -14,8 +14,10 @@
     "network",
     "custom/lock",
   ],
-  "hyprland/workspaces": {
+  "ext/workspaces": {
     "format": "{name}: {icon}",
+    "on-click": "activate",
+    "sort-by-id": true,
     "format-icons": {
       "active": "",
       "default": "",
@@ -84,5 +86,4 @@
         "deactivated": ""
     },
 	}
-}
 }

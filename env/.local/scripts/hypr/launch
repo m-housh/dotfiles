@@ -95,9 +95,11 @@ log() {
 	logging log --source "$THIS_FILE" "$@"
 }
 
-# Redirects all output of hyprctl dispatch commands.
-hypr_dispatch() {
-	hyprctl dispatch "$@" >/dev/null 2>&1
+lua_quote() {
+	local value=$1
+	value=${value//\\/\\\\}
+	value=${value//\"/\\\"}
+	printf '"%s"' "$value"
 }
 
 toggle_special() {
@@ -105,7 +107,20 @@ toggle_special() {
 		log --error " No name supplied for special workspace."
 		exit 1
 	fi
-	hypr_dispatch togglespecialworkspace $special
+	hyprctl dispatch "hl.dsp.workspace.toggle_special($(lua_quote "$special"))" >/dev/null 2>&1
+}
+
+perform_window_action() {
+	local action=$1
+	local address=$2
+	if [[ $action == "focuswindow" ]]; then
+		hyprctl dispatch "hl.dsp.focus({ window = $(lua_quote "address:$address") })" >/dev/null 2>&1
+	elif [[ $action == "closewindow" ]]; then
+		hyprctl dispatch "hl.dsp.window.close({ window = $(lua_quote "address:$address") })" >/dev/null 2>&1
+	else
+		log --error "Unsupported window action: '$action'"
+		return 1
+	fi
 }
 
 launch_application() {
@@ -172,7 +187,7 @@ for address in ${addresses[@]}; do
 		# check that the window is on the active workspace.
 		if [[ $active_window_workspace == $workspace ]]; then
 			log "Performing action: '$action', on window: '$address'"
-			hypr_dispatch $action "address:$address"
+			perform_window_action "$action" "$address"
 			# early out if focusing a window.
 			[[ $focus_active_only_flag ]] && exit 0
 		else
@@ -183,7 +198,7 @@ for address in ${addresses[@]}; do
 		# We don't have the focus_active_only_flag or close_active_only_flag set, so we perform
 		# the action on the window.
 		log "Performing action: '$action', on window: '$address'"
-		hypr_dispatch $action "address:$address"
+		perform_window_action "$action" "$address"
 	fi
 done
 
