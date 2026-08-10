@@ -39,19 +39,46 @@ log() {
   logging log --source "$THIS_FILE" "$@"
 }
 
-# Suppress output of hyprctl
-hypr_dispatch() {
-  hyprctl dispatch "$@" >/dev/null 2>&1 && return $?
+lua_quote() {
+  local value=$1
+  value=${value//\\/\\\\}
+  value=${value//\"/\\\"}
+  printf '"%s"' "$value"
+}
+
+window_monitor_size() {
+  local address=$1
+  local field=$2
+  local monitor_id
+  monitor_id=$(hyprctl clients -j | jq -r --arg address "$address" '.[] | select(.address == $address) | .monitor')
+  hyprctl monitors -j | jq -r --argjson id "$monitor_id" --arg field "$field" '.[] | select(.id == $id) | .[$field]'
+}
+
+resolve_size() {
+  local value=$1
+  local address=$2
+  local dimension=$3
+  if [[ $value == *% ]]; then
+    local percent=${value%%%}
+    local base
+    base=$(window_monitor_size "$address" "$dimension")
+    awk -v base="$base" -v percent="$percent" 'BEGIN { printf "%d", base * percent / 100 }'
+  else
+    printf '%s' "$value"
+  fi
 }
 
 toggle_floating() {
-  hypr_dispatch togglefloating "address:$address"
+  hyprctl dispatch "hl.dsp.window.float({ action = \"toggle\", window = $(lua_quote "address:$address") })" >/dev/null 2>&1
 }
 
 resize_window() {
   if [[ -n $width ]] && [[ -n $height ]]; then
     log "Resizing window: width: $width, height: $height"
-    hypr_dispatch resizewindowpixel exact "$width $height,address:$address"
+    local resolved_width resolved_height
+    resolved_width=$(resolve_size "$width" "$address" width)
+    resolved_height=$(resolve_size "$height" "$address" height)
+    hyprctl dispatch "hl.dsp.window.resize({ x = $resolved_width, y = $resolved_height, exact = true, window = $(lua_quote "address:$address") })" >/dev/null 2>&1
   fi
 
   echo "$address"
@@ -64,7 +91,7 @@ center_window() {
   local activeaddress=$(hyprctl activewindow -j | jq -r '.address')
   if [[ $address == $activeaddress ]]; then
     log "Centering window..."
-    hypr_dispatch centerwindow
+    hyprctl dispatch "hl.dsp.window.center()" >/dev/null 2>&1
   fi
 }
 

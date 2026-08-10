@@ -10,6 +10,19 @@ if [ ! $# = 1 ]; then
   exit 1
 fi
 
+lua_value() {
+  local value=$1
+  if [[ $value =~ ^-?[0-9]+([.][0-9]+)?$ ]]; then
+    printf '%s' "$value"
+  else
+    value=${value//\\/\\\\}
+    value=${value//\"/\\\"}
+    printf '"%s"' "$value"
+  fi
+}
+
 hyprctl workspaces -j |
-  jq '.[] | select(.monitorID != "$MONITOR") | .id' |
-  xargs -I{} hyprctl dispatch moveworkspacetomonitor {} "$MONITOR" >/dev/null 2>&1
+  jq --argjson monitor "$MONITOR" '.[] | select(.monitorID != $monitor) | .id' |
+  while read -r workspace; do
+    hyprctl dispatch "hl.dsp.workspace.move({ workspace = $(lua_value "$workspace"), monitor = $(lua_value "$MONITOR") })" >/dev/null 2>&1
+  done

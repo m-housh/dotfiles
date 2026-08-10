@@ -29,9 +29,37 @@ log() {
   logging log --source "$THIS_FILE" "$@"
 }
 
-# Suppress output from hyprctl
-hypr_dispatch() {
-  hyprctl dispatch "$@" >/dev/null 2>&1
+lua_quote() {
+  local value=$1
+  value=${value//\\/\\\\}
+  value=${value//\"/\\\"}
+  printf '"%s"' "$value"
+}
+
+lua_value() {
+  local value=$1
+  if [[ $value =~ ^-?[0-9]+([.][0-9]+)?$ ]]; then
+    printf '%s' "$value"
+  else
+    lua_quote "$value"
+  fi
+}
+
+move_window_to_workspace() {
+  local workspace=$1
+  local address=$2
+  hyprctl dispatch "hl.dsp.window.move({ workspace = $(lua_value "$workspace"), window = $(lua_quote "address:$address") })" >/dev/null 2>&1
+}
+
+focus_workspace() {
+  local workspace=$1
+  hyprctl dispatch "hl.dsp.focus({ workspace = $(lua_value "$workspace") })" >/dev/null 2>&1
+}
+
+toggle_special_workspace() {
+  local workspace=$1
+  workspace=${workspace#special:}
+  hyprctl dispatch "hl.dsp.workspace.toggle_special($(lua_quote "$workspace"))" >/dev/null 2>&1
 }
 
 ################################################################################
@@ -64,16 +92,16 @@ if [[ -f "$STATE_FILE" ]]; then
   ORIG_WS=$(cat "$STATE_FILE")
   log "Restoring windows to: '$ORIG_WS'"
   for win in $(hyprctl -j clients | jq -r ".[] | select(.workspace.name | contains(\"$HIDE_WS\")) | .address"); do
-    hyprctl dispatch movetoworkspace "$ORIG_WS,address:$win"
-    hyprctl dispatch workspace "$ORIG_WS"
+    move_window_to_workspace "$ORIG_WS" "$win"
+    focus_workspace "$ORIG_WS"
   done
   rm "$STATE_FILE"
 else
   log "Hiding windows from: '$CUR_WS'"
   # Hide all windows (move to special hidden workspace)
   for win in $(hyprctl -j clients | jq -r ".[] | select(.workspace.id == $CUR_WS) | .address"); do
-    hyprctl dispatch movetoworkspace "$HIDE_WS,address:$win"
-    hyprctl dispatch togglespecialworkspace "$HIDE_WS"
+    move_window_to_workspace "$HIDE_WS" "$win"
+    toggle_special_workspace "$HIDE_WS"
   done
 
   [[ -f "$STATE_FILE" ]] && rm "$STATE_FILE"

@@ -76,6 +76,13 @@ log() {
   logging log --source "$THIS_FILE" "$@"
 }
 
+lua_quote() {
+  local value=$1
+  value=${value//\\/\\\\}
+  value=${value//\"/\\\"}
+  printf '"%s"' "$value"
+}
+
 _select_addresses() {
   local property=$1
   local pattern=$2
@@ -99,7 +106,7 @@ get_special_addresses() {
 close() {
   log "Closing window address: $1"
   if [[ $dry_run_flag == "0" ]]; then
-    hyprctl dispatch closewindow "address:$1" >/dev/null 2>&1
+    hyprctl dispatch "hl.dsp.window.close({ window = $(lua_quote "address:$1") })" >/dev/null 2>&1
   fi
 }
 

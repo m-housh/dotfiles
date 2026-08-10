@@ -201,10 +201,6 @@ local function bind(mods, key, desc, dispatcher, opts)
   return hl.bind(combo, dispatcher, opts)
 end
 
-local function raw(dispatcher)
-  return hl.dsp.exec_raw(dispatcher)
-end
-
 local function exec(cmd)
   return hl.dsp.exec_cmd(cmd)
 end
@@ -218,9 +214,9 @@ bind(mainMod,       "A",      "[A]i - launch / focus",                   exec(pw
 bind(mainMod .. " + SHIFT", "A", "[A]i - new window",                   exec(pwa .. " \"https://ollama.housh.dev\""))
 bind(mainMod,       "B",      "New [b]rowser",                           exec(browser))
 bind(mainMod .. " + SHIFT", "B", "New private [b]rowser",               exec(browser .. " --incognito"))
-bind(mainMod,       "C",      "[C]alendar",                              raw("togglespecialworkspace calendar"))
+bind(mainMod,       "C",      "[C]alendar",                              hl.dsp.workspace.toggle_special("calendar"))
 bind(mainMod .. " + SHIFT", "C", "[C]onfig folder in tmux session",      exec(terminal .. " -e " .. tmuxSessionator .. " ~/.config"))
-bind(mainMod,       "D",      "[D]ispatch app - special workspace",      raw("togglespecialworkspace dispatch"))
+bind(mainMod,       "D",      "[D]ispatch app - special workspace",      hl.dsp.workspace.toggle_special("dispatch"))
 bind(mainMod .. " + SHIFT", "D", "[D]ispatch app - new window",          exec(pwa .. " --new " .. housecallPro))
 bind(mainMod,       "E",      "[E]mail - personal",                      exec(pwa .. " --or-focus \"https://mail.proton.me\""))
 bind(mainMod .. " + SHIFT", "E", "[E]mail - work",                      exec(scripts .. "/launch --or-focus thunderbird uwsm app -- thunderbird"))
@@ -228,25 +224,25 @@ bind(mainMod,       "F",      "[F]ile manager - terminal",               exec(fi
 bind(mainMod .. " + SHIFT", "F", "[F]ile manager - application",         exec(fileBrowser))
 bind(mainMod,       "G",      "[G]itea",                                 exec(pwa .. " --or-focus \"https://git.housh.dev\""))
 bind(mainMod .. " + SHIFT", "G", "[G]ithub",                            exec(pwa .. " --or-focus \"https://github.com\""))
-bind(mainMod,       "H",      "Focus window - left",                     raw("movefocus l"))
-bind(mainMod .. " + SHIFT", "H", "Workspace - back",                    raw("workspace -1"))
+bind(mainMod,       "H",      "Focus window - left",                     hl.dsp.focus({ direction = "left" }))
+bind(mainMod .. " + SHIFT", "H", "Workspace - back",                    hl.dsp.focus({ workspace = "-1" }))
 bind(mainMod,       "I",      "Localsend",                               exec(scripts .. "/launch --or-close localsend uwsm app -- localsend"))
-bind(mainMod,       "J",      "Focus window - down",                     raw("movefocus d"))
-bind(mainMod,       "K",      "Focus window - up",                       raw("movefocus u"))
-bind(mainMod,       "L",      "Focus window - right",                    raw("movefocus r"))
-bind(mainMod .. " + SHIFT", "L", "Workspace - forward",                 raw("workspace +1"))
-bind(mainMod,       "M",      "[M]usic - jellyfin-tui",                  raw("togglespecialworkspace music"))
+bind(mainMod,       "J",      "Focus window - down",                     hl.dsp.focus({ direction = "down" }))
+bind(mainMod,       "K",      "Focus window - up",                       hl.dsp.focus({ direction = "up" }))
+bind(mainMod,       "L",      "Focus window - right",                    hl.dsp.focus({ direction = "right" }))
+bind(mainMod .. " + SHIFT", "L", "Workspace - forward",                 hl.dsp.focus({ workspace = "+1" }))
+bind(mainMod,       "M",      "[M]usic - jellyfin-tui",                  hl.dsp.workspace.toggle_special("music"))
 bind(mainMod .. " + SHIFT", "M", "[M]enu bar - toggle visible",         exec(scripts .. "/waybarctl --toggle"))
 bind(mainMod,       "O",      "Purchase [o]rders",                       exec(pwa .. " --special dispatch \"https://po.housh.dev\""))
-bind(mainMod,       "P",      "[P]assword manager",                      raw("togglespecialworkspace pass"))
+bind(mainMod,       "P",      "[P]assword manager",                      hl.dsp.workspace.toggle_special("pass"))
 bind(mainMod .. " + SHIFT", "P", "[P]hotos",                            exec(pwa .. " --or-focus \"https://photos.housh.dev\""))
 bind(mainMod .. " + SHIFT", "R", "[R]estart menu bar",                  exec(scripts .. "/waybarctl --restart"))
-bind(mainMod,       "S",      "Toggle [s]pecial workspace",              raw("togglespecialworkspace magic"))
+bind(mainMod,       "S",      "Toggle [s]pecial workspace",              hl.dsp.workspace.toggle_special("magic"))
 bind(mainMod,       "Y",      "[Y]ouTube",                               exec(pwa .. " --or-focus \"https://youtube.com\""))
 bind(mainMod,       "U",      "[U]nifi",                                 exec(pwa .. " \"https://unifi.ui.com\""))
 bind(mainMod .. " + SHIFT", "U", "[U]tility launcher",                  exec(scripts .. "/launch --or-close " .. utilsLauncher))
 bind(mainMod,       "V",      "Clipboard history",                       exec(scripts .. "/launch --or-close " .. clipboardHistory))
-bind(mainMod,       "W",      "Close current window",                    raw("killactive"))
+bind(mainMod,       "W",      "Close current window",                    hl.dsp.window.close())
 bind(mainMod .. " + SHIFT", "W", "Close all windows in active workspace", exec(scripts .. "/windowctl close --active-workspace"))
 
 for i = 1, 10 do
@@ -261,32 +257,32 @@ bind(mainMod .. " + SHIFT", "3", "Screenshot a monitor",   exec("hyprshot --mode
 bind(mainMod .. " + SHIFT", "4", "Screenshot a selection", exec("hyprshot --mode region --output-folder ~/Pictures"))
 bind(mainMod .. " + SHIFT", "5", "Screenshot a window",    exec("hyprshot --mode window --output-folder ~/Pictures"))
 
-bind(mainMod, "mouse_down", "Next existing workspace", raw("workspace e+1"))
-bind(mainMod, "mouse_up",   "Previous existing workspace", raw("workspace e-1"))
-bind(mainMod, "mouse:272",  "Move window with mouse", raw("movewindow"), { mouse = true })
-bind(mainMod, "mouse:273",  "Resize window with mouse", raw("resizewindow"), { mouse = true })
-bind(mainMod .. " + SHIFT", "mouse_down", "Resize window with mouse", raw("resizewindow"), { mouse = true })
+bind(mainMod, "mouse_down", "Next existing workspace", hl.dsp.focus({ workspace = "e+1" }))
+bind(mainMod, "mouse_up",   "Previous existing workspace", hl.dsp.focus({ workspace = "e-1" }))
+bind(mainMod, "mouse:272",  "Move window with mouse", hl.dsp.window.drag(), { mouse = true })
+bind(mainMod, "mouse:273",  "Resize window with mouse", hl.dsp.window.resize(), { mouse = true })
+bind(mainMod .. " + SHIFT", "mouse_down", "Resize window with mouse", hl.dsp.window.resize(), { mouse = true })
 
 -- Window controls
-bind("CTRL",       "F",     "Toggle [f]ullscreen",                raw("fullscreen"))
+bind("CTRL",       "F",     "Toggle [f]ullscreen",                hl.dsp.window.fullscreen())
 bind(windowMod,    "F",     "Toggle [f]loating",                  exec(scripts .. "/windowctl toggle-floating --active --width 80% --height 80%"))
 bind(windowMod .. " + SHIFT", "F", "Toggle [f]loating",           exec(scripts .. "/windowctl toggle-floating --active"))
-bind(windowMod,    "H",     "Move window - left",                 raw("movewindow l"))
-bind(windowMod,    "J",     "Move window - down",                 raw("movewindow d"))
-bind(windowMod,    "K",     "Move window - up",                   raw("movewindow u"))
-bind(windowMod,    "L",     "Move window - right",                raw("movewindow r"))
-bind(windowMod,    "M",     "Move window to [m]usic workspace",   raw("movetoworkspace special:music"))
-bind(windowMod .. " + SHIFT", "P", "Toggle [p]seudo window mode", raw("pseudo"))
-bind(windowMod,    "S",     "Move window to [s]pecial workspace", raw("movetoworkspacesilent special:magic"))
+bind(windowMod,    "H",     "Move window - left",                 hl.dsp.window.move({ direction = "left" }))
+bind(windowMod,    "J",     "Move window - down",                 hl.dsp.window.move({ direction = "down" }))
+bind(windowMod,    "K",     "Move window - up",                   hl.dsp.window.move({ direction = "up" }))
+bind(windowMod,    "L",     "Move window - right",                hl.dsp.window.move({ direction = "right" }))
+bind(windowMod,    "M",     "Move window to [m]usic workspace",   hl.dsp.window.move({ workspace = "special:music" }))
+bind(windowMod .. " + SHIFT", "P", "Toggle [p]seudo window mode", hl.dsp.window.pseudo())
+bind(windowMod,    "S",     "Move window to [s]pecial workspace", hl.dsp.window.move({ workspace = "special:magic", silent = true }))
 bind(windowMod,    "W",     "[W]indow actions",                   exec(scripts .. "/windowctl launch action --active"))
-bind(windowMod,    "EQUAL", "Increase window size - horizontal",  raw("resizeactive 20 0"))
-bind(windowMod,    "MINUS", "Decrease window size - horizontal",  raw("resizeactive -20 0"))
-bind(windowMod .. " + SHIFT", "EQUAL", "Increase window size - vertical", raw("resizeactive 0 20"))
-bind(windowMod .. " + SHIFT", "MINUS", "Decrease window size - vertical", raw("resizeactive 0 -20"))
+bind(windowMod,    "EQUAL", "Increase window size - horizontal",  hl.dsp.window.resize({ x = 20, y = 0, relative = true }))
+bind(windowMod,    "MINUS", "Decrease window size - horizontal",  hl.dsp.window.resize({ x = -20, y = 0, relative = true }))
+bind(windowMod .. " + SHIFT", "EQUAL", "Increase window size - vertical", hl.dsp.window.resize({ x = 0, y = 20, relative = true }))
+bind(windowMod .. " + SHIFT", "MINUS", "Decrease window size - vertical", hl.dsp.window.resize({ x = 0, y = -20, relative = true }))
 
 for i = 1, 10 do
   local key = tostring(i % 10)
-  bind(windowMod, key, "Move window to workspace [" .. i .. "]", raw("movetoworkspace " .. i))
+  bind(windowMod, key, "Move window to workspace [" .. i .. "]", hl.dsp.window.move({ workspace = i }))
 end
 
 -- HYPER controls
@@ -296,7 +292,7 @@ bind(HYPER, "W", "Close all windows",      exec(scripts .. "/windowctl close --a
 
 for i = 1, 10 do
   local key = tostring(i % 10)
-  bind(HYPER, key, "Move window to workspace silent [" .. i .. "]", raw("movetoworkspacesilent " .. i))
+  bind(HYPER, key, "Move window to workspace silent [" .. i .. "]", hl.dsp.window.move({ workspace = i, silent = true }))
 end
 
 -- MEH controls
