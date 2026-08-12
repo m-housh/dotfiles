@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if command -v hyprshutdown; then
-	hyprshutdown -t 'Rebooting...' --post-cmd 'reboot'
+	hyprshutdown -t 'Rebooting...' --post-cmd 'systemctl reboot'
 else
 	sudo reboot
 fi
