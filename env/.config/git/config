@@ -73,6 +73,8 @@
 [lfs]
 	cachecredentials = true
 	concurrenttransfers = 1
+	locksverify = false
+	sshtransfer = never
 
 [lfs "ssh"]
 	automultiplex = true
