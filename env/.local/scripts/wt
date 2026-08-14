@@ -7,7 +7,9 @@ readonly worktree_dir_name=".worktrees"
 usage() {
   cat <<'EOF'
 Usage:
-  wt add <branch> [base]    Create a worktree; base defaults to main
+  wt add [-s|--space] <branch> [base]
+                            Create a worktree; base defaults to main
+                            With --space, open it in a new Herdr workspace
   wt remove <name>         Remove a worktree (branch or checkout name)
   wt list                  List the .worktrees directory
   wt prune [options]       Run git worktree prune
@@ -17,6 +19,7 @@ Usage:
 Examples:
   cd "$(wt add feature/foo)"
   cd "$(wt add feature/foo develop)"
+  wt add --space feature/foo
   wt remove feature/foo
   wt list
 
@@ -32,6 +35,11 @@ fail() {
 
 require_repository() {
   git rev-parse --git-dir >/dev/null 2>&1 || fail "not inside a Git repository"
+}
+
+require_herdr() {
+  [[ "${HERDR_ENV:-}" == 1 ]] || fail "--space requires running inside Herdr"
+  command -v herdr >/dev/null 2>&1 || fail "--space requires herdr in PATH"
 }
 
 main_worktree_root() {
@@ -74,13 +82,40 @@ validate_name() {
 }
 
 add_worktree() {
-  [[ $# -ge 1 && $# -le 2 ]] || fail "usage: wt add <branch> [base]"
+  local create_space=false
+  local -a args=()
+
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+      -s|--space)
+        create_space=true
+        ;;
+      --)
+        shift
+        args+=("$@")
+        break
+        ;;
+      -*)
+        fail "unknown add option '$1'"
+        ;;
+      *)
+        args+=("$1")
+        ;;
+    esac
+    shift
+  done
+
+  set -- "${args[@]}"
+  [[ $# -ge 1 && $# -le 2 ]] || fail "usage: wt add [-s|--space] <branch> [base]"
 
   local branch=$1
   local base=${2:-main}
   local root common_dir name path
 
   validate_name "$branch"
+  if [[ "$create_space" == true ]]; then
+    require_herdr
+  fi
   root=$(main_worktree_root)
   common_dir=$(common_git_dir)
   ensure_worktree_directory "$root" "$common_dir"
@@ -94,6 +129,10 @@ add_worktree() {
     git worktree add "$path" "$branch" >&2
   else
     git worktree add -b "$branch" "$path" "$base" >&2
+  fi
+
+  if [[ "$create_space" == true ]]; then
+    herdr workspace create --cwd "$path" --label "$(basename -- "$path")" --focus >/dev/null
   fi
 
   # stdout intentionally contains only the path so command substitution works.
@@ -152,6 +191,8 @@ _wt_completion() {
 
   if (( COMP_CWORD == 1 )); then
     COMPREPLY=($(compgen -W 'add remove list prune completion help' -- "$current"))
+  elif [[ "$action" == add && $COMP_CWORD -eq 2 ]]; then
+    COMPREPLY=($(compgen -W '-s --space' -- "$current"))
   elif [[ "$action" == remove && $COMP_CWORD -eq 2 ]]; then
     COMPREPLY=($(compgen -W "$(wt _complete-remove 2>/dev/null)" -- "$current"))
   elif [[ "$action" == completion && $COMP_CWORD -eq 2 ]]; then
@@ -181,6 +222,9 @@ if (( CURRENT == 2 )); then
 fi
 
 case $words[2] in
+  add)
+    _values 'add option' '-s[Open in a new Herdr workspace]' '--space[Open in a new Herdr workspace]'
+    ;;
   remove)
     worktrees=("${(@f)$(wt _complete-remove 2>/dev/null)}")
     _describe 'worktree' worktrees
