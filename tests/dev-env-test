@@ -33,6 +33,7 @@ make_fixture() {
 	mkdir -p -- \
 		"$source/env/.config/new [feature]" \
 		"$source/env/.config/herdr" \
+		"$source/env/.config/hypr" \
 		"$source/env/.config/nvim" \
 		"$source/env/.config/kanata" \
 		"$source/env/.config/systemd/user" \
@@ -47,6 +48,7 @@ make_fixture() {
 
 	printf 'managed feature\n' >"$source/env/.config/new [feature]/config * file"
 	printf 'new herdr\n' >"$source/env/.config/herdr/config.toml"
+	printf 'new hypr config\n' >"$source/env/.config/hypr/hyprland.lua"
 	printf 'new nvim\n' >"$source/env/.config/nvim/init.lua"
 	printf 'template\n' >"$source/env/.config/kanata/template.kbd"
 	printf 'managed unit\n' >"$source/env/.config/systemd/user/managed.service"
@@ -132,6 +134,7 @@ integration_case() {
 	mkdir -p -- \
 		"$config/new [feature]" \
 		"$config/herdr/sessions" \
+		"$config/hypr" \
 		"$config/nvim" \
 		"$config/kanata" \
 		"$config/systemd/user/enabled.target.wants" \
@@ -142,6 +145,7 @@ integration_case() {
 	printf 'stale\n' >"$config/new [feature]/stale"
 	printf 'session\n' >"$config/herdr/sessions/live"
 	printf 'lock\n' >"$config/herdr/.plugins.lock"
+	printf 'local hypr state\n' >"$config/hypr/local.conf"
 	printf 'lock\n' >"$config/nvim/nvim-pack-lock.json"
 	printf 'selected\n' >"$config/kanata/config.kbd"
 	printf 'local unit\n' >"$config/systemd/user/local.service"
@@ -162,6 +166,8 @@ integration_case() {
 	assert_file_contains "$config/herdr/config.toml" 'new herdr'
 	assert_exists "$config/herdr/sessions/live"
 	assert_exists "$config/herdr/.plugins.lock"
+	assert_file_contains "$config/hypr/hyprland.lua" 'new hypr config'
+	assert_exists "$config/hypr/local.conf"
 	assert_exists "$config/nvim/nvim-pack-lock.json"
 	assert_exists "$config/kanata/config.kbd"
 	assert_absent "$config/kanata/template.kbd"
@@ -190,6 +196,7 @@ integration_case() {
 	# A second installation must succeed and retain the same preservation policy.
 	run_installer "$case_root" --no-reload >"$case_root/output-second"
 	assert_exists "$config/herdr/sessions/live"
+	assert_exists "$config/hypr/local.conf"
 	assert_exists "$config/zsh/history"
 	pass_count=$((pass_count + 1))
 	printf 'ok - automatic, replacement, merge, exact-file, path, and idempotency behavior\n'

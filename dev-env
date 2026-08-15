@@ -17,9 +17,9 @@ Usage: dev-env [--dry-run] [--no-reload] [--help]
   --no-reload  Do not replace this process with a login Zsh after installation.
   --help       Show this help.
 
-Directories directly below env/.config are replaced by default. herdr and nvim
-are merged; systemd and zsh have explicit preservation policies; kanata is not
-installed automatically.
+Directories directly below env/.config are replaced by default. herdr, hypr,
+and nvim are merged; systemd and zsh have explicit preservation policies;
+kanata is not installed automatically.
 EOF
 }
 
@@ -171,7 +171,7 @@ install_config_directories() {
 		name=${source##*/}
 		destination="$XDG_CONFIG_HOME/$name"
 		case $name in
-		herdr | nvim) merge_tree "$source" "$destination" ;;
+		herdr | hypr | nvim) merge_tree "$source" "$destination" ;;
 		kanata | systemd | zsh) : ;;
 		*) replace_tree "$source" "$destination" ;;
 		esac
