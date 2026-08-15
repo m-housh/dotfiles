@@ -88,11 +88,11 @@ icon_ref=""
 json_file=""
 mime_types=""
 launch_flag="0"
-interactive_flag="0" # This is an internal flag, to not log some things when launch is used.
+interactive_flag="0" # Internal flag used to suppress a redundant interactive log.
 interactive_mode=false
 no_interactive_flag="0"
 SCRIPTS="${SCRIPTS:-$HOME/.local/scripts}"
-XDG_DATA_HOME=${XDG_DATA_HOME}
+XDG_DATA_HOME=${XDG_DATA_HOME:-}
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
@@ -149,12 +149,11 @@ load_from_file() {
   if [[ ! -f $1 ]]; then
     log --error "File '$1' is not found or readable." && exit 1
   fi
-  file=$(cat $1)
-  app_name=$(echo $file | jq -r '.name // ""')
-  app_url=$(echo $file | jq -r '.url // ""')
-  icon_ref=$(echo $file | jq -r '.icon // ""')
-  exec_cmd=$(echo $file | jq -r '.exec // ""')
-  mime_types=$(echo $file | jq -r '.mime_types // ""')
+  app_name=$(jq -r '.name // ""' "$1")
+  app_url=$(jq -r '.url // ""' "$1")
+  icon_ref=$(jq -r '.icon // ""' "$1")
+  exec_cmd=$(jq -r '.exec // ""' "$1")
+  mime_types=$(jq -r '.mime_types // ""' "$1")
 }
 
 print_properties() {
@@ -182,29 +181,30 @@ prompt_for_properties() {
 }
 
 set_icon_ref() {
-  # Refer to local icon or fetch remotely from URL
+  # Refer to a local icon or fetch one remotely from a URL.
   local icon_dir="$XDG_DATA_HOME/applications/icons"
   local icon_path=""
-
-  # Ensure the icon directory exists (useful if it's the first run.)
-  [ ! -d $icon_dir ] && mkdir -p $icon_dir
 
   if [[ $icon_ref == https://* ]]; then
     icon_path="$icon_dir/$app_name.png"
     log "Downloading icon: $icon_ref"
     if [[ $dry_run == "0" ]]; then
-      if curl -sL -o "$icon_path" "$icon_ref"; then
-        icon_path="$icon_dir/$app_name.png"
-      else
+      if [[ ! -d $icon_dir ]]; then
+        mkdir -p -- "$icon_dir"
+      fi
+      if ! curl -sL -o "$icon_path" "$icon_ref"; then
         log --error "Failed to download icon." && exit 1
       fi
     fi
   else
-    # Check if the icon path is a file.
-    if [ -f $icon_ref ]; then
+    if [[ -f $icon_ref ]]; then
       icon_path=$icon_ref
     else
       icon_path="$icon_dir/$icon_ref"
+    fi
+
+    if [[ ! -f $icon_path ]]; then
+      log --error "Local icon '$icon_ref' is not found or readable." && exit 1
     fi
   fi
 
@@ -238,6 +238,7 @@ EOF
 ################################################################################
 
 # Setup logging file and label
+# shellcheck source=/dev/null
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 export LOG_ENABLE_DRY_RUN="$dry_run"
@@ -253,7 +254,7 @@ if [[ $launch_flag == "1" ]]; then
 fi
 
 if [[ $file_mode_flag == "1" ]]; then
-  load_from_file $json_file
+  load_from_file "$json_file"
 fi
 
 # Check that all properties are set, prompt for missing values if not.
@@ -266,7 +267,7 @@ if [[ "$?" == "1" ]]; then
     exit 1
 
   # Only log this if not in interactive mode.
-  [[ $interactive_mode == "0" ]] &&
+  [[ $interactive_flag == "0" ]] &&
     log "All required properties not set, prompting for missing properties."
 
   prompt_for_properties

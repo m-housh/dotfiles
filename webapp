@@ -1,46 +1,44 @@
 #!/usr/bin/env bash
 
-# Installs or uninstalls webapps based on the spec in the './webapps' directory.
-#
+# Installs or uninstalls webapps based on the specs in env/webapps.
 # This is used when setting up a new machine.
-#
 
 set -e
 set -o nounset
 set -o pipefail
 
 THIS_FILE=${BASH_SOURCE[0]}
-LOG_LABEL=$(basename $THIS_FILE)
+LOG_LABEL=$(basename -- "$THIS_FILE")
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
-if [ -z "$DEV_ENV" ]; then
+if [[ -z ${DEV_ENV:-} ]]; then
 	echo "env var DEV_ENV needs to be present"
 	exit 1
 fi
 
-if [ -z "$XDG_DATA_HOME" ]; then
+if [[ -z ${XDG_DATA_HOME:-} ]]; then
 	echo "no xdg data home"
 	echo "using ~/.local/share"
-	XDG_DATA_HOME=~/.local/share
+	XDG_DATA_HOME=$HOME/.local/share
 fi
 
-grep=""
+filter=""
 dry_run="0"
 uninstall="0"
 
 while [[ $# -gt 0 ]]; do
 	echo "ARG: \"$1\""
 
-	# Handle a --dry or --dry-run argument
-	if [[ "$1" =~ ^--dry ]]; then
+	# Handle a --dry or --dry-run argument.
+	if [[ $1 =~ ^--dry ]]; then
 		dry_run="1"
-	# Handle an --uninstall argument
-	elif [[ "$1" =~ ^--u ]]; then
+	# Handle an --uninstall argument.
+	elif [[ $1 =~ ^--u ]]; then
 		uninstall="1"
-	# Handle an --install argument (default)
-	elif [[ ! "$1" =~ ^--i ]]; then
-		grep="$1"
+	# Handle an --install argument (default).
+	elif [[ ! $1 =~ ^--i ]]; then
+		filter=$1
 	fi
 	shift
 done
@@ -49,8 +47,35 @@ log() {
 	logging log --source "$THIS_FILE" "$@"
 }
 
-install() {
-	local file=$DEV_ENV/env/webapps/$(basename $1)
+install_local_icons() {
+	local source_dir="$DEV_ENV/env/.local/share/applications/icons"
+	local icon_dir="$XDG_DATA_HOME/applications/icons"
+	local source destination
+
+	[[ -d $source_dir ]] || return 0
+
+	if [[ ! -d $icon_dir ]]; then
+		log "Creating local icon directory: mkdir -p $icon_dir"
+		if [[ $dry_run == "0" ]]; then
+			mkdir -p -- "$icon_dir"
+		fi
+	fi
+
+	while IFS= read -r -d '' source; do
+		destination="$icon_dir/$(basename -- "$source")"
+		if [[ -e $destination ]]; then
+			continue
+		fi
+
+		log "Installing local icon: cp $source $destination"
+		if [[ $dry_run == "0" ]]; then
+			cp -- "$source" "$destination"
+		fi
+	done < <(find "$source_dir" -mindepth 1 -maxdepth 1 -type f -print0)
+}
+
+install_spec() {
+	local file=$1
 	local script="$DEV_ENV/env/.local/scripts/hypr/webapp"
 
 	if [[ ! -x $script ]]; then
@@ -58,23 +83,15 @@ install() {
 		exit 1
 	fi
 
-	# Install local icons if needed
-	mkdir -p $XDG_DATA_HOME/applications/icons
-	for i in $(find $DEV_ENV/env/.local/share/applications/icons -mindepth 1 -maxdepth 1 -type f); do
-		if [[ ! -f $XDG_DATA_HOME/applications/icons/$i ]] && [[ $dry_run == "0" ]]; then
-			cp $i $XDG_DATA_HOME/applications/icons
-		fi
-	done
-
 	log "Installing webapp from spec: $file"
 
 	if [[ $dry_run == "0" ]]; then
-		$script install --file $file --no-interactive
+		"$script" install --file "$file" --no-interactive
 	fi
 }
 
-uninstall() {
-	local file=$DEV_ENV/env/webapps/$(basename $1)
+uninstall_spec() {
+	local file=$1
 	local script="$DEV_ENV/env/.local/scripts/hypr/uninstall-desktop-app"
 
 	if [[ ! -x $script ]]; then
@@ -85,29 +102,34 @@ uninstall() {
 	log "Uninstalling webapp from spec: $file"
 
 	if [[ $dry_run == "0" ]]; then
-		$script --file $file
+		"$script" "$file"
 	fi
 }
 
 ############################## MAIN ##############################
 
 # Setup logging file and label.
+# shellcheck source=/dev/null
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 export LOG_ENABLE_DRY_RUN="$dry_run"
 
-log "WEBAPP: -- grep: $grep"
+log "WEBAPP: -- grep: $filter"
 
-apps_dir=$(find $DEV_ENV/env/webapps -mindepth 1 -maxdepth 1 -type f)
-for s in $apps_dir; do
-	if basename $s | grep -vq "$grep"; then
-		log "grep \"$grep\" filtered out $s"
+if [[ $uninstall == "0" ]]; then
+	install_local_icons
+fi
+
+while IFS= read -r -d '' spec; do
+	name=$(basename -- "$spec")
+	if [[ ! $name =~ $filter ]]; then
+		log "grep \"$filter\" filtered out $spec"
 		continue
 	fi
 
 	if [[ $uninstall == "1" ]]; then
-		uninstall $s
+		uninstall_spec "$spec"
 	else
-		install $s
+		install_spec "$spec"
 	fi
-done
+done < <(find "$DEV_ENV/env/webapps" -mindepth 1 -maxdepth 1 -type f -print0)

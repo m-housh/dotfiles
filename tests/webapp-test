@@ -1,0 +1,254 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null && pwd -P)
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf -- "$TEST_ROOT"' EXIT
+pass_count=0
+
+fail() {
+  printf 'not ok - %s\n' "$*" >&2
+  exit 1
+}
+
+assert_exists() {
+  [[ -e $1 ]] || fail "expected path to exist: $1"
+}
+
+assert_absent() {
+  [[ ! -e $1 ]] || fail "expected path to be absent: $1"
+}
+
+assert_contains() {
+  grep -Fq -- "$2" "$1" || fail "$1 does not contain: $2"
+}
+
+make_logging() {
+  local scripts=$1
+  mkdir -p -- "$scripts/hypr"
+  cat >"$scripts/hypr/logging" <<'EOF'
+setup-logging() { :; }
+logging() {
+  shift
+  [[ ${1:-} == --source ]] && shift 2
+  printf '%s\n' "$*"
+}
+EOF
+}
+
+make_top_fixture() {
+  local case_root=$1 source="$1/repo with spaces"
+  mkdir -p -- \
+    "$source/env/webapps" \
+    "$source/env/.local/share/applications/icons" \
+    "$source/env/.local/scripts/hypr" \
+    "$case_root/home" \
+    "$case_root/xdg data"
+  cp -- "$ROOT/webapp" "$source/webapp"
+  make_logging "$case_root/scripts"
+  cat >"$source/env/webapps/local app [one].json" <<'EOF'
+{"name":"Local App","url":"https://local.example","icon":"local icon.png"}
+EOF
+  cat >"$source/env/webapps/remote.json" <<'EOF'
+{"name":"Remote App","url":"https://remote.example","icon":"https://example/icon.png"}
+EOF
+  printf 'repository icon\n' >"$source/env/.local/share/applications/icons/local icon.png"
+  cat >"$source/env/.local/scripts/hypr/webapp" <<'EOF'
+#!/usr/bin/env bash
+printf 'install argc=%s' "$#" >>"$INVOCATIONS"
+printf ' <%s>' "$@" >>"$INVOCATIONS"
+printf '\n' >>"$INVOCATIONS"
+EOF
+  cat >"$source/env/.local/scripts/hypr/uninstall-desktop-app" <<'EOF'
+#!/usr/bin/env bash
+printf 'uninstall argc=%s' "$#" >>"$INVOCATIONS"
+printf ' <%s>' "$@" >>"$INVOCATIONS"
+printf '\n' >>"$INVOCATIONS"
+EOF
+  chmod +x -- "$source/webapp" "$source/env/.local/scripts/hypr/webapp" \
+    "$source/env/.local/scripts/hypr/uninstall-desktop-app"
+}
+
+run_top() {
+  local case_root=$1
+  shift
+  env HOME="$case_root/home" \
+    DEV_ENV="$case_root/repo with spaces" \
+    XDG_DATA_HOME="$case_root/xdg data" \
+    SCRIPTS="$case_root/scripts" \
+    INVOCATIONS="$case_root/invocations" \
+    "$case_root/repo with spaces/webapp" "$@"
+}
+
+top_install_case() {
+  local case_root="$TEST_ROOT/top-install"
+  make_top_fixture "$case_root"
+  run_top "$case_root" >"$case_root/output"
+  [[ $(grep -c '^install ' "$case_root/invocations") -eq 2 ]] || fail 'install helper was not called once per spec'
+  assert_contains "$case_root/invocations" '<--file> <'
+  assert_contains "$case_root/invocations" '/local app [one].json>'
+  assert_exists "$case_root/xdg data/applications/icons/local icon.png"
+  assert_contains "$case_root/xdg data/applications/icons/local icon.png" 'repository icon'
+  pass_count=$((pass_count + 1))
+  printf 'ok - all specs, spaced paths, and repository icons\n'
+}
+
+filter_and_preserve_case() {
+  local case_root="$TEST_ROOT/filter"
+  make_top_fixture "$case_root"
+  mkdir -p -- "$case_root/xdg data/applications/icons"
+  printf 'installed icon\n' >"$case_root/xdg data/applications/icons/local icon.png"
+  run_top "$case_root" 'local app' >"$case_root/output"
+  [[ $(grep -c '^install ' "$case_root/invocations") -eq 1 ]] || fail 'regex filter did not select one spec'
+  assert_contains "$case_root/invocations" '/local app [one].json>'
+  assert_contains "$case_root/xdg data/applications/icons/local icon.png" 'installed icon'
+  pass_count=$((pass_count + 1))
+  printf 'ok - regex filtering and existing-icon preservation\n'
+}
+
+top_dry_run_case() {
+  local case_root="$TEST_ROOT/top-dry"
+  make_top_fixture "$case_root"
+  run_top "$case_root" --dry-run >"$case_root/output"
+  assert_absent "$case_root/invocations"
+  assert_absent "$case_root/xdg data/applications"
+  assert_contains "$case_root/output" 'Installing local icon:'
+  pass_count=$((pass_count + 1))
+  printf 'ok - top-level dry-run is side-effect-free\n'
+}
+
+top_uninstall_contract_case() {
+  local case_root="$TEST_ROOT/top-uninstall"
+  make_top_fixture "$case_root"
+  run_top "$case_root" --uninstall 'local app' >"$case_root/output"
+  assert_contains "$case_root/invocations" 'uninstall argc=1 <'
+  assert_contains "$case_root/invocations" '/local app [one].json>'
+  if grep -Fq -- '<--file>' "$case_root/invocations"; then
+    fail 'top-level uninstall passed unsupported --file option'
+  fi
+  assert_absent "$case_root/xdg data/applications"
+  pass_count=$((pass_count + 1))
+  printf 'ok - top-level uninstall uses the positional spec contract\n'
+}
+
+prepare_helper_case() {
+  local case_root="$TEST_ROOT/$1"
+  mkdir -p -- "$case_root/home" "$case_root/xdg data/applications" "$case_root/bin"
+  make_logging "$case_root/scripts"
+  cat >"$case_root/bin/curl" <<'EOF'
+#!/usr/bin/env bash
+printf 'curl' >>"$INVOCATIONS"
+printf ' <%s>' "$@" >>"$INVOCATIONS"
+printf '\n' >>"$INVOCATIONS"
+while [[ $# -gt 0 ]]; do
+  if [[ $1 == -o ]]; then shift; printf 'downloaded\n' >"$1"; fi
+  shift
+done
+EOF
+  cat >"$case_root/bin/update-desktop-database" <<'EOF'
+#!/usr/bin/env bash
+printf 'update' >>"$INVOCATIONS"
+printf ' <%s>' "$@" >>"$INVOCATIONS"
+printf '\n' >>"$INVOCATIONS"
+EOF
+  chmod +x -- "$case_root/bin/curl" "$case_root/bin/update-desktop-database"
+  printf '%s\n' "$case_root"
+}
+
+run_install_helper() {
+  local case_root=$1
+  shift
+  env HOME="$case_root/home" XDG_DATA_HOME="$case_root/xdg data" \
+    SCRIPTS="$case_root/scripts" INVOCATIONS="$case_root/invocations" \
+    PATH="$case_root/bin:/usr/bin:/bin" \
+    "$ROOT/env/.local/scripts/hypr/utils/webapp/install" "$@"
+}
+
+installer_dry_run_case() {
+  local case_root spec
+  case_root=$(prepare_helper_case installer-dry)
+  spec="$case_root/remote spec.json"
+  cat >"$spec" <<'EOF'
+{"name":"Dry Remote","url":"https://example.test","icon":"https://example.test/icon.png"}
+EOF
+  run_install_helper "$case_root" --file "$spec" --no-interactive --dry-run >"$case_root/output"
+  assert_absent "$case_root/invocations"
+  assert_absent "$case_root/xdg data/applications/icons"
+  assert_absent "$case_root/xdg data/applications/Dry Remote.desktop"
+  assert_contains "$case_root/output" "$case_root/xdg data/applications/icons/Dry Remote.png"
+  pass_count=$((pass_count + 1))
+  printf 'ok - installer dry-run creates and downloads nothing\n'
+}
+
+missing_icon_case() {
+  local case_root spec
+  case_root=$(prepare_helper_case missing-icon)
+  spec="$case_root/local spec.json"
+  cat >"$spec" <<'EOF'
+{"name":"Missing Local","url":"https://example.test","icon":"missing icon.png"}
+EOF
+  if run_install_helper "$case_root" --file "$spec" --no-interactive >"$case_root/output" 2>&1; then
+    fail 'installer accepted a missing local icon'
+  fi
+  assert_absent "$case_root/xdg data/applications/Missing Local.desktop"
+  pass_count=$((pass_count + 1))
+  printf 'ok - missing local icon fails before desktop creation\n'
+}
+
+run_uninstaller() {
+  local case_root=$1
+  shift
+  env HOME="$case_root/home" XDG_DATA_HOME="$case_root/xdg data" \
+    SCRIPTS="$case_root/scripts" INVOCATIONS="$case_root/invocations" \
+    PATH="$case_root/bin:/usr/bin:/bin" \
+    "$ROOT/env/.local/scripts/hypr/uninstall-desktop-app" "$@"
+}
+
+make_installed_app() {
+  local case_root=$1 icon="$1/xdg data/applications/icons/Test App.png"
+  mkdir -p -- "${icon%/*}"
+  printf 'icon\n' >"$icon"
+  cat >"$case_root/xdg data/applications/Test App.desktop" <<EOF
+[Desktop Entry]
+Name=Test App
+Icon=$icon
+EOF
+  cat >"$case_root/app spec.json" <<'EOF'
+{"name":"Test App","url":"https://example.test","icon":"unused.png"}
+EOF
+}
+
+uninstaller_dry_run_case() {
+  local case_root
+  case_root=$(prepare_helper_case uninstall-dry)
+  make_installed_app "$case_root"
+  run_uninstaller "$case_root" --dry-run "$case_root/app spec.json" >"$case_root/output"
+  assert_exists "$case_root/xdg data/applications/Test App.desktop"
+  assert_exists "$case_root/xdg data/applications/icons/Test App.png"
+  assert_absent "$case_root/invocations"
+  pass_count=$((pass_count + 1))
+  printf 'ok - uninstaller dry-run removes and refreshes nothing\n'
+}
+
+uninstaller_real_case() {
+  local case_root
+  case_root=$(prepare_helper_case uninstall-real)
+  make_installed_app "$case_root"
+  run_uninstaller "$case_root" "$case_root/app spec.json" >"$case_root/output"
+  assert_absent "$case_root/xdg data/applications/Test App.desktop"
+  assert_absent "$case_root/xdg data/applications/icons/Test App.png"
+  [[ $(grep -c '^update ' "$case_root/invocations") -eq 1 ]] || fail 'desktop database was not refreshed once'
+  pass_count=$((pass_count + 1))
+  printf 'ok - positional JSON uninstall removes files and refreshes once\n'
+}
+
+top_install_case
+filter_and_preserve_case
+top_dry_run_case
+top_uninstall_contract_case
+installer_dry_run_case
+missing_icon_case
+uninstaller_dry_run_case
+uninstaller_real_case
+printf '1..%d\n' "$pass_count"
