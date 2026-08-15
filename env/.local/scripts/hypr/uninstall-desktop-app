@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 THIS_FILE=${BASH_SOURCE[0]}
-THIS=$(basename "$THIS_FILE")
+THIS=$(basename -- "$THIS_FILE")
 
 usage() {
   cat <<EOF
@@ -25,11 +25,10 @@ started that allows you to choose the applications to remove.
 EOF
 }
 
-declare -a files
+declare -a files=()
 interactive_mode="0"
 dry_run="0"
-help_flag="0"
-XDG_DATA_HOME=${XDG_DATA_HOME}
+XDG_DATA_HOME=${XDG_DATA_HOME:-}
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 
 while [[ $# -gt 0 ]]; do
@@ -49,8 +48,10 @@ log() {
 
 ############################## MAIN ##############################
 
+# shellcheck source=/dev/null
 source "$SCRIPTS/hypr/logging"
 setup-logging "$THIS.log" "$THIS"
+export LOG_ENABLE_DRY_RUN="$dry_run"
 
 if [[ -z $XDG_DATA_HOME ]]; then
   log "xdg data home is not set"
@@ -58,23 +59,23 @@ if [[ -z $XDG_DATA_HOME ]]; then
   XDG_DATA_HOME=$HOME/.local/share
 fi
 
-if [[ ${#files} == 0 ]]; then
+if [[ ${#files[@]} -eq 0 ]]; then
   interactive_mode="1"
-
-  files+=(
-    $(find $XDG_DATA_HOME/applications -mindepth 1 -maxdepth 1 -type f -name "*.desktop" -printf "%f\n" |
-      gum choose --no-limit --padding "2 4" --header "Choose desktop apps to remove:" --selected-prefix="✗ ")
+  mapfile -t files < <(
+    find "$XDG_DATA_HOME/applications" -mindepth 1 -maxdepth 1 -type f -name "*.desktop" -printf "%f\n" |
+      gum choose --no-limit --padding "2 4" --header "Choose desktop apps to remove:" --selected-prefix="✗ "
   )
 fi
 
-for f in ${files[@]}; do
-
+removed_desktop="0"
+for argument in "${files[@]}"; do
+  f=$argument
   icon=""
   log "ARG: $f"
 
-  # Handle a passed in webapp spec file.
-  if [[ $f =~ \.json$ ]]; then
-    name=$(jq -r ".name" $f)
+  # Handle a passed-in webapp spec file.
+  if [[ $f == *.json ]]; then
+    name=$(jq -r '.name' "$f")
     f="$name.desktop"
   fi
 
@@ -84,26 +85,31 @@ for f in ${files[@]}; do
 
   if [[ ! -f $file ]]; then
     log "[WARNING]: File didn't exist, skipping!"
-  else
-    # get the line in file that has the icon path.
-    icon_line=$(cat $file | grep "Icon")
-    # get just the file path.
-    icon=${icon_line/#Icon=/}
+    continue
+  fi
 
+  # Get the icon path from the desktop entry.
+  icon_line=$(grep -m 1 '^Icon=' "$file" || true)
+  icon=${icon_line#Icon=}
+
+  if [[ -n $icon ]]; then
     log "   removing icon: rm -rf $icon"
-    log "   removing desktop: rm -rf $file"
+  fi
+  log "   removing desktop: rm -rf $file"
 
-    if [[ $dry_run == "0" ]]; then
-      rm -rf $icon
-      rm -rf $file
+  if [[ $dry_run == "0" ]]; then
+    if [[ -n $icon ]]; then
+      rm -rf -- "$icon"
+    fi
+    if rm -rf -- "$file"; then
+      removed_desktop="1"
     fi
   fi
 done
 
-if [[ ${#files} -gt 0 ]]; then
-  # Refresh the database so that applcation luanchers, etc
-  # don't show the app still exists.
-  update-desktop-database $XDG_DATA_HOME/applications
+if [[ $dry_run == "0" && $removed_desktop == "1" ]]; then
+  # Refresh the database so application launchers do not show removed apps.
+  update-desktop-database "$XDG_DATA_HOME/applications"
 
   if [[ $interactive_mode == "1" ]]; then
     log "Done!"
