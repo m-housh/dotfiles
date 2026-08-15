@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null && pwd -P)
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf -- "$TEST_ROOT"' EXIT
+pass_count=0
+
+fail() {
+	printf 'not ok - %s\n' "$*" >&2
+	exit 1
+}
+
+new_repo() {
+	local repo=$1
+	mkdir -p -- "$repo"
+}
+
+run_gen() {
+	local repo=$1
+	shift
+	DEV_ENV=$repo "$ROOT/gen" "$@"
+}
+
+expect_failure() {
+	if "$@" >"$TEST_ROOT/failure-output" 2>&1; then
+		fail "command unexpectedly succeeded: $*"
+	fi
+	[[ -s $TEST_ROOT/failure-output ]] || fail 'failure did not provide a useful message'
+}
+
+run_case() {
+	local repo="$TEST_ROOT/run/repo" manifest
+	new_repo "$repo"
+	run_gen "$repo" run workstation >/dev/null
+	manifest=$repo/runs/workstation
+	[[ -f $manifest && ! -x $manifest ]] || fail 'run manifest is missing or executable'
+	grep -Fq '# Packages' "$manifest" || fail 'run package-list comment is missing'
+	! grep -Eq '(^#!|yay)' "$manifest" || fail 'run manifest contains executable shell content'
+	[[ ! -e $repo/runs/before/workstation && ! -e $repo/runs/after/workstation ]] || fail 'optional hooks were generated'
+	printf 'one\ntwo # note\n' >>"$manifest"
+	mapfile -t packages < <(while IFS= read -r line; do
+		[[ $line == \#* ]] && continue
+		package=${line%% \#*}
+		[[ -n $package ]] && printf '%s\n' "$package"
+	done <"$manifest")
+	[[ ${packages[*]} == 'one two' ]] || fail 'generated run is not consumable as a package manifest'
+	pass_count=$((pass_count + 1))
+	printf 'ok - current non-executable run manifest without lifecycle hooks\n'
+}
+
+webapp_case() {
+	local repo="$TEST_ROOT/webapp/repo"
+	new_repo "$repo"
+	run_gen "$repo" webapp 'first app' >/dev/null
+	run_gen "$repo" webapp second.json >/dev/null
+	[[ -f $repo/env/webapps/'first app.json' && ! -x $repo/env/webapps/'first app.json' ]] || fail 'webapp suffix or mode is wrong'
+	[[ -f $repo/env/webapps/second.json && ! -e $repo/env/webapps/second.json.json ]] || fail 'webapp suffix was added twice'
+	python3 -m json.tool "$repo/env/webapps/first app.json" >/dev/null || fail 'generated webapp is invalid JSON'
+	grep -Fq '"url": "https://example.com"' "$repo/env/webapps/first app.json" || fail 'webapp template changed'
+	pass_count=$((pass_count + 1))
+	printf 'ok - webapp suffix, JSON template, and file mode\n'
+}
+
+script_case() {
+	local repo="$TEST_ROOT/script/repo" script
+	new_repo "$repo"
+	run_gen "$repo" script 'team tools/new script' >/dev/null
+	script="$repo/env/.local/scripts/team tools/new script"
+	[[ -f $script && -x $script ]] || fail 'nested script is missing or not executable'
+	grep -Fqx '#!/usr/bin/env bash' "$script" || fail 'script template lost its shebang'
+	# The generated template must contain these literal variable references.
+	# shellcheck disable=SC2016
+	grep -Fq 'setup-logging "$LOG_FILE" "$LOG_LABEL"' "$script" || fail 'script logging template changed'
+	pass_count=$((pass_count + 1))
+	printf 'ok - executable script template and nested parent creation\n'
+}
+
+argument_case() {
+	local repo="$TEST_ROOT/arguments/repo"
+	new_repo "$repo"
+	expect_failure env DEV_ENV="$repo" "$ROOT/gen"
+	expect_failure env DEV_ENV="$repo" "$ROOT/gen" run
+	expect_failure env DEV_ENV="$repo" "$ROOT/gen" unknown name
+	expect_failure env DEV_ENV="$repo" "$ROOT/gen" run one extra
+	expect_failure env DEV_ENV="$repo" "$ROOT/gen" run webapp
+	[[ ! -e $repo/runs && ! -e $repo/env ]] || fail 'invalid arguments changed the filesystem'
+	pass_count=$((pass_count + 1))
+	printf 'ok - exactly one known type and one name are required\n'
+}
+
+containment_case() {
+	local repo="$TEST_ROOT/containment/repo"
+	new_repo "$repo"
+	expect_failure run_gen "$repo" run /absolute
+	expect_failure run_gen "$repo" run ../escape
+	expect_failure run_gen "$repo" run nested/name
+	expect_failure run_gen "$repo" webapp nested/name
+	expect_failure run_gen "$repo" script nested/../escape
+	[[ ! -e $repo/runs && ! -e $repo/env && ! -e $TEST_ROOT/containment/escape ]] || fail 'invalid destination had filesystem side effects'
+	pass_count=$((pass_count + 1))
+	printf 'ok - absolute, traversal, and invalid nested names are contained\n'
+}
+
+existing_case() {
+	local repo="$TEST_ROOT/existing/repo"
+	new_repo "$repo"
+	mkdir -p -- "$repo/runs/directory" "$repo/env/webapps" "$repo/env/.local/scripts"
+	printf 'original\n' >"$repo/runs/file"
+	ln -s -- nowhere "$repo/runs/link"
+	printf 'webapp\n' >"$repo/env/webapps/app.json"
+	printf 'script\n' >"$repo/env/.local/scripts/tool"
+	expect_failure run_gen "$repo" run file
+	expect_failure run_gen "$repo" run directory
+	expect_failure run_gen "$repo" run link
+	expect_failure run_gen "$repo" webapp app
+	expect_failure run_gen "$repo" script tool
+	[[ $(<"$repo/runs/file") == original && $(<"$repo/env/webapps/app.json") == webapp && $(<"$repo/env/.local/scripts/tool") == script ]] || fail 'an existing file was overwritten'
+	[[ -L $repo/runs/link ]] || fail 'an existing symlink was replaced'
+	pass_count=$((pass_count + 1))
+	printf 'ok - existing files, directories, and symlinks are preserved\n'
+}
+
+spaces_and_help_case() {
+	local repo="$TEST_ROOT/spaces/repository root" empty="$TEST_ROOT/help-empty"
+	new_repo "$repo"
+	mkdir -p -- "$empty"
+	run_gen "$repo" run 'desktop packages' >/dev/null
+	[[ -f $repo/runs/'desktop packages' ]] || fail 'spaces were split in repository or destination paths'
+	(cd -- "$empty" && env -u DEV_ENV "$ROOT/gen" --help >help-output)
+	[[ -f $empty/help-output ]] || fail '--help did not succeed without DEV_ENV'
+	[[ $(find "$empty" -mindepth 1 -maxdepth 1 -printf '%f\n') == help-output ]] || fail '--help changed the filesystem'
+	pass_count=$((pass_count + 1))
+	printf 'ok - spaces are quoted and help is side-effect-free\n'
+}
+
+run_case
+webapp_case
+script_case
+argument_case
+containment_case
+existing_case
+spaces_and_help_case
+printf '1..%d\n' "$pass_count"
