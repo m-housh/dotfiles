@@ -111,11 +111,12 @@ top_dry_run_case() {
   local case_root="$TEST_ROOT/top-dry"
   make_top_fixture "$case_root"
   run_top "$case_root" --dry-run >"$case_root/output"
-  assert_absent "$case_root/invocations"
+  [[ $(grep -c '^install ' "$case_root/invocations") -eq 2 ]] || fail 'dry-run did not delegate every spec to the installer'
+  [[ $(grep -c '<--dry-run>' "$case_root/invocations") -eq 2 ]] || fail 'installer helpers did not receive --dry-run'
   assert_absent "$case_root/xdg data/applications"
   assert_contains "$case_root/output" 'Installing local icon:'
   pass_count=$((pass_count + 1))
-  printf 'ok - top-level dry-run is side-effect-free\n'
+  printf 'ok - top-level dry-run delegates validation without local side effects\n'
 }
 
 top_uninstall_contract_case() {
@@ -128,8 +129,13 @@ top_uninstall_contract_case() {
     fail 'top-level uninstall passed unsupported --file option'
   fi
   assert_absent "$case_root/xdg data/applications"
+
+  rm -f -- "$case_root/invocations"
+  run_top "$case_root" --uninstall --dry-run 'local app' >"$case_root/dry-output"
+  assert_contains "$case_root/invocations" 'uninstall argc=2 <'
+  assert_contains "$case_root/invocations" '<--dry-run>'
   pass_count=$((pass_count + 1))
-  printf 'ok - top-level uninstall uses the positional spec contract\n'
+  printf 'ok - top-level uninstall delegates its positional and dry-run contract\n'
 }
 
 prepare_helper_case() {
@@ -142,9 +148,13 @@ printf 'curl' >>"$INVOCATIONS"
 printf ' <%s>' "$@" >>"$INVOCATIONS"
 printf '\n' >>"$INVOCATIONS"
 while [[ $# -gt 0 ]]; do
-  if [[ $1 == -o ]]; then shift; printf 'downloaded\n' >"$1"; fi
+  if [[ $1 == -o ]]; then
+    shift
+    printf 'downloaded\n' >"$1"
+  fi
   shift
 done
+[[ ${CURL_FAIL:-0} == 0 ]] || exit 22
 EOF
   cat >"$case_root/bin/update-desktop-database" <<'EOF'
 #!/usr/bin/env bash
@@ -161,7 +171,7 @@ run_install_helper() {
   shift
   env HOME="$case_root/home" XDG_DATA_HOME="$case_root/xdg data" \
     SCRIPTS="$case_root/scripts" INVOCATIONS="$case_root/invocations" \
-    PATH="$case_root/bin:/usr/bin:/bin" \
+    CURL_FAIL="${CURL_FAIL:-0}" PATH="$case_root/bin:/usr/bin:/bin" \
     "$ROOT/env/.local/scripts/hypr/utils/webapp/install" "$@"
 }
 
@@ -194,6 +204,125 @@ EOF
   assert_absent "$case_root/xdg data/applications/Missing Local.desktop"
   pass_count=$((pass_count + 1))
   printf 'ok - missing local icon fails before desktop creation\n'
+}
+
+invalid_installer_input_case() {
+  local case_root spec
+  case_root=$(prepare_helper_case invalid-installer)
+  spec="$case_root/bad.json"
+
+  printf '{not json}\n' >"$spec"
+  if run_install_helper "$case_root" --file "$spec" --no-interactive >"$case_root/output" 2>&1; then
+    fail 'installer accepted malformed JSON'
+  fi
+
+  printf '%s\n' '{"name":"../../escaped","url":"https://example.test","icon":"icon.png"}' >"$spec"
+  if run_install_helper "$case_root" --file "$spec" --no-interactive >>"$case_root/output" 2>&1; then
+    fail 'installer accepted a traversing app name'
+  fi
+
+  printf '%s\n' '{"name":"Safe App","url":"https://example.test","icon":"../icon.png"}' >"$spec"
+  if run_install_helper "$case_root" --file "$spec" --no-interactive >>"$case_root/output" 2>&1; then
+    fail 'installer accepted a traversing managed icon name'
+  fi
+
+  printf '%s\n' '{"name":"Bad\n","url":"https://example.test","icon":"icon.png"}' >"$spec"
+  if run_install_helper "$case_root" --file "$spec" --no-interactive >>"$case_root/output" 2>&1; then
+    fail 'installer accepted a trailing control character in an app name'
+  fi
+
+  assert_absent "$case_root/escaped.desktop"
+  assert_absent "$case_root/xdg data/applications/Safe App.desktop"
+  pass_count=$((pass_count + 1))
+  printf 'ok - malformed JSON and unsafe generated paths are rejected\n'
+}
+
+desktop_symlink_install_case() {
+  local case_root spec apps victim
+  case_root=$(prepare_helper_case desktop-symlink)
+  spec="$case_root/spec.json"
+  apps="$case_root/xdg data/applications"
+  victim="$case_root/external victim"
+  mkdir -p -- "$apps/icons"
+  printf 'victim contents\n' >"$victim"
+  printf 'icon\n' >"$apps/icons/local.png"
+  ln -s -- "$victim" "$apps/Linked App.desktop"
+  printf '%s\n' '{"name":"Linked App","url":"https://example.test","icon":"local.png"}' >"$spec"
+
+  run_install_helper "$case_root" --file "$spec" --no-interactive >"$case_root/output"
+  assert_contains "$victim" 'victim contents'
+  [[ ! -L "$apps/Linked App.desktop" ]] || fail 'installer left the desktop symlink in place'
+  assert_contains "$apps/Linked App.desktop" 'Name=Linked App'
+  pass_count=$((pass_count + 1))
+  printf 'ok - desktop generation cannot follow an external symlink\n'
+}
+
+desktop_directory_destination_case() {
+  local case_root spec apps destination
+  case_root=$(prepare_helper_case desktop-directory)
+  spec="$case_root/spec.json"
+  apps="$case_root/xdg data/applications"
+  destination="$apps/Directory App.desktop"
+  mkdir -p -- "$apps/icons" "$destination"
+  printf 'icon\n' >"$apps/icons/local.png"
+  printf 'preserve\n' >"$destination/marker"
+  printf '%s\n' '{"name":"Directory App","url":"https://example.test","icon":"local.png"}' >"$spec"
+
+  if run_install_helper "$case_root" --file "$spec" --no-interactive >"$case_root/output" 2>&1; then
+    fail 'installer accepted a desktop directory destination'
+  fi
+  assert_contains "$case_root/output" 'destination is a directory'
+  assert_contains "$destination/marker" 'preserve'
+  if find "$apps" -name '.webapp-desktop.*' | grep -q .; then
+    fail 'desktop directory rejection leaked a temporary file'
+  fi
+  pass_count=$((pass_count + 1))
+  printf 'ok - desktop directory destinations are rejected without changes\n'
+}
+
+icon_directory_destination_case() {
+  local case_root spec icons destination
+  case_root=$(prepare_helper_case icon-directory)
+  spec="$case_root/spec.json"
+  icons="$case_root/xdg data/applications/icons"
+  destination="$icons/Directory Icon.png"
+  mkdir -p -- "$destination"
+  printf 'preserve\n' >"$destination/marker"
+  printf '%s\n' '{"name":"Directory Icon","url":"https://example.test","icon":"https://example.test/icon.png"}' >"$spec"
+
+  if run_install_helper "$case_root" --file "$spec" --no-interactive >"$case_root/output" 2>&1; then
+    fail 'installer accepted an icon directory destination'
+  fi
+  assert_contains "$case_root/output" 'destination is a directory'
+  assert_contains "$destination/marker" 'preserve'
+  assert_absent "$case_root/invocations"
+  if find "$icons" -name '.webapp-icon.*' | grep -q .; then
+    fail 'icon directory rejection leaked a temporary file'
+  fi
+  pass_count=$((pass_count + 1))
+  printf 'ok - icon directory destinations are rejected without changes\n'
+}
+
+failed_download_case() {
+  local case_root spec icon
+  case_root=$(prepare_helper_case failed-download)
+  spec="$case_root/remote.json"
+  icon="$case_root/xdg data/applications/icons/Failed Remote.png"
+  mkdir -p -- "${icon%/*}"
+  printf 'existing icon\n' >"$icon"
+  printf '%s\n' '{"name":"Failed Remote","url":"https://example.test","icon":"https://example.test/missing.png"}' >"$spec"
+
+  if CURL_FAIL=1 run_install_helper "$case_root" --file "$spec" --no-interactive >"$case_root/output" 2>&1; then
+    fail 'installer accepted an HTTP download failure'
+  fi
+  assert_contains "$case_root/invocations" '<--fail>'
+  assert_contains "$icon" 'existing icon'
+  assert_absent "$case_root/xdg data/applications/Failed Remote.desktop"
+  if find "${icon%/*}" -name '.webapp-icon.*' | grep -q .; then
+    fail 'failed download left a temporary icon'
+  fi
+  pass_count=$((pass_count + 1))
+  printf 'ok - failed HTTP downloads preserve existing state\n'
 }
 
 run_uninstaller() {
@@ -243,12 +372,77 @@ uninstaller_real_case() {
   printf 'ok - positional JSON uninstall removes files and refreshes once\n'
 }
 
+preserve_unmanaged_icons_case() {
+  local case_root apps icons external target kind
+
+  for kind in external traversal symlink; do
+    case_root=$(prepare_helper_case "uninstall-$kind")
+    apps="$case_root/xdg data/applications"
+    icons="$apps/icons"
+    external="$case_root/external icon.png"
+    mkdir -p -- "$icons"
+    printf 'external\n' >"$external"
+
+    case $kind in
+      external) target=$external ;;
+      traversal) target="$icons/../../../external icon.png" ;;
+      symlink)
+        target="$icons/linked.png"
+        ln -s -- "$external" "$target"
+        ;;
+    esac
+
+    cat >"$apps/Unsafe App.desktop" <<EOF
+[Desktop Entry]
+Name=Unsafe App
+Icon=$target
+EOF
+    printf '%s\n' '{"name":"Unsafe App"}' >"$case_root/spec.json"
+    run_uninstaller "$case_root" "$case_root/spec.json" >"$case_root/output"
+    assert_absent "$apps/Unsafe App.desktop"
+    assert_exists "$external"
+    if [[ $kind == symlink && ! -L $target ]]; then
+      fail 'uninstaller removed a managed icon symlink'
+    fi
+    assert_contains "$case_root/output" 'Preserving unsafe or unmanaged icon target'
+  done
+
+  pass_count=$((pass_count + 1))
+  printf 'ok - external, traversing, and symlink icon targets are preserved\n'
+}
+
+invalid_uninstaller_input_case() {
+  local case_root spec
+  case_root=$(prepare_helper_case invalid-uninstaller)
+  spec="$case_root/spec.json"
+  printf '{bad json}\n' >"$spec"
+  if run_uninstaller "$case_root" "$spec" >"$case_root/output" 2>&1; then
+    fail 'uninstaller accepted malformed JSON'
+  fi
+  printf '%s\n' '{"name":"../../victim"}' >"$spec"
+  if run_uninstaller "$case_root" "$spec" >>"$case_root/output" 2>&1; then
+    fail 'uninstaller accepted a traversing app name'
+  fi
+  if run_uninstaller "$case_root" '../victim.desktop' >>"$case_root/output" 2>&1; then
+    fail 'uninstaller accepted a desktop path separator'
+  fi
+  pass_count=$((pass_count + 1))
+  printf 'ok - malformed and traversing uninstall inputs are rejected\n'
+}
+
 top_install_case
 filter_and_preserve_case
 top_dry_run_case
 top_uninstall_contract_case
 installer_dry_run_case
 missing_icon_case
+invalid_installer_input_case
+desktop_symlink_install_case
+desktop_directory_destination_case
+icon_directory_destination_case
+failed_download_case
 uninstaller_dry_run_case
 uninstaller_real_case
+preserve_unmanaged_icons_case
+invalid_uninstaller_input_case
 printf '1..%d\n' "$pass_count"
