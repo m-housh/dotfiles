@@ -14,6 +14,7 @@ Ghostty, Git, tmux, systemd user services, and other command-line and desktop
 tools. It also contains:
 
 - scripts installed under `~/.local/scripts`;
+- portable Pi guidance, skills, and themes under `env/.pi/agent`;
 - package manifests and optional lifecycle hooks under `runs/`;
 - webapp specifications under `env/webapps`;
 - encrypted machine-specific configuration; and
@@ -93,6 +94,24 @@ For the smaller container profile, run:
 The wrapper uses its own repository directory as `DEV_ENV` and forwards options
 to `dev-env container`. The container profile installs a small set of shell and
 development configuration without workstation service actions.
+
+## Pi resources
+
+Both the full and container profiles install the portable Pi resources from
+`env/.pi/agent` into `~/.pi/agent`. Managed global guidance, same-named skills,
+and same-named themes are updated on each installation. Other runtime entries
+are left in place.
+
+The managed `settings.json` is only an initial default: it is copied when no
+runtime settings file exists and selects the `catppuccin-mocha` theme. An
+existing `~/.pi/agent/settings.json` is preserved byte-for-byte. To use the
+managed Catppuccin theme with an existing runtime, select it once through
+Pi's `/settings` interface.
+
+Credentials, models, sessions, trust decisions, package directories,
+extensions (including Herdr state), and other machine-local runtime files are
+deliberately excluded from dotfile management. Keep those only in the live
+`~/.pi/agent` directory.
 
 ## Package runs
 
