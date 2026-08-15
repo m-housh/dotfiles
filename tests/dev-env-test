@@ -32,6 +32,11 @@ make_fixture() {
 	source=$case_root/source
 	mkdir -p -- \
 		"$source/env/.config/new [feature]" \
+		"$source/env/.config/eza" \
+		"$source/env/.config/git" \
+		"$source/env/.config/ripgrep" \
+		"$source/env/.config/starship" \
+		"$source/env/.config/yazi" \
 		"$source/env/.config/herdr" \
 		"$source/env/.config/hypr" \
 		"$source/env/.config/nvim" \
@@ -47,6 +52,11 @@ make_fixture() {
 		"$source/mail"
 
 	printf 'managed feature\n' >"$source/env/.config/new [feature]/config * file"
+	printf 'new eza\n' >"$source/env/.config/eza/config.yml"
+	printf 'new git\n' >"$source/env/.config/git/config"
+	printf 'new ripgrep\n' >"$source/env/.config/ripgrep/config"
+	printf 'new starship\n' >"$source/env/.config/starship/starship.toml"
+	printf 'new yazi\n' >"$source/env/.config/yazi/yazi.toml"
 	printf 'new herdr\n' >"$source/env/.config/herdr/config.toml"
 	printf 'new hypr config\n' >"$source/env/.config/hypr/hyprland.lua"
 	printf 'new nvim\n' >"$source/env/.config/nvim/init.lua"
@@ -66,7 +76,7 @@ make_fixture() {
 	printf 'tmux\n' >"$source/env/.tmux.conf"
 	printf 'markdown\n' >"$source/env/.markdownlint.jsonc"
 	printf 'prettier\n' >"$source/env/.prettierrc.json"
-	cp -- "$ROOT/dev-env" "$source/dev-env"
+	cp -- "$ROOT/dev-env" "$ROOT/devcontainer-env" "$source/"
 
 	cat >"$source/env/.local/scripts/wt" <<'EOF'
 #!/usr/bin/env bash
@@ -100,6 +110,13 @@ printf '\n' >>"$INVOCATIONS"
 printf 'hpa completion\n'
 EOF
 	chmod +x -- "$fake_bin/podman"
+	cat >"$fake_bin/git" <<'EOF'
+#!/usr/bin/env bash
+printf 'git' >>"$INVOCATIONS"
+printf ' <%s>' "$@" >>"$INVOCATIONS"
+printf '\n' >>"$INVOCATIONS"
+EOF
+	chmod +x -- "$fake_bin/git"
 }
 
 prepare_case() {
@@ -194,7 +211,7 @@ integration_case() {
 	fi
 
 	# A second installation must succeed and retain the same preservation policy.
-	run_installer "$case_root" --no-reload >"$case_root/output-second"
+	run_installer "$case_root" full --no-reload >"$case_root/output-second"
 	assert_exists "$config/herdr/sessions/live"
 	assert_exists "$config/hypr/local.conf"
 	assert_exists "$config/zsh/history"
@@ -231,10 +248,117 @@ argument_case() {
 		fail 'unknown argument succeeded'
 	fi
 	grep -Fq 'unknown option: --unknown' "$case_root/error" || fail 'unknown argument error was not useful'
+	if run_installer "$case_root" unknown >"$case_root/output" 2>"$case_root/error"; then
+		fail 'unknown profile succeeded'
+	fi
+	grep -Fq 'unknown profile: unknown' "$case_root/error" || fail 'unknown profile error was not useful'
+	if run_installer "$case_root" full container >"$case_root/output" 2>"$case_root/error"; then
+		fail 'multiple profiles succeeded'
+	fi
+	grep -Fq 'multiple profiles specified' "$case_root/error" || fail 'duplicate profile error was not useful'
 	"$case_root/source/dev-env" --help >"$case_root/help"
-	grep -Fq 'Usage: dev-env' "$case_root/help" || fail '--help did not print usage'
+	grep -Fq 'Usage: dev-env [full|container]' "$case_root/help" || fail '--help did not print usage'
 	pass_count=$((pass_count + 1))
 	printf 'ok - CLI parsing\n'
+}
+
+container_case() {
+	local case_root home config
+	case_root=$(prepare_case container)
+	home="$case_root/home [test]"
+	config="$case_root/xdg config"
+
+	mkdir -p -- \
+		"$config/eza" \
+		"$config/zsh/functions" \
+		"$config/zsh/plugins" \
+		"$config/nvim/generated" \
+		"$home/.local/scripts/hypr/utils"
+	printf 'stale config\n' >"$config/eza/stale"
+	printf 'stale function\n' >"$config/zsh/functions/stale"
+	printf 'history\n' >"$config/zsh/history"
+	printf 'plugin\n' >"$config/zsh/plugins/local"
+	printf 'personal\n' >"$config/zsh/personal.env"
+	printf 'generated\n' >"$config/nvim/generated/state"
+	printf 'local script\n' >"$home/.local/scripts/local-only"
+	printf 'stale nested\n' >"$home/.local/scripts/hypr/utils/stale"
+
+	# Options may precede the profile; --no-reload is harmless for containers.
+	run_installer "$case_root" --no-reload container >"$case_root/output"
+
+	for name in eza git ripgrep starship yazi; do
+		assert_exists "$config/$name"
+	done
+	assert_absent "$config/eza/stale"
+	assert_absent "$config/new [feature]"
+	assert_absent "$config/herdr"
+	assert_absent "$config/hypr"
+	assert_absent "$config/systemd"
+	assert_absent "$config/kanata"
+	assert_absent "$case_root/xdg data/applications"
+	assert_absent "$home/wallpapers"
+	assert_absent "$home/Pictures"
+	assert_absent "$home/pkgbuilds"
+
+	assert_absent "$config/zsh/functions/stale"
+	assert_file_contains "$config/zsh/functions/managed" 'new function'
+	assert_exists "$config/zsh/history"
+	assert_exists "$config/zsh/plugins/local"
+	assert_exists "$config/zsh/personal.env"
+	assert_file_contains "$config/nvim/init.lua" 'new nvim'
+	assert_exists "$config/nvim/generated/state"
+	assert_file_contains "$home/.prettierrc.json" prettier
+	assert_absent "$home/.prettierrc"
+	assert_file_contains "$home/.markdownlint.jsonc" markdown
+	assert_file_contains "$home/.tmux.conf" tmux
+	assert_file_contains "$home/.zshenv" zshenv
+	assert_exists "$home/.local/scripts/tool"
+	assert_exists "$home/.local/scripts/hypr/run"
+	assert_exists "$home/.local/scripts/hypr/utils/new"
+	assert_exists "$home/.local/scripts/hypr/utils/stale"
+	assert_exists "$home/.local/scripts/local-only"
+	assert_absent "$home/.local/scripts/dev-env"
+
+	assert_file_contains "$case_root/invocations" 'git <-C>'
+	assert_file_contains "$case_root/invocations" '<submodule> <update> <--init> <--> <env/.config/nvim>'
+	if grep -Fq -- '--remote' "$case_root/invocations"; then
+		fail 'container submodule update used --remote'
+	fi
+	[[ $(wc -l <"$case_root/invocations") -eq 1 ]] || fail 'container invoked host commands'
+	pass_count=$((pass_count + 1))
+	printf 'ok - explicit minimal container installation and preservation policies\n'
+}
+
+container_dry_run_case() {
+	local case_root
+	case_root=$(prepare_case container-dry-run)
+	run_installer "$case_root" container --dry-run >"$case_root/plan"
+	[[ ! -s $case_root/invocations ]] || fail 'container dry-run invoked an external command'
+	assert_absent "$case_root/home [test]/.zshenv"
+	assert_absent "$case_root/xdg config/eza"
+	grep -Fq 'git -C' "$case_root/plan" || fail 'container dry-run omitted submodule update'
+	grep -Fq 'submodule update --init -- env/.config/nvim' "$case_root/plan" || fail 'container dry-run submodule plan is not pinned'
+	if grep -Eq 'systemctl|hyprctl|espanso|podman|zsh -l' "$case_root/plan"; then
+		fail 'container dry-run planned a host action'
+	fi
+	pass_count=$((pass_count + 1))
+	printf 'ok - container dry-run has no side effects or host actions\n'
+}
+
+wrapper_case() {
+	local case_root
+	case_root=$(prepare_case wrapper)
+	env -u DEV_ENV \
+		HOME="$case_root/home [test]" \
+		XDG_CONFIG_HOME="$case_root/xdg config" \
+		XDG_DATA_HOME="$case_root/xdg data" \
+		INVOCATIONS="$case_root/invocations" \
+		PATH="$case_root/bin:/usr/bin:/bin" \
+		"$case_root/source/devcontainer-env" --dry-run --no-reload >"$case_root/plan"
+	grep -Fq 'submodule update --init -- env/.config/nvim' "$case_root/plan" || fail 'wrapper did not dispatch to container profile'
+	[[ ! -s $case_root/invocations ]] || fail 'wrapper did not forward --dry-run'
+	pass_count=$((pass_count + 1))
+	printf 'ok - compatibility wrapper defaults the source root and forwards arguments\n'
 }
 
 missing_source_case() {
@@ -256,5 +380,8 @@ integration_case
 dry_run_case
 reload_case
 argument_case
+container_case
+container_dry_run_case
+wrapper_case
 missing_source_case
 printf '1..%d\n' "$pass_count"
