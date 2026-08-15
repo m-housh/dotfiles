@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 
-# Adapted from https://github.com/ThePrimeagen/dev/blob/master/run
-#
-# Installs packages declared in the 'runs' directory, will run scripts matching the
-# file name in the 'runs/before' and 'runs/after', respectively, to handle setting up or
-# tearing down based on the run mode.
-#
+# Installs or uninstalls packages declared in regular files immediately under runs/.
+# This command owns CLI policy and manifest selection; run-handler owns the lifecycle
+# for each selected manifest.
 set -e
 set -o nounset
 set -o pipefail
@@ -14,47 +11,117 @@ THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=$(basename "$THIS_FILE")
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
-declare dry_run grepstr mode
+declare dry_run filter filter_set mode mode_set end_options regex_status
+declare -a manifests
+
+usage() {
+	cat <<'EOF'
+Usage: run [--dry-run] [install|uninstall] [FILTER]
+
+Install package manifests by default, or uninstall them with their lifecycle hooks.
+FILTER is an optional Bash regular expression matched against each manifest path.
+
+Options:
+  --dry-run  Log the selected lifecycle without running hooks or yay.
+  -h, --help Show this help text.
+EOF
+}
+
+fail() {
+	printf 'run: %s\n' "$*" >&2
+	printf "Try 'run --help' for more information.\n" >&2
+	exit 2
+}
 
 log() {
 	logging log --source "$THIS_FILE" --echo "$@"
-} && export -f log
+}
 
 ############################## MAIN ##############################
 
-# Setup logging file and label.
+filter=""
+filter_set="0"
+dry_run="0"
+mode="install"
+mode_set="0"
+end_options="0"
+manifests=()
+
+while (($# > 0)); do
+	if [[ $end_options == "0" ]]; then
+		case $1 in
+			--dry-run)
+				dry_run="1"
+				shift
+				continue
+				;;
+			-h | --help)
+				usage
+				exit 0
+				;;
+			--)
+				end_options="1"
+				shift
+				continue
+				;;
+			-*) fail "unknown option: $1" ;;
+		esac
+	fi
+
+	if [[ $end_options == "1" ]]; then
+		[[ $filter_set == "0" ]] || fail "only one filter may be specified"
+		filter=$1
+		filter_set="1"
+		shift
+		continue
+	fi
+
+	case $1 in
+		install | uninstall)
+			[[ $mode_set == "0" ]] || fail "mode may only be specified once"
+			mode=$1
+			mode_set="1"
+			;;
+		*)
+			[[ $filter_set == "0" ]] || fail "only one filter may be specified"
+			filter=$1
+			filter_set="1"
+			;;
+	esac
+	shift
+done
+
+if [[ -n $filter ]]; then
+	regex_status=0
+	# Capture status 2, which Bash uses for a malformed dynamic regex.
+	# shellcheck disable=SC2319
+	[[ "" =~ $filter ]] || regex_status=$?
+	((regex_status != 2)) || fail "invalid Bash regular expression: $filter"
+fi
+
+[[ -n ${DEV_ENV:-} ]] || fail "env var DEV_ENV needs to be present"
+[[ -n ${SCRIPTS:-} ]] || fail "env var SCRIPTS needs to be present"
+[[ -d $DEV_ENV/runs ]] || fail "runs directory not found: $DEV_ENV/runs"
+[[ -x $DEV_ENV/runs/utils/run-handler ]] ||
+	fail "run handler is not executable: $DEV_ENV/runs/utils/run-handler"
+
+# Read by the logging utility sourced below.
+# shellcheck disable=SC2034
+LOG_ENABLE_DRY_RUN=$dry_run
 # shellcheck disable=SC1091
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
-[ -z "$DEV_ENV" ] &&
-	log --error "env var DEV_ENV needs to be present" &&
-	exit 1
+log "RUN: -- grep: '$filter'"
 
-grepstr=""
-dry_run="0"
-mode="install"
-
-while [[ $# -gt 0 ]]; do
-	if [[ "$1" =~ ^--dry ]]; then
-		dry_run="1"
-	elif [[ "$1" == "uninstall" ]]; then
-		mode="uninstall"
-	elif [[ ! "$1" == "install" ]]; then
-		grepstr="$1"
+while IFS= read -r -d '' manifest; do
+	if [[ -z $filter ]] || [[ $manifest =~ $filter ]]; then
+		manifests+=("$manifest")
+	else
+		log "Grep filtered out: '$manifest'"
 	fi
-	shift
+done < <(find "$DEV_ENV/runs" -mindepth 1 -maxdepth 1 -type f -print0)
+
+for manifest in "${manifests[@]}"; do
+	"$DEV_ENV/runs/utils/run-handler" "$manifest" "$mode" "$dry_run"
 done
-
-export DEV_ENV="$DEV_ENV"
-export LOG_ENABLE_DRY_RUN="$dry_run"
-export RUN_GREP_STR="$grepstr"
-export RUN_MODE="$mode"
-
-log "RUN: -- grep: '$grepstr'"
-
-find "$DEV_ENV/runs" \
-	-mindepth 1 \
-	-maxdepth 1 \
-	-type f \
-	-exec bash -xc "$DEV_ENV/runs/utils/run-handler {}" \;

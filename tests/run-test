@@ -25,13 +25,23 @@ assert_count() {
 	[[ $actual == "$expected" ]] || fail "expected $expected copies of '$line' in $file, found $actual"
 }
 
-package_and_hook_case() {
-	local case_root=$TEST_ROOT/packages dev_env=$TEST_ROOT/packages/dev-env
+assert_contents() {
+	local file=$1 expected=$2
+	[[ $(<"$file") == "$expected" ]] || {
+		printf 'expected %s to contain:\n%s\nactual:\n' "$file" "$expected" >&2
+		cat -- "$file" >&2
+		fail "unexpected contents in $file"
+	}
+}
+
+prepare_package_case() {
+	local case_root=$1 dev_env=$1/dev-env
 	mkdir -p -- "$case_root/bin" "$case_root/logs" \
 		"$dev_env/runs/utils" "$dev_env/runs/before" "$dev_env/runs/after"
 	cp -- "$ROOT/runs/utils/run-handler" "$dev_env/runs/utils/run-handler"
 	cp -- "$ROOT/runs/before/yay" "$dev_env/runs/before/yay"
 	printf 'selected-one\nselected-two # inline comment\n' >"$dev_env/runs/selected"
+	printf 'selected-extra\n' >"$dev_env/runs/selected-extra"
 	printf 'must-not-run\n' >"$dev_env/runs/omitted"
 
 	cat >"$case_root/bin/yay" <<'EOF'
@@ -56,44 +66,140 @@ EOF
 
 	: >"$case_root/invocations"
 	: >"$case_root/hooks"
+}
+
+run_top() {
+	local case_root=$1
+	shift
 	env \
-		DEV_ENV="$dev_env" \
+		DEV_ENV="$case_root/dev-env" \
 		SCRIPTS="$ROOT/env/.local/scripts" \
 		LOG_DIR="$case_root/logs" \
 		INVOCATIONS="$case_root/invocations" \
 		HOOK_INVOCATIONS="$case_root/hooks" \
+		RUN_MODE="poisoned" \
+		RUN_GREP_STR=".*" \
+		LOG_ENABLE_DRY_RUN="poisoned" \
 		PATH="$case_root/bin:/usr/bin:/bin" \
-		bash "$ROOT/run" install selected >"$case_root/install-output" 2>&1
+		bash "$ROOT/run" "$@"
+}
 
-	assert_line "$case_root/invocations" $'yay\t-S\t--noconfirm\t--needed\tselected-one'
-	assert_line "$case_root/invocations" $'yay\t-S\t--noconfirm\t--needed\tselected-two'
-	assert_line "$case_root/hooks" 'before:install'
-	assert_line "$case_root/hooks" 'after:install'
-	if grep -Fq -- 'must-not-run' "$case_root/invocations"; then
-		fail 'a nonmatching manifest was processed during install'
+selection_and_lifecycle_case() {
+	local case_root=$TEST_ROOT/packages
+	prepare_package_case "$case_root"
+
+	run_top "$case_root" install 'selected$' >"$case_root/install-output" 2>&1
+	assert_contents "$case_root/invocations" $'yay\t-S\t--noconfirm\t--needed\tselected-one\nyay\t-S\t--noconfirm\t--needed\tselected-two'
+	assert_contents "$case_root/hooks" $'before:install\nafter:install'
+	grep -Fq -- "Grep filtered out: '$case_root/dev-env/runs/omitted'" "$case_root/install-output" ||
+		fail 'top-level run did not log a filtered manifest'
+	if grep -Fq -- "RUN: file: $case_root/dev-env/runs/omitted" "$case_root/install-output"; then
+		fail 'a handler was started for a filtered manifest'
 	fi
 
 	: >"$case_root/invocations"
 	: >"$case_root/hooks"
+	run_top "$case_root" uninstall 'selected$' >"$case_root/uninstall-output" 2>&1
+	assert_contents "$case_root/invocations" $'yay\t-Rns\tselected-one\nyay\t-Rns\tselected-two'
+	assert_contents "$case_root/hooks" $'before:uninstall\nafter:uninstall'
+
+	pass_count=$((pass_count + 1))
+	printf 'ok - top-level selection preserves package order and lifecycle modes\n'
+}
+
+bash_regex_selection_case() {
+	local case_root=$TEST_ROOT/regex
+	prepare_package_case "$case_root"
+
+	run_top "$case_root" 'selected(-extra)?$' >"$case_root/output" 2>&1
+	assert_line "$case_root/invocations" $'yay\t-S\t--noconfirm\t--needed\tselected-one'
+	assert_line "$case_root/invocations" $'yay\t-S\t--noconfirm\t--needed\tselected-two'
+	assert_line "$case_root/invocations" $'yay\t-S\t--noconfirm\t--needed\tselected-extra'
+	[[ $(wc -l <"$case_root/invocations") -eq 3 ]] || fail 'Bash regex selected the wrong manifests'
+	if grep -Fq -- 'must-not-run' "$case_root/invocations"; then
+		fail 'Bash regex included a nonmatching manifest'
+	fi
+
+	pass_count=$((pass_count + 1))
+	printf 'ok - filters retain Bash regular-expression selection behavior\n'
+}
+
+explicit_state_and_dry_run_case() {
+	local case_root=$TEST_ROOT/explicit manifest handler
+	prepare_package_case "$case_root"
+	manifest=$case_root/dev-env/runs/selected
+	handler=$case_root/dev-env/runs/utils/run-handler
+
+	run_top "$case_root" --dry-run install 'selected$' >"$case_root/top-dry-output" 2>&1
+	[[ ! -s $case_root/invocations ]] || fail 'top-level dry-run invoked yay'
+	[[ ! -s $case_root/hooks ]] || fail 'top-level dry-run invoked lifecycle hooks'
+	grep -Fq -- "installing packages from: $manifest" "$case_root/top-dry-output" ||
+		fail 'dry-run did not pass the explicit install mode'
+
 	env \
-		DEV_ENV="$dev_env" \
 		SCRIPTS="$ROOT/env/.local/scripts" \
 		LOG_DIR="$case_root/logs" \
 		INVOCATIONS="$case_root/invocations" \
 		HOOK_INVOCATIONS="$case_root/hooks" \
+		RUN_MODE="uninstall" \
+		RUN_GREP_STR="nomatch" \
+		LOG_ENABLE_DRY_RUN="0" \
 		PATH="$case_root/bin:/usr/bin:/bin" \
-		bash "$ROOT/run" uninstall selected >"$case_root/uninstall-output" 2>&1
-
-	assert_line "$case_root/invocations" $'yay\t-Rns\tselected-one'
-	assert_line "$case_root/invocations" $'yay\t-Rns\tselected-two'
-	assert_line "$case_root/hooks" 'before:uninstall'
-	assert_line "$case_root/hooks" 'after:uninstall'
-	if grep -Fq -- 'must-not-run' "$case_root/invocations"; then
-		fail 'a nonmatching manifest was processed during uninstall'
-	fi
+		"$handler" "$manifest" install 1 >"$case_root/handler-dry-output" 2>&1
+	[[ ! -s $case_root/invocations ]] || fail 'handler dry-run invoked yay'
+	[[ ! -s $case_root/hooks ]] || fail 'handler dry-run invoked lifecycle hooks'
+	grep -Fq -- "installing packages from: $manifest" "$case_root/handler-dry-output" ||
+		fail 'handler used exported state instead of explicit arguments'
 
 	pass_count=$((pass_count + 1))
-	printf 'ok - filtered package operations and lifecycle hook modes\n'
+	printf 'ok - explicit mode and dry-run arguments override legacy RUN state\n'
+}
+
+invalid_input_case() {
+	local case_root=$TEST_ROOT/invalid handler manifest
+	prepare_package_case "$case_root"
+	handler=$case_root/dev-env/runs/utils/run-handler
+	manifest=$case_root/dev-env/runs/selected
+
+	if run_top "$case_root" --dry >"$case_root/unknown-option" 2>&1; then
+		fail 'run accepted an abbreviated unknown option'
+	fi
+	grep -Fq -- 'unknown option: --dry' "$case_root/unknown-option" || fail 'unknown option error was unclear'
+
+	if run_top "$case_root" '[' >"$case_root/invalid-regex" 2>&1; then
+		fail 'run accepted a malformed Bash regular expression'
+	fi
+	grep -Fq -- 'invalid Bash regular expression' "$case_root/invalid-regex" || fail 'regex error was unclear'
+
+	if run_top "$case_root" install uninstall >"$case_root/repeated-mode" 2>&1; then
+		fail 'run accepted multiple modes'
+	fi
+	if run_top "$case_root" one two >"$case_root/multiple-filters" 2>&1; then
+		fail 'run accepted multiple filters'
+	fi
+
+	if "$handler" "$manifest" remove 0 >"$case_root/invalid-mode" 2>&1; then
+		fail 'handler accepted an invalid mode'
+	fi
+	grep -Fq -- 'invalid mode: remove' "$case_root/invalid-mode" || fail 'handler mode error was unclear'
+	if "$handler" "$manifest" install maybe >"$case_root/invalid-dry-run" 2>&1; then
+		fail 'handler accepted an invalid dry-run value'
+	fi
+	if "$handler" "$manifest" install >"$case_root/missing-argument" 2>&1; then
+		fail 'handler accepted missing explicit state'
+	fi
+	if "$handler" "$case_root/missing" install 0 >"$case_root/missing-manifest" 2>&1; then
+		fail 'handler accepted a missing manifest'
+	fi
+	grep -Fq -- 'manifest is not a readable regular file' "$case_root/missing-manifest" ||
+		fail 'handler manifest error was unclear'
+
+	env -u DEV_ENV -u SCRIPTS bash "$ROOT/run" --help >"$case_root/help"
+	grep -Fq -- 'Usage: run [--dry-run] [install|uninstall] [FILTER]' "$case_root/help" ||
+		fail 'help is unavailable without runtime environment variables'
+
+	pass_count=$((pass_count + 1))
+	printf 'ok - malformed options, regexes, modes, and handler inputs are rejected\n'
 }
 
 system_after_case() {
@@ -121,7 +227,7 @@ case ${1:-} in
 		[[ ${1:-} == --append && ${2:-} == /etc/fstab ]] || exit 30
 		command tee --append "$FSTAB_FIXTURE"
 		;;
-	systemctl|mount)
+	systemctl | mount)
 		printf '%s' "$1" >>"$SUDO_INVOCATIONS"
 		shift
 		printf ' <%s>' "$@" >>"$SUDO_INVOCATIONS"
@@ -168,6 +274,9 @@ EOF
 	printf 'ok - exact fstab idempotency and repeatable home-directory setup\n'
 }
 
-package_and_hook_case
+selection_and_lifecycle_case
+bash_regex_selection_case
+explicit_state_and_dry_run_case
+invalid_input_case
 system_after_case
 printf '1..%d\n' "$pass_count"
