@@ -47,6 +47,14 @@ log() {
 	logging log --source "$THIS_FILE" "$@"
 }
 
+validate_icon_name() {
+	local name=$1
+	if [[ -z $name || $name == "." || $name == ".." || $name == */* || $name == *\\* || $name =~ [[:cntrl:]] ]]; then
+		log --error "Unsafe local icon filename: $name"
+		return 1
+	fi
+}
+
 install_local_icons() {
 	local source_dir="$DEV_ENV/env/.local/share/applications/icons"
 	local icon_dir="$XDG_DATA_HOME/applications/icons"
@@ -62,8 +70,11 @@ install_local_icons() {
 	fi
 
 	while IFS= read -r -d '' source; do
-		destination="$icon_dir/$(basename -- "$source")"
-		if [[ -e $destination ]]; then
+		local icon_name
+		icon_name=$(basename -- "$source")
+		validate_icon_name "$icon_name" || exit 1
+		destination="$icon_dir/$icon_name"
+		if [[ -e $destination || -L $destination ]]; then
 			continue
 		fi
 
@@ -85,9 +96,11 @@ install_spec() {
 
 	log "Installing webapp from spec: $file"
 
-	if [[ $dry_run == "0" ]]; then
-		"$script" install --file "$file" --no-interactive
+	local -a args=(install --file "$file" --no-interactive)
+	if [[ $dry_run == "1" ]]; then
+		args+=(--dry-run)
 	fi
+	"$script" "${args[@]}"
 }
 
 uninstall_spec() {
@@ -101,9 +114,11 @@ uninstall_spec() {
 
 	log "Uninstalling webapp from spec: $file"
 
-	if [[ $dry_run == "0" ]]; then
-		"$script" "$file"
+	local -a args=("$file")
+	if [[ $dry_run == "1" ]]; then
+		args+=(--dry-run)
 	fi
+	"$script" "${args[@]}"
 }
 
 ############################## MAIN ##############################

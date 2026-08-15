@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
+set -Eeuo pipefail
+
 THIS_FILE=${BASH_SOURCE[0]}
 THIS=$(basename -- "$THIS_FILE")
 
 usage() {
   cat <<EOF
 
-Uninstalls '.desktop' files, including their icons. Most commonly
-used for web applications, if an application was installed by a
+Uninstalls '.desktop' files and safe managed icon files. Most commonly
+used for web applications; if an application was installed by a
 package manager, then it should be used to uninstall the application.
 
 Usage:
@@ -35,7 +37,8 @@ while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^--dry ]]; then
     dry_run="1"
   elif [[ $1 =~ ^-h ]] || [[ $1 =~ ^--h ]]; then
-    usage && exit 0
+    usage
+    exit 0
   else
     files+=("$1")
   fi
@@ -44,6 +47,35 @@ done
 
 log() {
   logging log --source "$THIS_FILE" "$@"
+}
+
+validate_managed_name() {
+  local label=$1 value=$2
+  if [[ -z $value || $value == "." || $value == ".." || $value == */* || $value == *\\* || $value =~ [[:cntrl:]] ]]; then
+    log --error "Unsafe $label: '$value'."
+    return 1
+  fi
+}
+
+name_from_spec() {
+  local spec=$1
+  if [[ ! -f $spec ]] || ! jq -e '
+    def plain_string: type == "string" and all(explode[]; . >= 32 and . != 127);
+    type == "object" and (.name | plain_string)
+  ' "$spec" >/dev/null 2>&1; then
+    log --error "Invalid or unreadable webapp JSON: '$spec'."
+    return 1
+  fi
+  jq -r '.name' "$spec"
+}
+
+safe_managed_icon() {
+  local icon=$1 icon_root target
+
+  [[ $icon != *[[:cntrl:]]* && $icon == /* && -f $icon && ! -L $icon ]] || return 1
+  icon_root=$(realpath -e -- "$XDG_DATA_HOME/applications/icons") || return 1
+  target=$(realpath -e -- "$icon") || return 1
+  [[ $target == "$icon_root/"* ]]
 }
 
 ############################## MAIN ##############################
@@ -70,16 +102,24 @@ fi
 removed_desktop="0"
 for argument in "${files[@]}"; do
   f=$argument
-  icon=""
   log "ARG: $f"
 
-  # Handle a passed-in webapp spec file.
   if [[ $f == *.json ]]; then
-    name=$(jq -r '.name' "$f")
-    f="$name.desktop"
+    if ! name=$(name_from_spec "$f"); then
+      exit 1
+    fi
+    if ! validate_managed_name "application name" "$name"; then
+      exit 1
+    fi
+    fname="$name.desktop"
+  else
+    if ! validate_managed_name "desktop filename" "$f" || [[ $f != *.desktop ]]; then
+      log --error "Invalid desktop filename: '$f'."
+      exit 1
+    fi
+    fname=$f
   fi
 
-  fname=${f##*/}
   log "Uninstalling Desktop: $fname"
   file="$XDG_DATA_HOME/applications/$fname"
 
@@ -87,28 +127,32 @@ for argument in "${files[@]}"; do
     log "[WARNING]: File didn't exist, skipping!"
     continue
   fi
+  if [[ -L $file ]]; then
+    log "[WARNING]: Desktop target is a symlink, preserving: $file"
+    continue
+  fi
 
-  # Get the icon path from the desktop entry.
   icon_line=$(grep -m 1 '^Icon=' "$file" || true)
   icon=${icon_line#Icon=}
 
   if [[ -n $icon ]]; then
-    log "   removing icon: rm -rf $icon"
+    if safe_managed_icon "$icon"; then
+      log "   removing managed icon: rm -f $icon"
+      if [[ $dry_run == "0" ]]; then
+        rm -f -- "$icon"
+      fi
+    else
+      log "[WARNING]: Preserving unsafe or unmanaged icon target: $icon"
+    fi
   fi
-  log "   removing desktop: rm -rf $file"
+  log "   removing desktop: rm -f $file"
 
-  if [[ $dry_run == "0" ]]; then
-    if [[ -n $icon ]]; then
-      rm -rf -- "$icon"
-    fi
-    if rm -rf -- "$file"; then
-      removed_desktop="1"
-    fi
+  if [[ $dry_run == "0" ]] && rm -f -- "$file"; then
+    removed_desktop="1"
   fi
 done
 
 if [[ $dry_run == "0" && $removed_desktop == "1" ]]; then
-  # Refresh the database so application launchers do not show removed apps.
   update-desktop-database "$XDG_DATA_HOME/applications"
 
   if [[ $interactive_mode == "1" ]]; then

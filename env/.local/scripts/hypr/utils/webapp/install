@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -Eeuo pipefail
+
 # Adapted from https://github.com/basecamp/omarchy/tree/master?tab=readme-ov-file
 
 THIS_FILE=${BASH_SOURCE[0]}
@@ -147,13 +149,61 @@ check_properties() {
 
 load_from_file() {
   if [[ ! -f $1 ]]; then
-    log --error "File '$1' is not found or readable." && exit 1
+    log --error "File '$1' is not found or readable."
+    exit 1
   fi
-  app_name=$(jq -r '.name // ""' "$1")
-  app_url=$(jq -r '.url // ""' "$1")
-  icon_ref=$(jq -r '.icon // ""' "$1")
+
+  if ! jq -e '
+    def plain_string: type == "string" and all(explode[]; . >= 32 and . != 127);
+    type == "object" and
+    (.name | plain_string) and
+    (.url | plain_string) and
+    (.icon | plain_string) and
+    ((.exec == null) or (.exec | plain_string)) and
+    ((.mime_types == null) or (.mime_types | plain_string))
+  ' "$1" >/dev/null 2>&1; then
+    log --error "Invalid webapp JSON in '$1'."
+    exit 1
+  fi
+
+  app_name=$(jq -r '.name' "$1")
+  app_url=$(jq -r '.url' "$1")
+  icon_ref=$(jq -r '.icon' "$1")
   exec_cmd=$(jq -r '.exec // ""' "$1")
   mime_types=$(jq -r '.mime_types // ""' "$1")
+}
+
+validate_value() {
+  local label=$1 value=$2
+  if [[ $value =~ [[:cntrl:]] ]]; then
+    log --error "$label contains control characters."
+    return 1
+  fi
+}
+
+validate_managed_name() {
+  local label=$1 value=$2
+  validate_value "$label" "$value" || return 1
+  if [[ -z $value || $value == "." || $value == ".." || $value == */* || $value == *\\* ]]; then
+    log --error "Unsafe $label: '$value'."
+    return 1
+  fi
+}
+
+validate_properties() {
+  validate_managed_name "application name" "$app_name" || return 1
+  validate_value "URL" "$app_url" || return 1
+  validate_value "icon reference" "$icon_ref" || return 1
+  validate_value "execution command" "$exec_cmd" || return 1
+  validate_value "MIME types" "$mime_types" || return 1
+}
+
+reject_directory_destination() {
+  local label=$1 destination=$2
+  if [[ -d $destination ]]; then
+    log --error "Cannot replace $label because the destination is a directory: $destination"
+    return 1
+  fi
 }
 
 print_properties() {
@@ -183,28 +233,37 @@ prompt_for_properties() {
 set_icon_ref() {
   # Refer to a local icon or fetch one remotely from a URL.
   local icon_dir="$XDG_DATA_HOME/applications/icons"
-  local icon_path=""
+  local icon_path="" temp_icon=""
 
   if [[ $icon_ref == https://* ]]; then
     icon_path="$icon_dir/$app_name.png"
+    reject_directory_destination "downloaded icon" "$icon_path" || exit 1
     log "Downloading icon: $icon_ref"
     if [[ $dry_run == "0" ]]; then
-      if [[ ! -d $icon_dir ]]; then
-        mkdir -p -- "$icon_dir"
+      mkdir -p -- "$icon_dir"
+      temp_icon=$(mktemp -- "$icon_dir/.webapp-icon.XXXXXX")
+      if ! curl --fail --silent --show-error --location -o "$temp_icon" "$icon_ref"; then
+        rm -f -- "$temp_icon"
+        log --error "Failed to download icon."
+        exit 1
       fi
-      if ! curl -sL -o "$icon_path" "$icon_ref"; then
-        log --error "Failed to download icon." && exit 1
+      if ! mv -fT -- "$temp_icon" "$icon_path"; then
+        rm -f -- "$temp_icon"
+        log --error "Failed to install downloaded icon."
+        exit 1
       fi
     fi
   else
-    if [[ -f $icon_ref ]]; then
+    if [[ $icon_ref == /* ]]; then
       icon_path=$icon_ref
     else
+      validate_managed_name "icon filename" "$icon_ref" || exit 1
       icon_path="$icon_dir/$icon_ref"
     fi
 
     if [[ ! -f $icon_path ]]; then
-      log --error "Local icon '$icon_ref' is not found or readable." && exit 1
+      log --error "Local icon '$icon_ref' is not found or readable."
+      exit 1
     fi
   fi
 
@@ -212,8 +271,10 @@ set_icon_ref() {
 }
 
 generate_file() {
+  local destination=$1 temp_file
+  temp_file=$(mktemp -- "${destination%/*}/.webapp-desktop.XXXXXX")
 
-  cat >"$1" <<EOF
+  if ! cat >"$temp_file" <<EOF
 [Desktop Entry]
 Version=1.0
 Name=$app_name
@@ -224,13 +285,19 @@ Type=Application
 Icon=$icon_ref
 StartupNotify=true
 EOF
-
-  # Add mime types if provided
-  if [[ -n $mime_types ]]; then
-    echo "MimeType=$mime_types" >>"$1"
+  then
+    rm -f -- "$temp_file"
+    return 1
   fi
 
-  chmod +x "$1"
+  if [[ -n $mime_types ]]; then
+    echo "MimeType=$mime_types" >>"$temp_file"
+  fi
+
+  if ! chmod +x "$temp_file" || ! mv -fT -- "$temp_file" "$destination"; then
+    rm -f -- "$temp_file"
+    return 1
+  fi
 }
 
 ################################################################################
@@ -258,8 +325,7 @@ if [[ $file_mode_flag == "1" ]]; then
 fi
 
 # Check that all properties are set, prompt for missing values if not.
-check_properties
-if [[ "$?" == "1" ]]; then
+if ! check_properties; then
 
   # Check if the '--no-interactive' flag was passed and exit with error.
   [[ $no_interactive_flag == "1" ]] &&
@@ -273,8 +339,7 @@ if [[ "$?" == "1" ]]; then
   prompt_for_properties
 
   # Check properties again after prompting in interactive mode.
-  check_properties
-  if [[ "$?" == "1" ]]; then
+  if ! check_properties; then
     # Exit if they were not set during interactive mode.
     log --error "You must set app name, app URL, and icon URL!" && exit 1
   fi
@@ -283,7 +348,12 @@ if [[ "$?" == "1" ]]; then
   interactive_mode=true
 fi
 
+if ! validate_properties; then
+  exit 1
+fi
+
 desktop_file="$XDG_DATA_HOME/applications/$app_name.desktop"
+reject_directory_destination "desktop file" "$desktop_file" || exit 1
 
 # Parse the icon ref and download icon, if applicable.
 set_icon_ref
