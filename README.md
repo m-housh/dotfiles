@@ -102,6 +102,12 @@ Both the full and container profiles install the portable Pi resources from
 and same-named themes are updated on each installation. Other runtime entries
 are left in place.
 
+Managed Pi sources must be portable filesystem entries rather than symlinks.
+Each top-level skill is a real directory with a regular `SKILL.md` and may
+contain only real directories and regular files. Guidance, settings, and themes
+are regular files. All managed Pi sources are validated before runtime entries
+are changed.
+
 The managed `settings.json` is only an initial default: it is copied when no
 runtime settings file exists and selects the `catppuccin-mocha` theme. An
 existing `~/.pi/agent/settings.json` is preserved byte-for-byte. To use the

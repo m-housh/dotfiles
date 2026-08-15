@@ -115,6 +115,31 @@ source_directory_exists() {
 	[[ -d $1 ]] || fail "source directory does not exist: $1"
 }
 
+source_file_exists() {
+	[[ -f $1 ]] || fail "source file does not exist or is not a regular file: $1"
+}
+
+source_real_directory_exists() {
+	[[ -d $1 && ! -L $1 ]] || fail "source must be a real directory, not a symlink: $1"
+}
+
+source_real_file_exists() {
+	[[ -f $1 && ! -L $1 ]] || fail "source must be a real regular file, not a symlink: $1"
+}
+
+validate_pi_skill_source() {
+	local skill=$1 entry
+	source_real_directory_exists "$skill"
+	source_real_file_exists "$skill/SKILL.md"
+
+	while IFS= read -r -d '' entry; do
+		if [[ -L $entry ]]; then
+			fail "unsupported symlink in managed Pi skill: $entry"
+		fi
+		[[ -d $entry || -f $entry ]] || fail "unsupported entry in managed Pi skill: $entry"
+	done < <(find "$skill" -mindepth 1 -print0)
+}
+
 validate_destination() {
 	local destination normalized root
 	destination=$1
@@ -149,25 +174,35 @@ merge_tree() {
 	run cp -a -- "$source/." "$destination/"
 }
 
-replace_entries() {
-	local source=$1 destination=$2 entry target
-	source_directory_exists "$source"
+replace_entry_sources() {
+	local destination=$1 entry target
+	shift
 	validate_destination "$destination"
 	run mkdir -p -- "$destination"
 
-	# NUL delimiters preserve whitespace, glob characters, and newlines in names.
-	while IFS= read -r -d '' entry; do
+	for entry in "$@"; do
 		target="$destination/${entry##*/}"
 		validate_destination "$target"
 		run rm -rf -- "$target"
 		run cp -a -- "$entry" "$target"
+	done
+}
+
+replace_entries() {
+	local source=$1 destination=$2 entry
+	local -a entries=()
+	source_directory_exists "$source"
+
+	# NUL delimiters preserve whitespace, glob characters, and newlines in names.
+	while IFS= read -r -d '' entry; do
+		entries+=("$entry")
 	done < <(find "$source" -mindepth 1 -maxdepth 1 -print0)
+	replace_entry_sources "$destination" "${entries[@]}"
 }
 
 copy_file() {
 	local source=$1 destination=$2
-	source_exists "$source"
-	[[ ! -d $source ]] || fail "expected a file source, got directory: $source"
+	source_file_exists "$source"
 	validate_destination "$destination"
 	run mkdir -p -- "$(dirname -- "$destination")"
 	run rm -rf -- "$destination"
@@ -177,30 +212,33 @@ copy_file() {
 install_pi_environment() {
 	local source_root="$DEV_ENV_ROOT/env/.pi/agent"
 	local destination_root="$HOME/.pi/agent"
-	local relative
-	local -a managed_files=(
-		"AGENTS.md"
-		"settings.json"
-		"skills/code-review/SKILL.md"
-		"skills/commit-message/SKILL.md"
-		"skills/explain-before-edit/SKILL.md"
-		"skills/security-review/SKILL.md"
-		"skills/simplify-refactor/SKILL.md"
-		"skills/simplify-refactor/references/checklist.md"
-		"skills/test-plan/SKILL.md"
-		"themes/catppuccin-mocha.json"
-	)
+	local source
+	local -a managed_skills=() managed_themes=()
 
+	# Discover and validate every managed source before mutating the runtime.
+	source_real_file_exists "$source_root/AGENTS.md"
+	source_real_file_exists "$source_root/settings.json"
+	source_directory_exists "$source_root/skills"
+	source_directory_exists "$source_root/themes"
+
+	while IFS= read -r -d '' source; do
+		managed_skills+=("$source")
+	done < <(find "$source_root/skills" -mindepth 1 -maxdepth 1 -print0)
+	while IFS= read -r -d '' source; do
+		managed_themes+=("$source")
+	done < <(find "$source_root/themes" -mindepth 1 -maxdepth 1 -print0)
+
+	for source in "${managed_skills[@]}"; do
+		validate_pi_skill_source "$source"
+	done
+	for source in "${managed_themes[@]}"; do
+		source_real_file_exists "$source"
+	done
 	validate_destination "$destination_root"
 
-	# Validate the complete managed manifest before replacing any runtime entry.
-	for relative in "${managed_files[@]}"; do
-		source_exists "$source_root/$relative"
-	done
-
 	copy_file "$source_root/AGENTS.md" "$destination_root/AGENTS.md"
-	replace_entries "$source_root/skills" "$destination_root/skills"
-	replace_entries "$source_root/themes" "$destination_root/themes"
+	replace_entry_sources "$destination_root/skills" "${managed_skills[@]}"
+	replace_entry_sources "$destination_root/themes" "${managed_themes[@]}"
 
 	if [[ -e $destination_root/settings.json || -L $destination_root/settings.json ]]; then
 		log_action "preserve existing Pi settings: $destination_root/settings.json"

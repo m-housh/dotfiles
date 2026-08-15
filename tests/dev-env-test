@@ -77,6 +77,9 @@ make_fixture() {
 	printf 'markdown\n' >"$source/env/.markdownlint.jsonc"
 	printf 'prettier\n' >"$source/env/.prettierrc.json"
 	cp -a -- "$ROOT/env/.pi" "$source/env/.pi"
+	mkdir -p -- "$source/env/.pi/agent/skills/discovered [new]"
+	printf '%s\n' 'name: discovered-without-manifest' >"$source/env/.pi/agent/skills/discovered [new]/SKILL.md"
+	printf '%s\n' '{"name":"discovered-without-manifest"}' >"$source/env/.pi/agent/themes/discovered new.json"
 	cp -- "$ROOT/dev-env" "$ROOT/devcontainer-env" "$source/"
 
 	cat >"$source/env/.local/scripts/wt" <<'EOF'
@@ -142,6 +145,26 @@ run_installer() {
 		"$case_root/source/dev-env" "$@"
 }
 
+prepare_preserved_pi_runtime() {
+	local case_root=$1 home
+	home="$case_root/home [test]"
+	mkdir -p -- "$home/.pi/agent/skills/discovered [new]" "$home/.pi/agent/themes"
+	printf 'keep guidance\n' >"$home/.pi/agent/AGENTS.md"
+	printf 'keep discovered skill\n' >"$home/.pi/agent/skills/discovered [new]/SKILL.md"
+	printf 'keep theme\n' >"$home/.pi/agent/themes/discovered new.json"
+	printf '{\n  "theme": "keep-settings"\n}\n' >"$home/.pi/agent/settings.json"
+	cp -- "$home/.pi/agent/settings.json" "$case_root/expected-settings"
+}
+
+assert_preserved_pi_runtime() {
+	local case_root=$1 home
+	home="$case_root/home [test]"
+	assert_file_contains "$home/.pi/agent/AGENTS.md" 'keep guidance'
+	assert_file_contains "$home/.pi/agent/skills/discovered [new]/SKILL.md" 'keep discovered skill'
+	assert_file_contains "$home/.pi/agent/themes/discovered new.json" 'keep theme'
+	cmp -s -- "$case_root/expected-settings" "$home/.pi/agent/settings.json" || fail 'existing Pi settings changed after preflight failure'
+}
+
 integration_case() {
 	local case_root home config data
 	case_root=$(prepare_case integration)
@@ -161,6 +184,7 @@ integration_case() {
 		"$home/.local/scripts/hypr/utils" \
 		"$home/pkgbuilds/managed-pkg" \
 		"$home/.pi/agent/skills/code-review" \
+		"$home/.pi/agent/skills/discovered [new]" \
 		"$home/.pi/agent/skills/local-only" \
 		"$home/.pi/agent/themes" \
 		"$home/.pi/agent/sessions/session-1" \
@@ -195,8 +219,10 @@ integration_case() {
 	printf 'npm package\n' >"$home/.pi/agent/npm/cache/state"
 	printf 'herdr state\n' >"$home/.pi/agent/extensions/herdr-agent-state.ts"
 	printf 'stale skill\n' >"$home/.pi/agent/skills/code-review/stale"
+	printf 'stale discovered skill\n' >"$home/.pi/agent/skills/discovered [new]/stale"
 	printf 'local skill\n' >"$home/.pi/agent/skills/local-only/SKILL.md"
 	printf '{"name":"old"}\n' >"$home/.pi/agent/themes/catppuccin-mocha.json"
+	printf '{"name":"stale-discovered"}\n' >"$home/.pi/agent/themes/discovered new.json"
 	printf '{"name":"local"}\n' >"$home/.pi/agent/themes/local.json"
 
 	run_installer "$case_root" --no-reload >"$case_root/output"
@@ -231,9 +257,12 @@ integration_case() {
 	assert_file_contains "$home/.pi/agent/AGENTS.md" 'wt add --space <branch> [base]'
 	assert_file_contains "$home/.pi/agent/skills/code-review/SKILL.md" 'name: code-review'
 	assert_file_contains "$home/.pi/agent/skills/simplify-refactor/references/checklist.md" 'Boundary check'
+	assert_file_contains "$home/.pi/agent/skills/discovered [new]/SKILL.md" 'discovered-without-manifest'
 	assert_absent "$home/.pi/agent/skills/code-review/stale"
+	assert_absent "$home/.pi/agent/skills/discovered [new]/stale"
 	assert_exists "$home/.pi/agent/skills/local-only/SKILL.md"
 	assert_file_contains "$home/.pi/agent/themes/catppuccin-mocha.json" 'earendil-works/pi'
+	assert_file_contains "$home/.pi/agent/themes/discovered new.json" 'discovered-without-manifest'
 	assert_exists "$home/.pi/agent/themes/local.json"
 	cmp -s -- "$case_root/expected-settings" "$home/.pi/agent/settings.json" || fail 'existing Pi settings changed'
 	assert_file_contains "$home/.pi/agent/auth.json" 'auth state'
@@ -271,8 +300,8 @@ dry_run_case() {
 	assert_absent "$case_root/home [test]/.pi"
 	assert_absent "$case_root/xdg config/new [feature]"
 	grep -Fq '[dry-run]' "$case_root/plan" || fail 'dry-run did not print a plan'
-	grep -Fq '.pi/agent/skills/code-review' "$case_root/plan" || fail 'dry-run omitted Pi skills'
-	grep -Fq '.pi/agent/themes/catppuccin-mocha.json' "$case_root/plan" || fail 'dry-run omitted Pi theme'
+	grep -Fq '.pi/agent/skills/discovered\ \[new\]' "$case_root/plan" || fail 'dry-run omitted discovered Pi skill'
+	grep -Fq '.pi/agent/themes/discovered\ new.json' "$case_root/plan" || fail 'dry-run omitted discovered Pi theme'
 	grep -Fq 'zsh -l' "$case_root/plan" || fail 'dry-run omitted planned shell reload'
 	pass_count=$((pass_count + 1))
 	printf 'ok - dry-run has no side effects\n'
@@ -417,17 +446,69 @@ missing_pi_source_case() {
 	local case_root home
 	case_root=$(prepare_case missing-pi-source)
 	home="$case_root/home [test]"
-	mkdir -p -- "$home/.pi/agent/skills/code-review"
-	printf 'keep managed skill\n' >"$home/.pi/agent/skills/code-review/SKILL.md"
-	rm -- "$case_root/source/env/.pi/agent/skills/code-review/SKILL.md"
+	mkdir -p -- "$home/.pi/agent/skills/discovered [new]"
+	printf 'keep discovered skill\n' >"$home/.pi/agent/skills/discovered [new]/SKILL.md"
+	printf 'keep guidance\n' >"$home/.pi/agent/AGENTS.md"
+	rm -- "$case_root/source/env/.pi/agent/skills/discovered [new]/SKILL.md"
 	if run_installer "$case_root" container >"$case_root/output" 2>"$case_root/error"; then
-		fail 'installation with a missing Pi source succeeded'
+		fail 'installation with an incomplete discovered Pi skill succeeded'
 	fi
-	assert_file_contains "$home/.pi/agent/skills/code-review/SKILL.md" 'keep managed skill'
-	assert_absent "$home/.pi/agent/AGENTS.md"
-	grep -Fq 'source does not exist' "$case_root/error" || fail 'missing Pi source error was not useful'
+	assert_file_contains "$home/.pi/agent/skills/discovered [new]/SKILL.md" 'keep discovered skill'
+	assert_file_contains "$home/.pi/agent/AGENTS.md" 'keep guidance'
+	assert_absent "$home/.pi/agent/settings.json"
+	grep -Fq 'discovered [new]/SKILL.md' "$case_root/error" || fail 'missing Pi skill error omitted its path'
+	grep -Fq 'source must be a real regular file' "$case_root/error" || fail 'missing Pi skill error was not useful'
 	pass_count=$((pass_count + 1))
-	printf 'ok - Pi manifest validation precedes managed replacements\n'
+	printf 'ok - incomplete discovered Pi skill validation precedes managed replacements\n'
+}
+
+symlinked_pi_resource_case() {
+	local resource case_root source target
+
+	for resource in skill theme; do
+		case_root=$(prepare_case "symlinked-pi-$resource")
+		source="$case_root/source/env/.pi/agent"
+		prepare_preserved_pi_runtime "$case_root"
+
+		case $resource in
+		skill)
+			target="$case_root/source/env/.pi/linked-skill"
+			mv -- "$source/skills/discovered [new]" "$target"
+			ln -s -- "$target" "$source/skills/discovered [new]"
+			;;
+		theme)
+			target="$case_root/source/env/.pi/linked-theme.json"
+			mv -- "$source/themes/discovered new.json" "$target"
+			ln -s -- "$target" "$source/themes/discovered new.json"
+			;;
+		esac
+
+		if run_installer "$case_root" container >"$case_root/output" 2>"$case_root/error"; then
+			fail "installation with a symlinked Pi $resource succeeded"
+		fi
+		assert_preserved_pi_runtime "$case_root"
+		grep -Fq 'not a symlink' "$case_root/error" || fail "symlinked Pi $resource error was not useful"
+		pass_count=$((pass_count + 1))
+		printf 'ok - valid symlinked Pi %s is rejected before runtime mutation\n' "$resource"
+	done
+}
+
+broken_nested_pi_source_case() {
+	local case_root source
+	case_root=$(prepare_case broken-nested-pi-source)
+	source="$case_root/source/env/.pi/agent/skills/discovered [new]"
+	prepare_preserved_pi_runtime "$case_root"
+	mkdir -p -- "$source/references"
+	ln -s -- missing-reference.md "$source/references/broken.md"
+
+	if run_installer "$case_root" container >"$case_root/output" 2>"$case_root/error"; then
+		fail 'installation with a broken nested Pi skill link succeeded'
+	fi
+	assert_preserved_pi_runtime "$case_root"
+	grep -Fq 'references/broken.md' "$case_root/error" || fail 'broken nested Pi skill error omitted its path'
+	grep -Fq 'unsupported symlink in managed Pi skill' "$case_root/error" || fail 'broken nested Pi skill error was not useful'
+	pass_count=$((pass_count + 1))
+	printf 'ok - broken nested Pi skill link is rejected before runtime mutation\n'
 }
 
 missing_source_case() {
@@ -440,7 +521,7 @@ missing_source_case() {
 		fail 'installation with a missing source succeeded'
 	fi
 	assert_file_contains "$home/.tmux.conf" 'keep me'
-	grep -Fq 'source does not exist' "$case_root/error" || fail 'missing source error was not useful'
+	grep -Fq 'source file does not exist' "$case_root/error" || fail 'missing source error was not useful'
 	pass_count=$((pass_count + 1))
 	printf 'ok - source validation precedes destination removal\n'
 }
@@ -453,5 +534,7 @@ container_case
 container_dry_run_case
 wrapper_case
 missing_pi_source_case
+symlinked_pi_resource_case
+broken_nested_pi_source_case
 missing_source_case
 printf '1..%d\n' "$pass_count"
