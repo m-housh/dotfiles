@@ -1,0 +1,253 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null && pwd -P)
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf -- "$TEST_ROOT"' EXIT
+
+pass_count=0
+
+fail() {
+	printf 'not ok - %s\n' "$*" >&2
+	exit 1
+}
+
+assert_file_contains() {
+	local file=$1 expected=$2
+	[[ -f $file ]] || fail "missing file: $file"
+	grep -Fq -- "$expected" "$file" || fail "$file does not contain: $expected"
+}
+
+assert_exists() {
+	[[ -e $1 || -L $1 ]] || fail "expected path to exist: $1"
+}
+
+assert_absent() {
+	[[ ! -e $1 && ! -L $1 ]] || fail "expected path to be absent: $1"
+}
+
+make_fixture() {
+	local case_root=$1 source
+	source=$case_root/source
+	mkdir -p -- \
+		"$source/env/.config/new [feature]" \
+		"$source/env/.config/herdr" \
+		"$source/env/.config/nvim" \
+		"$source/env/.config/kanata" \
+		"$source/env/.config/systemd/user" \
+		"$source/env/.config/zsh/functions" \
+		"$source/env/.gnupg" \
+		"$source/env/wallpapers" \
+		"$source/env/.local/share/applications/icons" \
+		"$source/env/.local/scripts/utils/hpa" \
+		"$source/env/.local/scripts/hypr/utils" \
+		"$source/env/pkgbuilds/managed-pkg" \
+		"$source/mail"
+
+	printf 'managed feature\n' >"$source/env/.config/new [feature]/config * file"
+	printf 'new herdr\n' >"$source/env/.config/herdr/config.toml"
+	printf 'new nvim\n' >"$source/env/.config/nvim/init.lua"
+	printf 'template\n' >"$source/env/.config/kanata/template.kbd"
+	printf 'managed unit\n' >"$source/env/.config/systemd/user/managed.service"
+	printf 'new function\n' >"$source/env/.config/zsh/functions/managed"
+	printf 'new zshrc\n' >"$source/env/.config/zsh/.zshrc"
+	printf 'gpg\n' >"$source/env/.gnupg/gpg.conf"
+	printf 'wallpaper\n' >"$source/env/wallpapers/wall.txt"
+	printf 'desktop\n' >"$source/env/.local/share/applications/app.desktop"
+	printf 'icon\n' >"$source/env/.local/share/applications/icons/app.icon"
+	printf 'hypr script\n' >"$source/env/.local/scripts/hypr/run"
+	printf 'nested\n' >"$source/env/.local/scripts/hypr/utils/new"
+	printf 'root script\n' >"$source/env/.local/scripts/tool"
+	printf 'pkg\n' >"$source/env/pkgbuilds/managed-pkg/PKGBUILD"
+	printf 'zshenv\n' >"$source/env/.zshenv"
+	printf 'tmux\n' >"$source/env/.tmux.conf"
+	printf 'markdown\n' >"$source/env/.markdownlint.jsonc"
+	printf 'prettier\n' >"$source/env/.prettierrc.json"
+	cp -- "$ROOT/dev-env" "$source/dev-env"
+
+	cat >"$source/env/.local/scripts/wt" <<'EOF'
+#!/usr/bin/env bash
+printf 'wt completion\n'
+EOF
+	chmod +x -- "$source/env/.local/scripts/wt"
+	cat >"$source/env/.local/scripts/utils/hpa/hpa.env" <<'EOF'
+HPA_DOCKER_IMAGE=test-image
+HPA_DOCKER_TAG=test-tag
+EOF
+}
+
+make_stubs() {
+	local case_root=$1 fake_bin
+	fake_bin=$case_root/bin
+	mkdir -p -- "$fake_bin"
+	for command_name in mailctl systemctl hyprctl espanso zsh; do
+		cat >"$fake_bin/$command_name" <<'EOF'
+#!/usr/bin/env bash
+printf '%s' "$(basename -- "$0")" >>"$INVOCATIONS"
+printf ' <%s>' "$@" >>"$INVOCATIONS"
+printf '\n' >>"$INVOCATIONS"
+EOF
+		chmod +x -- "$fake_bin/$command_name"
+	done
+	cat >"$fake_bin/podman" <<'EOF'
+#!/usr/bin/env bash
+printf '%s' "$(basename -- "$0")" >>"$INVOCATIONS"
+printf ' <%s>' "$@" >>"$INVOCATIONS"
+printf '\n' >>"$INVOCATIONS"
+printf 'hpa completion\n'
+EOF
+	chmod +x -- "$fake_bin/podman"
+}
+
+prepare_case() {
+	local name=$1 case_root
+	case_root="$TEST_ROOT/$name"
+	mkdir -p -- "$case_root/home [test]" "$case_root/xdg config" "$case_root/xdg data"
+	make_fixture "$case_root"
+	make_stubs "$case_root"
+	printf '%s\n' "$case_root"
+}
+
+run_installer() {
+	local case_root=$1
+	shift
+	env \
+		HOME="$case_root/home [test]" \
+		XDG_CONFIG_HOME="$case_root/xdg config" \
+		XDG_DATA_HOME="$case_root/xdg data" \
+		DEV_ENV="$case_root/source" \
+		INVOCATIONS="$case_root/invocations" \
+		PATH="$case_root/bin:/usr/bin:/bin" \
+		"$case_root/source/dev-env" "$@"
+}
+
+integration_case() {
+	local case_root home config data
+	case_root=$(prepare_case integration)
+	home="$case_root/home [test]"
+	config="$case_root/xdg config"
+	data="$case_root/xdg data"
+
+	mkdir -p -- \
+		"$config/new [feature]" \
+		"$config/herdr/sessions" \
+		"$config/nvim" \
+		"$config/kanata" \
+		"$config/systemd/user/enabled.target.wants" \
+		"$config/zsh/functions" \
+		"$config/zsh/plugins" \
+		"$home/.local/scripts/hypr/utils" \
+		"$home/pkgbuilds/managed-pkg"
+	printf 'stale\n' >"$config/new [feature]/stale"
+	printf 'session\n' >"$config/herdr/sessions/live"
+	printf 'lock\n' >"$config/herdr/.plugins.lock"
+	printf 'lock\n' >"$config/nvim/nvim-pack-lock.json"
+	printf 'selected\n' >"$config/kanata/config.kbd"
+	printf 'local unit\n' >"$config/systemd/user/local.service"
+	ln -s ../local.service "$config/systemd/user/enabled.target.wants/local.service"
+	printf 'stale function\n' >"$config/zsh/functions/stale"
+	printf 'history\n' >"$config/zsh/history"
+	printf 'plugin\n' >"$config/zsh/plugins/local"
+	printf 'dump\n' >"$config/zsh/.zcompdump"
+	printf 'personal\n' >"$config/zsh/personal.env"
+	printf 'stale nested\n' >"$home/.local/scripts/hypr/utils/stale"
+	printf 'local script\n' >"$home/.local/scripts/local-only"
+	printf 'stale pkg\n' >"$home/pkgbuilds/managed-pkg/stale"
+
+	run_installer "$case_root" --no-reload >"$case_root/output"
+
+	assert_file_contains "$config/new [feature]/config * file" 'managed feature'
+	assert_absent "$config/new [feature]/stale"
+	assert_file_contains "$config/herdr/config.toml" 'new herdr'
+	assert_exists "$config/herdr/sessions/live"
+	assert_exists "$config/herdr/.plugins.lock"
+	assert_exists "$config/nvim/nvim-pack-lock.json"
+	assert_exists "$config/kanata/config.kbd"
+	assert_absent "$config/kanata/template.kbd"
+	assert_exists "$config/systemd/user/local.service"
+	assert_exists "$config/systemd/user/enabled.target.wants/local.service"
+	assert_exists "$config/systemd/user/managed.service"
+	assert_absent "$config/zsh/functions/stale"
+	assert_exists "$config/zsh/functions/managed"
+	assert_exists "$config/zsh/history"
+	assert_exists "$config/zsh/plugins/local"
+	assert_exists "$config/zsh/.zcompdump"
+	assert_exists "$config/zsh/personal.env"
+	assert_absent "$home/.local/scripts/hypr/utils/stale"
+	assert_exists "$home/.local/scripts/local-only"
+	assert_absent "$home/pkgbuilds/managed-pkg/stale"
+	assert_file_contains "$home/.tmux.conf" tmux
+	assert_file_contains "$home/.local/scripts/dev-env" 'Usage: dev-env'
+	assert_exists "$data/applications/icons/app.icon"
+	assert_file_contains "$home/.zsh/completions/_wt" 'wt completion'
+	assert_file_contains "$home/.zsh/completions/_hpa" 'hpa completion'
+	grep -Fq 'mailctl <update>' "$case_root/invocations" || fail 'mailctl update was not invoked'
+	if grep -Fq 'zsh ' "$case_root/invocations"; then
+		fail '--no-reload invoked zsh'
+	fi
+
+	# A second installation must succeed and retain the same preservation policy.
+	run_installer "$case_root" --no-reload >"$case_root/output-second"
+	assert_exists "$config/herdr/sessions/live"
+	assert_exists "$config/zsh/history"
+	pass_count=$((pass_count + 1))
+	printf 'ok - automatic, replacement, merge, exact-file, path, and idempotency behavior\n'
+}
+
+dry_run_case() {
+	local case_root
+	case_root=$(prepare_case dry-run)
+	run_installer "$case_root" --dry-run >"$case_root/plan"
+	[[ ! -s $case_root/invocations ]] || fail 'dry-run invoked an external command'
+	assert_absent "$case_root/home [test]/.zshenv"
+	assert_absent "$case_root/xdg config/new [feature]"
+	grep -Fq '[dry-run]' "$case_root/plan" || fail 'dry-run did not print a plan'
+	grep -Fq 'zsh -l' "$case_root/plan" || fail 'dry-run omitted planned shell reload'
+	pass_count=$((pass_count + 1))
+	printf 'ok - dry-run has no side effects\n'
+}
+
+reload_case() {
+	local case_root
+	case_root=$(prepare_case reload)
+	run_installer "$case_root" >"$case_root/output"
+	grep -Fq 'zsh <-l>' "$case_root/invocations" || fail 'default execution did not invoke zsh -l'
+	pass_count=$((pass_count + 1))
+	printf 'ok - default login-shell reload\n'
+}
+
+argument_case() {
+	local case_root
+	case_root=$(prepare_case arguments)
+	if run_installer "$case_root" --unknown >"$case_root/output" 2>"$case_root/error"; then
+		fail 'unknown argument succeeded'
+	fi
+	grep -Fq 'unknown option: --unknown' "$case_root/error" || fail 'unknown argument error was not useful'
+	"$case_root/source/dev-env" --help >"$case_root/help"
+	grep -Fq 'Usage: dev-env' "$case_root/help" || fail '--help did not print usage'
+	pass_count=$((pass_count + 1))
+	printf 'ok - CLI parsing\n'
+}
+
+missing_source_case() {
+	local case_root home
+	case_root=$(prepare_case missing-source)
+	home="$case_root/home [test]"
+	printf 'keep me\n' >"$home/.tmux.conf"
+	rm -- "$case_root/source/env/.tmux.conf"
+	if run_installer "$case_root" --no-reload >"$case_root/output" 2>"$case_root/error"; then
+		fail 'installation with a missing source succeeded'
+	fi
+	assert_file_contains "$home/.tmux.conf" 'keep me'
+	grep -Fq 'source does not exist' "$case_root/error" || fail 'missing source error was not useful'
+	pass_count=$((pass_count + 1))
+	printf 'ok - source validation precedes destination removal\n'
+}
+
+integration_case
+dry_run_case
+reload_case
+argument_case
+missing_source_case
+printf '1..%d\n' "$pass_count"
