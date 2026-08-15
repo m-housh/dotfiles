@@ -111,6 +111,23 @@ email() {
 	fi
 }
 
+completions() {
+	local completion_dir="$HOME/.zsh/completions"
+
+	mkdir -p "$completion_dir" >/dev/null 2>&1
+
+	log "installing wt completion: $completion_dir/_wt"
+	log "installing hpa completion: $completion_dir/_hpa"
+	if [[ $dry_run == "0" ]]; then
+		"$HOME/.local/scripts/wt" completion zsh >"$completion_dir/_wt"
+		(
+			. "$HOME/.local/scripts/utils/hpa/hpa.env"
+			podman run --rm "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" \
+				--generate-completion-script zsh
+		) >"$completion_dir/_hpa"
+	fi
+}
+
 ############################## MAIN ##############################
 
 # CONFIG
@@ -138,6 +155,7 @@ copy $DEV_ENV/env/.zshenv $HOME/.zshenv
 mkdir -p $XDG_CONFIG_HOME/zsh >/dev/null 2>&1
 update_dirs $DEV_ENV/env/.config/zsh $XDG_CONFIG_HOME/zsh # copies sup-directories.
 copy_files $DEV_ENV/env/.config/zsh $XDG_CONFIG_HOME/zsh  # copies files in the root directory.
+completions
 
 # TMUX
 copy $DEV_ENV/env/.tmux.conf $HOME/.tmux.conf
