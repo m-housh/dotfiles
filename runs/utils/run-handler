@@ -4,84 +4,94 @@ set -e
 set -o nounset
 set -o pipefail
 
-declare file
-declare -a yayflags
-
 THIS_FILE=${BASH_SOURCE[0]}
 LOG_LABEL=${LOG_LABEL:-$(basename "$THIS_FILE")}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
-DEV_ENV=${DEV_ENV:-""}
 
-MODE=${RUN_MODE:-"install"}
-DRY_RUN=${LOG_ENABLE_DRY_RUN:-"0"}
-GREP_STR=${RUN_GREP_STR:-""}
+declare manifest mode dry_run runs_dir comment_pattern
+declare -a yayflags
+
+usage() {
+	printf 'Usage: run-handler MANIFEST {install|uninstall} {0|1}\n' >&2
+}
+
+fail() {
+	printf 'run-handler: %s\n' "$*" >&2
+	usage
+	exit 2
+}
 
 log() {
 	logging log --source "$THIS_FILE" --echo "$@"
 }
 
 run_before_or_after() {
-	local dir file run
-	dir=${1:-""}
-	run=${2:-""}
+	local dir=$1 hook
+	hook=$dir/$(basename "$manifest")
 
-	file=$(find "$dir" -mindepth 1 -maxdepth 1 -executable -name "$(basename "$run")" | head -1)
-	if [[ -n "$file" ]]; then
-		log "	running $(basename "$dir") script: '$file'"
-		# shellcheck disable=SC1090
-		[[ $DRY_RUN == "0" ]] && source "$file" "$MODE"
+	if [[ -x $hook && -f $hook ]]; then
+		log "\trunning $(basename "$dir") script: '$hook'"
+		if [[ $dry_run == "0" ]]; then
+			# shellcheck disable=SC1090
+			source "$hook" "$mode"
+		fi
 	fi
 }
 
 main() {
 	local line pkg
 
-	log "RUN: file: $file"
+	log "RUN: file: $manifest"
+	log "${mode}ing packages from: $manifest"
 
-	if [[ -z $GREP_STR ]] || [[ $file =~ $GREP_STR ]]; then
+	run_before_or_after "$runs_dir/before"
 
-		log "${MODE}ing packages from: $file"
-
-		run_before_or_after "$DEV_ENV/runs/before" "$file"
-
-		# Loop over lines in the file and install the packages.
-		while IFS= read -r line; do
-			# Skip lines that begin with '#' (comments)
-			if [[ ! $line =~ ^# ]]; then
-				# Remove any inline comments.
-				pkg=${line%% \#*}
-				if [[ -n $pkg ]]; then
-					log "	pkg: '$pkg'"
-					[[ $DRY_RUN == "0" ]] && yay "${yayflags[@]}" "$pkg"
+	# Process package entries in manifest order.
+	while IFS= read -r line; do
+		if [[ ! $line =~ $comment_pattern ]]; then
+			pkg=${line%% \#*}
+			if [[ -n $pkg ]]; then
+				log "\tpkg: '$pkg'"
+				if [[ $dry_run == "0" ]]; then
+					yay "${yayflags[@]}" "$pkg"
 				fi
 			fi
-		done <"$file"
+		fi
+	done <"$manifest"
 
-		run_before_or_after "$DEV_ENV/runs/after" "$file"
-	else
-		log "Grep filtered out: '$file'"
-	fi
+	run_before_or_after "$runs_dir/after"
 }
 
 ############################## MAIN ##############################
 
-# Setup logging file and label.
+(($# == 3)) || fail "expected manifest, mode, and dry-run arguments"
+manifest=$1
+mode=$2
+dry_run=$3
+
+[[ $mode == "install" || $mode == "uninstall" ]] || fail "invalid mode: $mode"
+[[ $dry_run == "0" || $dry_run == "1" ]] || fail "dry-run must be 0 or 1"
+[[ -f $manifest && -r $manifest ]] || fail "manifest is not a readable regular file: $manifest"
+[[ -n ${SCRIPTS:-} ]] || fail "env var SCRIPTS needs to be present"
+
+runs_dir=$(dirname "$manifest")
+# Read by the logging utility sourced below.
+# shellcheck disable=SC2034
+LOG_ENABLE_DRY_RUN=$dry_run
 # shellcheck disable=SC1091
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
-file=${1:-""}
+comment_pattern='^#'
 yayflags=("-S" "--noconfirm" "--needed")
+if [[ $mode == "uninstall" ]]; then
+	yayflags=("-Rns")
+fi
 
-[[ -z "$DEV_ENV" ]] &&
-	log --error "env var DEV_ENV needs to be present" && exit 1
-[[ ! -r $file ]] &&
-	log --error "File not readable." && exit 1
-
-# Change yay flags if mode is 'uninstall'
-[[ $MODE == "uninstall" ]] && yayflags=("-Rns")
-
-# Ensure yay is installed before proceeding.
-[[ $DRY_RUN == "0" ]] && . "$DEV_ENV/runs/before/yay"
+# Ensure yay is installed before proceeding with a real lifecycle.
+if [[ $dry_run == "0" ]]; then
+	# shellcheck disable=SC1090,SC1091
+	source "$runs_dir/before/yay"
+fi
 
 main

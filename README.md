@@ -143,8 +143,12 @@ Remove the matching packages and run uninstall hooks:
 ./run uninstall hyprland
 ```
 
-Preview either operation with `--dry-run`. Filters use Bash regular-expression
-matching, so one filter may select multiple manifests.
+The command syntax is `run [--dry-run] [install|uninstall] [FILTER]`; mode and
+filter may each be supplied at most once. Preview either operation with
+`--dry-run`. The filter is a Bash regular expression matched against each full
+manifest path, so one filter may select multiple manifests. Malformed regular
+expressions and unknown options are rejected. Run `./run --help` for the command
+summary.
 
 `run` expects `DEV_ENV` and `SCRIPTS` to be set. The installed Zsh environment
 sets both; when running directly from a fresh clone, point `SCRIPTS` at the
