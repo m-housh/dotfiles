@@ -204,8 +204,10 @@ tests/run-all
 ```
 
 The tests use temporary fixtures and command stubs rather than modifying the
-host. CI also runs Bash syntax checks and ShellCheck for the primary installers,
-generator, test runner, and all `tests/*-test` scripts.
+host. CI also runs Bash syntax checks and ShellCheck for the supported entry
+points, package lifecycle and webapp helpers, test runner, and all
+`tests/*-test` scripts. The deferred `bootstrap` and `repos` helpers are not part
+of this enforcement.
 
 ## Deferred setup scripts
 

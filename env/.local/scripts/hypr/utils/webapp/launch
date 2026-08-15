@@ -47,7 +47,7 @@ EOF
 browser="brave-browser.desktop"
 url=""
 launch_args=()
-app_args=""
+app_args=()
 
 while [[ $# -gt 0 ]]; do
   if [[ $1 =~ ^--special ]] || [[ $1 =~ ^-s ]]; then
@@ -72,7 +72,7 @@ pattern() {
   pattern=${url/#https:\/\//}
   pattern=${pattern/#http:\/\//}
   pattern=${pattern%%/*}
-  echo $pattern
+  echo "$pattern"
 }
 
 log() {
@@ -84,6 +84,7 @@ log() {
 ##################################################
 
 # setup logging file and label
+# shellcheck source=/dev/null
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
@@ -92,11 +93,11 @@ if [[ -z $url ]]; then
 fi
 
 # Any left over args after "--"
-app_args="$@"
+app_args=("$@")
 
 log "Launching URL: $url"
-log "	Launch args: ${launch_args[@]}"
-log "	App args: ${app_args}"
+log "	Launch args: ${launch_args[*]}"
+log "	App args: ${app_args[*]}"
 
-$SCRIPTS/hypr/launch "${launch_args[@]}" "$(pattern)" \
-  setsid uwsm app -- $(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1) --app="$url" "$app_args"
+"$SCRIPTS/hypr/launch" "${launch_args[@]}" "$(pattern)" \
+  setsid uwsm app -- "$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1)" --app="$url" "${app_args[@]}"

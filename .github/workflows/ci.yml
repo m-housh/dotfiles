@@ -9,6 +9,25 @@ on:
 permissions:
   contents: read
 
+env:
+  # Supported entry points, their lifecycle/webapp helpers, and test scripts.
+  # Deferred legacy bootstrap and repos scripts are intentionally excluded.
+  BASH_FILES: >-
+    dev-env
+    devcontainer-env
+    gen
+    run
+    webapp
+    runs/before/*
+    runs/after/*
+    runs/utils/run-handler
+    env/.local/scripts/hypr/logging
+    env/.local/scripts/hypr/webapp
+    env/.local/scripts/hypr/uninstall-desktop-app
+    env/.local/scripts/hypr/utils/webapp/*
+    tests/run-all
+    tests/*-test
+
 jobs:
   tests:
     name: Tests
@@ -20,10 +39,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check Bash syntax
-        run: bash -n dev-env devcontainer-env gen tests/run-all tests/*-test
+        run: bash -n $BASH_FILES
 
       - name: Run ShellCheck
-        run: shellcheck dev-env devcontainer-env gen tests/run-all tests/*-test
+        run: shellcheck $BASH_FILES
 
       - name: Run integration tests
         run: tests/run-all

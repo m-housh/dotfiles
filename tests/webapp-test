@@ -175,6 +175,49 @@ run_install_helper() {
     "$ROOT/env/.local/scripts/hypr/utils/webapp/install" "$@"
 }
 
+launch_argument_forwarding_case() {
+  local case_root="$TEST_ROOT/launch-arguments"
+  mkdir -p -- "$case_root/home/.local/share/applications" "$case_root/scripts/hypr"
+  make_logging "$case_root/scripts"
+  cat >"$case_root/home/.local/share/applications/brave-browser.desktop" <<'EOF'
+[Desktop Entry]
+Exec=browser-command %U
+EOF
+  cat >"$case_root/scripts/hypr/launch" <<'EOF'
+#!/usr/bin/env bash
+printf '<%s>\n' "$@" >"$INVOCATIONS"
+EOF
+  chmod +x -- "$case_root/scripts/hypr/launch"
+
+  env HOME="$case_root/home" SCRIPTS="$case_root/scripts" \
+    INVOCATIONS="$case_root/invocations" PATH=/usr/bin:/bin \
+    "$ROOT/env/.local/scripts/hypr/utils/webapp/launch" \
+    --or-focus --special scratch https://example.test/path -- \
+    '--profile=Profile One' --new-window 'search terms' >"$case_root/output"
+
+  cat >"$case_root/expected" <<'EOF'
+<--or-focus>
+<--special>
+<scratch>
+<example.test>
+<setsid>
+<uwsm>
+<app>
+<-->
+<browser-command>
+<--app=https://example.test/path>
+<--profile=Profile One>
+<--new-window>
+<search terms>
+EOF
+  if ! cmp -s -- "$case_root/expected" "$case_root/invocations"; then
+    diff -u -- "$case_root/expected" "$case_root/invocations" >&2 || true
+    fail 'launch options and browser arguments were not forwarded distinctly'
+  fi
+  pass_count=$((pass_count + 1))
+  printf 'ok - launch options and browser arguments remain distinct\n'
+}
+
 installer_dry_run_case() {
   local case_root spec
   case_root=$(prepare_helper_case installer-dry)
@@ -434,6 +477,7 @@ top_install_case
 filter_and_preserve_case
 top_dry_run_case
 top_uninstall_contract_case
+launch_argument_forwarding_case
 installer_dry_run_case
 missing_icon_case
 invalid_installer_input_case

@@ -39,6 +39,7 @@ log() {
 ################################################################################
 
 # Setup logging file and label.
+# shellcheck source=/dev/null
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
