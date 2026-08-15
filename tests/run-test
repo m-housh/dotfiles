@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null && pwd -P)
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf -- "$TEST_ROOT"' EXIT
+
+pass_count=0
+
+fail() {
+	printf 'not ok - %s\n' "$*" >&2
+	exit 1
+}
+
+assert_line() {
+	local file=$1 expected=$2
+	[[ -f $file ]] || fail "missing file: $file"
+	grep -Fqx -- "$expected" "$file" || fail "$file does not contain exact line: $expected"
+}
+
+assert_count() {
+	local expected=$1 line=$2 file=$3 actual
+	actual=$(grep -Fxc -- "$line" "$file" || true)
+	[[ $actual == "$expected" ]] || fail "expected $expected copies of '$line' in $file, found $actual"
+}
+
+package_and_hook_case() {
+	local case_root=$TEST_ROOT/packages dev_env=$TEST_ROOT/packages/dev-env
+	mkdir -p -- "$case_root/bin" "$case_root/logs" \
+		"$dev_env/runs/utils" "$dev_env/runs/before" "$dev_env/runs/after"
+	cp -- "$ROOT/runs/utils/run-handler" "$dev_env/runs/utils/run-handler"
+	cp -- "$ROOT/runs/before/yay" "$dev_env/runs/before/yay"
+	printf 'selected-one\nselected-two # inline comment\n' >"$dev_env/runs/selected"
+	printf 'must-not-run\n' >"$dev_env/runs/omitted"
+
+	cat >"$case_root/bin/yay" <<'EOF'
+#!/usr/bin/env bash
+printf 'yay' >>"$INVOCATIONS"
+printf '\t%s' "$@" >>"$INVOCATIONS"
+printf '\n' >>"$INVOCATIONS"
+EOF
+	chmod +x -- "$case_root/bin/yay"
+
+	cat >"$dev_env/runs/before/selected" <<'EOF'
+#!/usr/bin/env bash
+[[ $# -eq 1 ]] || return 20
+printf 'before:%s\n' "$1" >>"$HOOK_INVOCATIONS"
+EOF
+	cat >"$dev_env/runs/after/selected" <<'EOF'
+#!/usr/bin/env bash
+[[ $# -eq 1 ]] || return 21
+printf 'after:%s\n' "$1" >>"$HOOK_INVOCATIONS"
+EOF
+	chmod +x -- "$dev_env/runs/before/selected" "$dev_env/runs/after/selected"
+
+	: >"$case_root/invocations"
+	: >"$case_root/hooks"
+	env \
+		DEV_ENV="$dev_env" \
+		SCRIPTS="$ROOT/env/.local/scripts" \
+		LOG_DIR="$case_root/logs" \
+		INVOCATIONS="$case_root/invocations" \
+		HOOK_INVOCATIONS="$case_root/hooks" \
+		PATH="$case_root/bin:/usr/bin:/bin" \
+		bash "$ROOT/run" install selected >"$case_root/install-output" 2>&1
+
+	assert_line "$case_root/invocations" $'yay\t-S\t--noconfirm\t--needed\tselected-one'
+	assert_line "$case_root/invocations" $'yay\t-S\t--noconfirm\t--needed\tselected-two'
+	assert_line "$case_root/hooks" 'before:install'
+	assert_line "$case_root/hooks" 'after:install'
+	if grep -Fq -- 'must-not-run' "$case_root/invocations"; then
+		fail 'a nonmatching manifest was processed during install'
+	fi
+
+	: >"$case_root/invocations"
+	: >"$case_root/hooks"
+	env \
+		DEV_ENV="$dev_env" \
+		SCRIPTS="$ROOT/env/.local/scripts" \
+		LOG_DIR="$case_root/logs" \
+		INVOCATIONS="$case_root/invocations" \
+		HOOK_INVOCATIONS="$case_root/hooks" \
+		PATH="$case_root/bin:/usr/bin:/bin" \
+		bash "$ROOT/run" uninstall selected >"$case_root/uninstall-output" 2>&1
+
+	assert_line "$case_root/invocations" $'yay\t-Rns\tselected-one'
+	assert_line "$case_root/invocations" $'yay\t-Rns\tselected-two'
+	assert_line "$case_root/hooks" 'before:uninstall'
+	assert_line "$case_root/hooks" 'after:uninstall'
+	if grep -Fq -- 'must-not-run' "$case_root/invocations"; then
+		fail 'a nonmatching manifest was processed during uninstall'
+	fi
+
+	pass_count=$((pass_count + 1))
+	printf 'ok - filtered package operations and lifecycle hook modes\n'
+}
+
+system_after_case() {
+	local case_root=$TEST_ROOT/system
+	local existing='server:/path.with[chars] /mnt/test nfs defaults 0 0'
+	local missing='//server/share /home/test path cifs credentials=/tmp/a+b,uid=1000 0 0'
+	mkdir -p -- "$case_root/bin" "$case_root/mount" "$case_root/home/.config" "$case_root/dev-env"
+	printf '%s\n' "$existing" >"$case_root/fstab"
+	: >"$case_root/sudo-invocations"
+	: >"$case_root/home/.config/.smbcredentials"
+
+	cat >"$case_root/bin/sudo" <<'EOF'
+#!/usr/bin/env bash
+case ${1:-} in
+	grep)
+		shift
+		args=("$@")
+		for i in "${!args[@]}"; do
+			[[ ${args[i]} == /etc/fstab ]] && args[i]=$FSTAB_FIXTURE
+		done
+		command grep "${args[@]}"
+		;;
+	tee)
+		shift
+		[[ ${1:-} == --append && ${2:-} == /etc/fstab ]] || exit 30
+		command tee --append "$FSTAB_FIXTURE"
+		;;
+	systemctl|mount)
+		printf '%s' "$1" >>"$SUDO_INVOCATIONS"
+		shift
+		printf ' <%s>' "$@" >>"$SUDO_INVOCATIONS"
+		printf '\n' >>"$SUDO_INVOCATIONS"
+		;;
+	*)
+		exit 31
+		;;
+esac
+EOF
+	cat >"$case_root/bin/gpg" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+	chmod +x -- "$case_root/bin/sudo" "$case_root/bin/gpg"
+
+	export FSTAB_FIXTURE="$case_root/fstab"
+	export SUDO_INVOCATIONS="$case_root/sudo-invocations"
+	export HOME="$case_root/home"
+	export DEV_ENV="$case_root/dev-env"
+	export PATH="$case_root/bin:/usr/bin:/bin"
+	log() { :; }
+	# The hook returns false when sourced without its install argument.
+	# shellcheck disable=SC1091
+	source "$ROOT/runs/after/system" "" || :
+
+	{
+		_ensure_mount "$existing" "$case_root/mount"
+		_ensure_mount "$missing" "$case_root/mount"
+		_ensure_mount "$missing" "$case_root/mount"
+	} >"$case_root/mount-output"
+	assert_count 1 "$existing" "$case_root/fstab"
+	assert_count 1 "$missing" "$case_root/fstab"
+	assert_count 1 'systemctl <daemon-reload>' "$case_root/sudo-invocations"
+	assert_count 1 'mount <-a>' "$case_root/sudo-invocations"
+
+	_setup-home-dir
+	_setup-home-dir
+	[[ -d $HOME/containers ]] || fail 'home containers directory was not created'
+	[[ -d $HOME/dev ]] || fail 'home dev directory was not created'
+	[[ ! -e $HOME/'{containers,dev}' ]] || fail 'literal brace-expression directory was created'
+
+	pass_count=$((pass_count + 1))
+	printf 'ok - exact fstab idempotency and repeatable home-directory setup\n'
+}
+
+package_and_hook_case
+system_after_case
+printf '1..%d\n' "$pass_count"

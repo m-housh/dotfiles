@@ -11,7 +11,7 @@ set -o nounset
 set -o pipefail
 
 THIS_FILE=${BASH_SOURCE[0]}
-LOG_LABEL=$(basename $THIS_FILE)
+LOG_LABEL=$(basename "$THIS_FILE")
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
 declare dry_run grepstr mode
@@ -23,6 +23,7 @@ log() {
 ############################## MAIN ##############################
 
 # Setup logging file and label.
+# shellcheck disable=SC1091
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 

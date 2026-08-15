@@ -8,7 +8,7 @@ declare file
 declare -a yayflags
 
 THIS_FILE=${BASH_SOURCE[0]}
-LOG_LABEL=${LOG_LABEL:-$(basename $THIS_FILE)}
+LOG_LABEL=${LOG_LABEL:-$(basename "$THIS_FILE")}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 DEV_ENV=${DEV_ENV:-""}
 
@@ -28,7 +28,8 @@ run_before_or_after() {
 	file=$(find "$dir" -mindepth 1 -maxdepth 1 -executable -name "$(basename "$run")" | head -1)
 	if [[ -n "$file" ]]; then
 		log "	running $(basename "$dir") script: '$file'"
-		[[ $DRY_RUN == "0" ]] && source "$file" "$mode"
+		# shellcheck disable=SC1090
+		[[ $DRY_RUN == "0" ]] && source "$file" "$MODE"
 	fi
 }
 
@@ -65,6 +66,7 @@ main() {
 ############################## MAIN ##############################
 
 # Setup logging file and label.
+# shellcheck disable=SC1091
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
