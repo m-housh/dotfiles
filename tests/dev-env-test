@@ -76,6 +76,7 @@ make_fixture() {
 	printf 'tmux\n' >"$source/env/.tmux.conf"
 	printf 'markdown\n' >"$source/env/.markdownlint.jsonc"
 	printf 'prettier\n' >"$source/env/.prettierrc.json"
+	cp -a -- "$ROOT/env/.pi" "$source/env/.pi"
 	cp -- "$ROOT/dev-env" "$ROOT/devcontainer-env" "$source/"
 
 	cat >"$source/env/.local/scripts/wt" <<'EOF'
@@ -158,7 +159,14 @@ integration_case() {
 		"$config/zsh/functions" \
 		"$config/zsh/plugins" \
 		"$home/.local/scripts/hypr/utils" \
-		"$home/pkgbuilds/managed-pkg"
+		"$home/pkgbuilds/managed-pkg" \
+		"$home/.pi/agent/skills/code-review" \
+		"$home/.pi/agent/skills/local-only" \
+		"$home/.pi/agent/themes" \
+		"$home/.pi/agent/sessions/session-1" \
+		"$home/.pi/agent/git/cache" \
+		"$home/.pi/agent/npm/cache" \
+		"$home/.pi/agent/extensions"
 	printf 'stale\n' >"$config/new [feature]/stale"
 	printf 'session\n' >"$config/herdr/sessions/live"
 	printf 'lock\n' >"$config/herdr/.plugins.lock"
@@ -175,6 +183,21 @@ integration_case() {
 	printf 'stale nested\n' >"$home/.local/scripts/hypr/utils/stale"
 	printf 'local script\n' >"$home/.local/scripts/local-only"
 	printf 'stale pkg\n' >"$home/pkgbuilds/managed-pkg/stale"
+	printf 'old guidance\n' >"$home/.pi/agent/AGENTS.md"
+	printf '{\n  "theme": "local",\n  "provider": "machine"\n}\n' >"$home/.pi/agent/settings.json"
+	cp -- "$home/.pi/agent/settings.json" "$case_root/expected-settings"
+	printf 'auth state\n' >"$home/.pi/agent/auth.json"
+	printf 'model config\n' >"$home/.pi/agent/models.json"
+	printf 'model state\n' >"$home/.pi/agent/models-store.json"
+	printf 'trust state\n' >"$home/.pi/agent/trust.json"
+	printf 'session state\n' >"$home/.pi/agent/sessions/session-1/state"
+	printf 'git package\n' >"$home/.pi/agent/git/cache/state"
+	printf 'npm package\n' >"$home/.pi/agent/npm/cache/state"
+	printf 'herdr state\n' >"$home/.pi/agent/extensions/herdr-agent-state.ts"
+	printf 'stale skill\n' >"$home/.pi/agent/skills/code-review/stale"
+	printf 'local skill\n' >"$home/.pi/agent/skills/local-only/SKILL.md"
+	printf '{"name":"old"}\n' >"$home/.pi/agent/themes/catppuccin-mocha.json"
+	printf '{"name":"local"}\n' >"$home/.pi/agent/themes/local.json"
 
 	run_installer "$case_root" --no-reload >"$case_root/output"
 
@@ -205,6 +228,22 @@ integration_case() {
 	assert_exists "$data/applications/icons/app.icon"
 	assert_file_contains "$home/.zsh/completions/_wt" 'wt completion'
 	assert_file_contains "$home/.zsh/completions/_hpa" 'hpa completion'
+	assert_file_contains "$home/.pi/agent/AGENTS.md" 'wt add --space <branch> [base]'
+	assert_file_contains "$home/.pi/agent/skills/code-review/SKILL.md" 'name: code-review'
+	assert_file_contains "$home/.pi/agent/skills/simplify-refactor/references/checklist.md" 'Boundary check'
+	assert_absent "$home/.pi/agent/skills/code-review/stale"
+	assert_exists "$home/.pi/agent/skills/local-only/SKILL.md"
+	assert_file_contains "$home/.pi/agent/themes/catppuccin-mocha.json" 'earendil-works/pi'
+	assert_exists "$home/.pi/agent/themes/local.json"
+	cmp -s -- "$case_root/expected-settings" "$home/.pi/agent/settings.json" || fail 'existing Pi settings changed'
+	assert_file_contains "$home/.pi/agent/auth.json" 'auth state'
+	assert_file_contains "$home/.pi/agent/models.json" 'model config'
+	assert_file_contains "$home/.pi/agent/models-store.json" 'model state'
+	assert_file_contains "$home/.pi/agent/trust.json" 'trust state'
+	assert_file_contains "$home/.pi/agent/sessions/session-1/state" 'session state'
+	assert_file_contains "$home/.pi/agent/git/cache/state" 'git package'
+	assert_file_contains "$home/.pi/agent/npm/cache/state" 'npm package'
+	assert_file_contains "$home/.pi/agent/extensions/herdr-agent-state.ts" 'herdr state'
 	grep -Fq 'mailctl <update>' "$case_root/invocations" || fail 'mailctl update was not invoked'
 	if grep -Fq 'zsh ' "$case_root/invocations"; then
 		fail '--no-reload invoked zsh'
@@ -215,6 +254,10 @@ integration_case() {
 	assert_exists "$config/herdr/sessions/live"
 	assert_exists "$config/hypr/local.conf"
 	assert_exists "$config/zsh/history"
+	cmp -s -- "$case_root/expected-settings" "$home/.pi/agent/settings.json" || fail 'second install changed Pi settings'
+	assert_exists "$home/.pi/agent/skills/local-only/SKILL.md"
+	assert_exists "$home/.pi/agent/themes/local.json"
+	assert_exists "$home/.pi/agent/extensions/herdr-agent-state.ts"
 	pass_count=$((pass_count + 1))
 	printf 'ok - automatic, replacement, merge, exact-file, path, and idempotency behavior\n'
 }
@@ -225,8 +268,11 @@ dry_run_case() {
 	run_installer "$case_root" --dry-run >"$case_root/plan"
 	[[ ! -s $case_root/invocations ]] || fail 'dry-run invoked an external command'
 	assert_absent "$case_root/home [test]/.zshenv"
+	assert_absent "$case_root/home [test]/.pi"
 	assert_absent "$case_root/xdg config/new [feature]"
 	grep -Fq '[dry-run]' "$case_root/plan" || fail 'dry-run did not print a plan'
+	grep -Fq '.pi/agent/skills/code-review' "$case_root/plan" || fail 'dry-run omitted Pi skills'
+	grep -Fq '.pi/agent/themes/catppuccin-mocha.json' "$case_root/plan" || fail 'dry-run omitted Pi theme'
 	grep -Fq 'zsh -l' "$case_root/plan" || fail 'dry-run omitted planned shell reload'
 	pass_count=$((pass_count + 1))
 	printf 'ok - dry-run has no side effects\n'
@@ -318,6 +364,11 @@ container_case() {
 	assert_exists "$home/.local/scripts/hypr/utils/stale"
 	assert_exists "$home/.local/scripts/local-only"
 	assert_absent "$home/.local/scripts/dev-env"
+	assert_file_contains "$home/.pi/agent/AGENTS.md" 'wt add --space <branch> [base]'
+	assert_file_contains "$home/.pi/agent/skills/test-plan/SKILL.md" 'name: test-plan'
+	assert_file_contains "$home/.pi/agent/skills/simplify-refactor/references/checklist.md" 'Boundary check'
+	assert_file_contains "$home/.pi/agent/themes/catppuccin-mocha.json" 'catppuccin-mocha'
+	assert_file_contains "$home/.pi/agent/settings.json" '"theme": "catppuccin-mocha"'
 
 	assert_file_contains "$case_root/invocations" 'git <-C>'
 	assert_file_contains "$case_root/invocations" '<submodule> <update> <--init> <--> <env/.config/nvim>'
@@ -335,6 +386,7 @@ container_dry_run_case() {
 	run_installer "$case_root" container --dry-run >"$case_root/plan"
 	[[ ! -s $case_root/invocations ]] || fail 'container dry-run invoked an external command'
 	assert_absent "$case_root/home [test]/.zshenv"
+	assert_absent "$case_root/home [test]/.pi"
 	assert_absent "$case_root/xdg config/eza"
 	grep -Fq 'git -C' "$case_root/plan" || fail 'container dry-run omitted submodule update'
 	grep -Fq 'submodule update --init -- env/.config/nvim' "$case_root/plan" || fail 'container dry-run submodule plan is not pinned'
@@ -361,6 +413,23 @@ wrapper_case() {
 	printf 'ok - compatibility wrapper defaults the source root and forwards arguments\n'
 }
 
+missing_pi_source_case() {
+	local case_root home
+	case_root=$(prepare_case missing-pi-source)
+	home="$case_root/home [test]"
+	mkdir -p -- "$home/.pi/agent/skills/code-review"
+	printf 'keep managed skill\n' >"$home/.pi/agent/skills/code-review/SKILL.md"
+	rm -- "$case_root/source/env/.pi/agent/skills/code-review/SKILL.md"
+	if run_installer "$case_root" container >"$case_root/output" 2>"$case_root/error"; then
+		fail 'installation with a missing Pi source succeeded'
+	fi
+	assert_file_contains "$home/.pi/agent/skills/code-review/SKILL.md" 'keep managed skill'
+	assert_absent "$home/.pi/agent/AGENTS.md"
+	grep -Fq 'source does not exist' "$case_root/error" || fail 'missing Pi source error was not useful'
+	pass_count=$((pass_count + 1))
+	printf 'ok - Pi manifest validation precedes managed replacements\n'
+}
+
 missing_source_case() {
 	local case_root home
 	case_root=$(prepare_case missing-source)
@@ -383,5 +452,6 @@ argument_case
 container_case
 container_dry_run_case
 wrapper_case
+missing_pi_source_case
 missing_source_case
 printf '1..%d\n' "$pass_count"

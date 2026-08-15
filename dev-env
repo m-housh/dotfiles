@@ -174,6 +174,41 @@ copy_file() {
 	run cp -a -- "$source" "$destination"
 }
 
+install_pi_environment() {
+	local source_root="$DEV_ENV_ROOT/env/.pi/agent"
+	local destination_root="$HOME/.pi/agent"
+	local relative
+	local -a managed_files=(
+		"AGENTS.md"
+		"settings.json"
+		"skills/code-review/SKILL.md"
+		"skills/commit-message/SKILL.md"
+		"skills/explain-before-edit/SKILL.md"
+		"skills/security-review/SKILL.md"
+		"skills/simplify-refactor/SKILL.md"
+		"skills/simplify-refactor/references/checklist.md"
+		"skills/test-plan/SKILL.md"
+		"themes/catppuccin-mocha.json"
+	)
+
+	validate_destination "$destination_root"
+
+	# Validate the complete managed manifest before replacing any runtime entry.
+	for relative in "${managed_files[@]}"; do
+		source_exists "$source_root/$relative"
+	done
+
+	copy_file "$source_root/AGENTS.md" "$destination_root/AGENTS.md"
+	replace_entries "$source_root/skills" "$destination_root/skills"
+	replace_entries "$source_root/themes" "$destination_root/themes"
+
+	if [[ -e $destination_root/settings.json || -L $destination_root/settings.json ]]; then
+		log_action "preserve existing Pi settings: $destination_root/settings.json"
+	else
+		copy_file "$source_root/settings.json" "$destination_root/settings.json"
+	fi
+}
+
 install_config_directories() {
 	local source name destination
 	source_directory_exists "$DEV_ENV_ROOT/env/.config"
@@ -324,6 +359,7 @@ reload_services() {
 }
 
 install_full_environment() {
+	install_pi_environment
 	install_config_directories
 	install_explicit_mappings
 	generate_completions
@@ -361,7 +397,10 @@ main() {
 		install_full_environment
 		reload_login_shell
 		;;
-	container) install_container_environment ;;
+	container)
+		install_pi_environment
+		install_container_environment
+		;;
 	esac
 }
 
