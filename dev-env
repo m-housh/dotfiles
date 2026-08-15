@@ -1,194 +1,311 @@
 #!/usr/bin/env bash
 
-# Adapted from https://github.com/ThePrimeagen/dev/blob/master/dev-env
-#
-# Copies configuration files to their appropriate places.
+# Copies this repository's configuration into a home directory. DEV_ENV remains
+# explicit because the installed copy of this script is outside the repository.
 
-dry_run="0"
+set -Eeuo pipefail
 
-if [ -z "$XDG_CONFIG_HOME" ]; then
-	echo "no xdg config home"
-	echo "using ~/.config"
-	XDG_CONFIG_HOME=$HOME/.config
-fi
+DRY_RUN=0
+RELOAD_SHELL=1
+DEV_ENV_ROOT=""
 
-if [ -z "$XDG_DATA_HOME" ]; then
-	echo "no xdg data home"
-	echo "using ~/.local/share"
-	XDG_DATA_HOME=$HOME/.local/share
-fi
+usage() {
+	cat <<'EOF'
+Usage: dev-env [--dry-run] [--no-reload] [--help]
 
-if [ -z "$DEV_ENV" ]; then
-	echo "env var DEV_ENV needs to be present"
+  --dry-run    Print the complete installation plan without changing anything.
+  --no-reload  Do not replace this process with a login Zsh after installation.
+  --help       Show this help.
+
+Directories directly below env/.config are replaced by default. herdr and nvim
+are merged; systemd and zsh have explicit preservation policies; kanata is not
+installed automatically.
+EOF
+}
+
+fail() {
+	printf 'dev-env: %s\n' "$*" >&2
 	exit 1
-fi
+}
 
-if [[ $1 =~ ^--dry ]]; then
-	dry_run="1"
-fi
+parse_args() {
+	while (($#)); do
+		case $1 in
+		--dry-run) DRY_RUN=1 ;;
+		--no-reload) RELOAD_SHELL=0 ;;
+		--help)
+			usage
+			exit 0
+			;;
+		*) fail "unknown option: $1 (try --help)" ;;
+		esac
+		shift
+	done
+}
 
-log() {
-	if [[ $dry_run == "1" ]]; then
-		echo "[DRY_RUN]: $1"
+print_command() {
+	local prefix=""
+	if ((DRY_RUN)); then
+		prefix="[dry-run] "
+	fi
+	printf '%s' "$prefix"
+	printf '%q ' "$@"
+	printf '\n'
+}
+
+run() {
+	print_command "$@"
+	((DRY_RUN)) || command "$@"
+}
+
+run_capture() {
+	local destination=$1 prefix=""
+	shift
+	if ((DRY_RUN)); then
+		prefix="[dry-run] "
+	fi
+	printf '%s' "$prefix"
+	printf '%q ' "$@"
+	printf '> %q\n' "$destination"
+	if ((DRY_RUN)); then
+		return 0
+	fi
+
+	local temporary="${destination}.tmp.$$"
+	if ! command "$@" >"$temporary"; then
+		rm -f -- "$temporary"
+		return 1
+	fi
+	command mv -f -- "$temporary" "$destination"
+}
+
+log_action() {
+	if ((DRY_RUN)); then
+		printf '[dry-run] %s\n' "$*"
 	else
-		echo "$1"
+		printf '%s\n' "$*"
 	fi
 }
 
-log "env: $DEV_ENV"
+canonical_directory() {
+	local path=$1
+	[[ -d $path ]] || fail "directory does not exist: $path"
+	(cd -- "$path" >/dev/null && pwd -P)
+}
 
-# Removes a destination directory and copies all files to the destination.
-update_dirs() {
-	log "copying over files from: $1"
-	pushd $1 &>/dev/null
-	(
-		# Copy everything except systemd, share, and zsh folders, they need treated differently.
-		configs=$(
-			find . -mindepth 1 -maxdepth 1 -type d \
-				\( -name "systemd" -o -name "zsh" -o -name "share" -o -name "scripts" -o -name "kanata" \) \
-				-prune -o -type d -print
-		)
-		for c in $configs; do
-			directory=${2%/}/${c#./}
-			log "    removing: rm -rf $directory"
+normalize_path() {
+	realpath -m -- "$1"
+}
 
-			if [[ $dry_run == "0" ]]; then
-				rm -rf $directory
-			fi
+source_exists() {
+	[[ -e $1 || -L $1 ]] || fail "source does not exist: $1"
+}
 
-			log "    copying env: cp $c $2"
-			if [[ $dry_run == "0" ]]; then
-				cp -r ./$c $2
-			fi
-		done
+source_directory_exists() {
+	[[ -d $1 ]] || fail "source directory does not exist: $1"
+}
 
+validate_destination() {
+	local destination normalized root
+	destination=$1
+	[[ -n $destination && $destination == /* ]] || fail "unsafe destination: $destination"
+	normalized=$(normalize_path "$destination")
+	[[ $normalized != / ]] || fail "refusing destructive root destination: $destination"
+
+	for root in "$HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME"; do
+		root=$(normalize_path "$root")
+		[[ $normalized != "$root" ]] || fail "refusing destination root: $destination"
+		if [[ $normalized == "$root"/* ]]; then
+			return 0
+		fi
+	done
+	fail "destination is outside HOME/XDG roots: $destination"
+}
+
+replace_tree() {
+	local source=$1 destination=$2
+	source_directory_exists "$source"
+	validate_destination "$destination"
+	run rm -rf -- "$destination"
+	run mkdir -p -- "$(dirname -- "$destination")"
+	run cp -a -- "$source" "$destination"
+}
+
+merge_tree() {
+	local source=$1 destination=$2
+	source_directory_exists "$source"
+	validate_destination "$destination"
+	run mkdir -p -- "$destination"
+	run cp -a -- "$source/." "$destination/"
+}
+
+replace_entries() {
+	local source=$1 destination=$2 entry target
+	source_directory_exists "$source"
+	validate_destination "$destination"
+	run mkdir -p -- "$destination"
+
+	# NUL delimiters preserve whitespace, glob characters, and newlines in names.
+	while IFS= read -r -d '' entry; do
+		target="$destination/${entry##*/}"
+		validate_destination "$target"
+		run rm -rf -- "$target"
+		run cp -a -- "$entry" "$target"
+	done < <(find "$source" -mindepth 1 -maxdepth 1 -print0)
+}
+
+copy_file() {
+	local source=$1 destination=$2
+	source_exists "$source"
+	[[ ! -d $source ]] || fail "expected a file source, got directory: $source"
+	validate_destination "$destination"
+	run mkdir -p -- "$(dirname -- "$destination")"
+	run rm -rf -- "$destination"
+	run cp -a -- "$source" "$destination"
+}
+
+install_config_directories() {
+	local source name destination
+	source_directory_exists "$DEV_ENV_ROOT/env/.config"
+	while IFS= read -r -d '' source; do
+		name=${source##*/}
+		destination="$XDG_CONFIG_HOME/$name"
+		case $name in
+		herdr | nvim) merge_tree "$source" "$destination" ;;
+		kanata | systemd | zsh) : ;;
+		*) replace_tree "$source" "$destination" ;;
+		esac
+	done < <(find "$DEV_ENV_ROOT/env/.config" -mindepth 1 -maxdepth 1 -type d -print0)
+}
+
+install_explicit_mappings() {
+	local index
+	local -a file_sources=(
+		"env/.zshenv"
+		"env/.tmux.conf"
+		"env/.markdownlint.jsonc"
+		"env/.prettierrc.json"
+		"dev-env"
 	)
-	popd &>/dev/null
-}
-
-# Removes a destination file and copies a single file to the destination.
-copy() {
-	log "removing: $2"
-	if [[ $dry_run == "0" ]]; then
-		rm $2 &>/dev/null
-	fi
-	log "copying: $1 to $2"
-	if [[ $dry_run == "0" ]]; then
-		cp $1 $2
-	fi
-}
-
-# Copy all files from a directory into another directory.
-copy_files() {
-	log "copying over files from: $1"
-	pushd "$1" &>/dev/null || exit 1
-	(
-		for f in $(find . -mindepth 1 -maxdepth 1 -type f); do
-
-			declare dest
-			dest="$2/$(basename "$f")"
-
-			if [[ $dry_run == "0" ]]; then
-				rm -rf $dest >/dev/null 2>&1
-			fi
-
-			log "    copying env: cp $f $dest"
-			if [[ $dry_run == "0" ]]; then
-				cp $f $dest
-			fi
-		done
+	local -a file_destinations=(
+		"$HOME/.zshenv"
+		"$HOME/.tmux.conf"
+		"$HOME/.markdownlint.jsonc"
+		"$HOME/.prettierrc.json"
+		"$HOME/.local/scripts/dev-env"
 	)
-	popd &>/dev/null || exit 1
+	local -a merge_sources=(
+		"env/.gnupg"
+		"env/wallpapers"
+		"env/.local/share/applications"
+	)
+	local -a merge_destinations=(
+		"$HOME/.gnupg"
+		"$HOME/wallpapers"
+		"$XDG_DATA_HOME/applications"
+	)
+	local -a entry_sources=(
+		"env/.local/scripts"
+		"env/pkgbuilds"
+	)
+	local -a entry_destinations=(
+		"$HOME/.local/scripts"
+		"$HOME/pkgbuilds"
+	)
+
+	for index in "${!file_sources[@]}"; do
+		copy_file "$DEV_ENV_ROOT/${file_sources[index]}" "${file_destinations[index]}"
+	done
+	for index in "${!merge_sources[@]}"; do
+		merge_tree "$DEV_ENV_ROOT/${merge_sources[index]}" "${merge_destinations[index]}"
+	done
+	for index in "${!entry_sources[@]}"; do
+		replace_entries "$DEV_ENV_ROOT/${entry_sources[index]}" "${entry_destinations[index]}"
+	done
+
+	merge_tree "$DEV_ENV_ROOT/env/.config/systemd/user" "$XDG_CONFIG_HOME/systemd/user"
+	replace_entries "$DEV_ENV_ROOT/env/.config/zsh" "$XDG_CONFIG_HOME/zsh"
+
+	run mkdir -p -- "$HOME/Pictures" "$XDG_DATA_HOME/clipse/tmp_files"
 }
 
-email() {
-	if command -v mailctl; then
-		log "Updating using mailctl..."
-		[[ $dry_run == "0" ]] && mailctl update && mailctl config
-	else
-		log "Installing mailctl..."
-		[[ $dry_run == "0" ]] && . "$DEV_ENV/mail/install"
-	fi
-}
-
-completions() {
+generate_completions() {
 	local completion_dir="$HOME/.zsh/completions"
+	local wt_completion="$completion_dir/_wt"
+	local hpa_completion="$completion_dir/_hpa"
+	local hpa_environment="$HOME/.local/scripts/utils/hpa/hpa.env"
 
-	mkdir -p "$completion_dir" >/dev/null 2>&1
+	run mkdir -p -- "$completion_dir"
+	run_capture "$wt_completion" "$HOME/.local/scripts/wt" completion zsh
 
-	log "installing wt completion: $completion_dir/_wt"
-	log "installing hpa completion: $completion_dir/_hpa"
-	if [[ $dry_run == "0" ]]; then
-		"$HOME/.local/scripts/wt" completion zsh >"$completion_dir/_wt"
-		(
-			. "$HOME/.local/scripts/utils/hpa/hpa.env"
-			podman run --rm "$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" \
-				--generate-completion-script zsh
-		) >"$completion_dir/_hpa"
+	if ((DRY_RUN)); then
+		log_action "generate HPA Zsh completion -> $hpa_completion"
+		return 0
+	fi
+
+	source_exists "$hpa_environment"
+	# shellcheck disable=SC1090
+	. "$hpa_environment"
+	: "${HPA_DOCKER_IMAGE:?HPA_DOCKER_IMAGE is not set by $hpa_environment}"
+	: "${HPA_DOCKER_TAG:?HPA_DOCKER_TAG is not set by $hpa_environment}"
+	run_capture "$hpa_completion" podman run --rm \
+		"$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" --generate-completion-script zsh
+}
+
+update_email() {
+	if command -v mailctl >/dev/null 2>&1; then
+		run mailctl update
+		run mailctl config
+	else
+		local installer="$DEV_ENV_ROOT/mail/install"
+		source_exists "$installer"
+		log_action "source $installer"
+		if ((!DRY_RUN)); then
+			# shellcheck disable=SC1090
+			. "$installer"
+		fi
 	fi
 }
 
-############################## MAIN ##############################
+reload_services() {
+	run systemctl --user daemon-reload
+	run hyprctl reload
+	run espanso service restart
+}
 
-# CONFIG
-update_dirs $DEV_ENV/env/.config $XDG_CONFIG_HOME
-update_dirs $DEV_ENV/env/.local $HOME/.local
+reload_login_shell() {
+	((RELOAD_SHELL)) || return 0
+	print_command zsh -l
+	((DRY_RUN)) || exec zsh -l
+}
 
-# SCRIPTS
-mkdir -p ~/.local/scripts/{hypr,utils} >/dev/null 2>&1
-mkdir -p ~/.local/scripts/utils/{kanatactl,hpa,shorten-url} >/dev/null 2>&1
-update_dirs $DEV_ENV/env/.local/scripts/hypr $HOME/.local/scripts/hypr
-copy_files $DEV_ENV/env/.local/scripts/hypr $HOME/.local/scripts/hypr
-copy_files "$DEV_ENV/env/.local/scripts/utils/kanatactl" "$HOME/.local/scripts/utils/kanatactl"
-copy_files "$DEV_ENV/env/.local/scripts/utils/hpa" "$HOME/.local/scripts/utils/hpa"
-copy_files "$DEV_ENV/env/.local/scripts/utils/shorten-url" "$HOME/.local/scripts/utils/shorten-url"
-copy_files $DEV_ENV/env/.local/scripts $HOME/.local/scripts
+initialize_paths() {
+	[[ -n ${HOME:-} ]] || fail "HOME is not set"
+	[[ -n ${DEV_ENV:-} ]] || fail "DEV_ENV is not set"
+	XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
+	XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
 
-# SYSTEMD
-mkdir -p $XDG_CONFIG_HOME/systemd/user >/dev/null 2>&1
-copy_files $DEV_ENV/env/.config/systemd/user $XDG_CONFIG_HOME/systemd/user
+	HOME=$(normalize_path "$HOME")
+	XDG_CONFIG_HOME=$(normalize_path "$XDG_CONFIG_HOME")
+	XDG_DATA_HOME=$(normalize_path "$XDG_DATA_HOME")
+	DEV_ENV_ROOT=$(canonical_directory "$DEV_ENV")
+	[[ $DEV_ENV_ROOT != / ]] || fail "DEV_ENV may not be /"
+	source_directory_exists "$DEV_ENV_ROOT/env"
+}
 
-# ZSH
-# NOTE: This keeps from clobbering zsh history and plugins vs. wiping the entire directory and
-#       copying configuration.
-copy $DEV_ENV/env/.zshenv $HOME/.zshenv
-mkdir -p $XDG_CONFIG_HOME/zsh >/dev/null 2>&1
-update_dirs $DEV_ENV/env/.config/zsh $XDG_CONFIG_HOME/zsh # copies sup-directories.
-copy_files $DEV_ENV/env/.config/zsh $XDG_CONFIG_HOME/zsh  # copies files in the root directory.
-completions
+main() {
+	parse_args "$@"
+	initialize_paths
+	log_action "source root: $DEV_ENV_ROOT"
 
-# TMUX
-copy $DEV_ENV/env/.tmux.conf $HOME/.tmux.conf
+	install_config_directories
+	install_explicit_mappings
+	generate_completions
+	update_email
+	reload_services
+	reload_login_shell
+}
 
-# GPG
-mkdir $HOME/.gnupg >/dev/null 2>&1
-copy_files $DEV_ENV/env/.gnupg $HOME/.gnupg
-
-# Wallpapers
-mkdir $HOME/wallpapers >/dev/null 2>&1
-copy_files $DEV_ENV/env/wallpapers $HOME/wallpapers
-
-# MISC
-mkdir $HOME/Pictures >/dev/null 2>&1
-mkdir -p $XDG_DATA_HOME/clipse/tmp_files
-copy $DEV_ENV/dev-env $HOME/.local/scripts/dev-env
-copy $DEV_ENV/env/.markdownlint.jsonc $HOME/.markdownlint.jsonc
-copy $DEV_ENV/env/.prettierrc.json $HOME/.prettierrc.json
-
-mkdir -p $XDG_DATA_HOME/applications/icons
-copy_files $DEV_ENV/env/.local/share/applications $XDG_DATA_HOME/applications
-copy_files $DEV_ENV/env/.local/share/applications/icons $XDG_DATA_HOME/applications/icons
-
-# Custom package builds.
-mkdir $HOME/pkgbuilds
-update_dirs $DEV_ENV/env/pkgbuilds $HOME/pkgbuilds
-
-# Email.
-email
-
-if [[ $dry_run == "0" ]]; then
-	systemctl --user daemon-reload
-	hyprctl reload
-	espanso service restart
-	exec zsh -l
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+	main "$@"
 fi
