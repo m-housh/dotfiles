@@ -1,77 +1,83 @@
 #!/usr/bin/env bash
 
-# Generates a new run, webapp, or script file.
+# Generates a new run manifest, webapp specification, or general script.
 
-if [ -z "$DEV_ENV" ]; then
-  echo "env var DEV_ENV needs to be present"
-  exit 1
-fi
+set -Eeuo pipefail
+set -o noclobber
 
-file=""
-run="0"
-webapp="0"
-script="0"
+PROGRAM=${0##*/}
+incomplete_destination=
 
-while [[ $# -gt 0 ]]; do
-  echo "Arg: \"$1\""
-
-  if [[ "$1" == "run" ]]; then
-    run="1"
-  elif [[ "$1" == "webapp" ]]; then
-    webapp="1"
-  elif [[ "$1" == "script" ]]; then
-    script="1"
-  else
-    file="$1"
-  fi
-  shift
-done
-
-log() { echo "$1"; }
-
-fail_if_exists() {
-  if [[ -f $1 ]]; then
-    log "file exists: $dest"
-    exit 1
-  fi
+after_exit() {
+	local status=$?
+	if ((status != 0)) && [[ -n $incomplete_destination ]]; then
+		rm -f -- "$incomplete_destination"
+	fi
 }
+trap after_exit EXIT
 
-generate_run() {
-  local dest="$DEV_ENV/runs/$file"
-  fail_if_exists $dest
-  log "Creating new run: $dest"
-  cat >"$dest" <<'EOF'
-#!/usr/bin/env bash
+usage() {
+	cat <<EOF
+Usage:
+  $PROGRAM run <name>
+  $PROGRAM webapp <name>
+  $PROGRAM script <name>
 
-yay ${1:-"-S --noconfirm"} # packages
-
+Generate a run manifest, webapp specification, or general Bash script under DEV_ENV.
 EOF
-  chmod +x $dest
 }
 
-generate_webapp() {
-  local dest="$DEV_ENV/env/webapps/$file"
-  # Check that the destination ends with '.json', fix if not.
-  if [[ ! $dest =~ \.json$ ]]; then
-    dest="$dest.json"
-  fi
-  fail_if_exists $dest
-  log "Creating new webapp: $dest"
-  cat >"$dest" <<'EOF'
+fail() {
+	printf '%s: %s\n' "$PROGRAM" "$*" >&2
+	exit 1
+}
+
+is_type() {
+	case $1 in
+		run | webapp | script) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+is_within() {
+	local child=$1 parent=${2%/}
+	[[ $child == "$parent"/* ]]
+}
+
+validate_name() {
+	local type=$1 name=$2
+
+	[[ -n $name ]] || fail 'destination name must not be empty'
+	[[ $name != /* ]] || fail "destination name must be relative: $name"
+	[[ $name != */ && $name != *//* ]] || fail "destination name contains an empty path component: $name"
+	case "/$name/" in
+		*/./* | */../*) fail "destination name must not contain '.' or '..' components: $name" ;;
+	esac
+	if [[ $type != script && $name == */* ]]; then
+		fail "$type destination must be a single file name: $name"
+	fi
+}
+
+write_run() {
+	cat >"$destination" <<'EOF'
+# Packages to install / uninstall with this run.
+EOF
+	chmod 0644 -- "$destination"
+}
+
+write_webapp() {
+	cat >"$destination" <<'EOF'
 {
   "name": "My App",
   "url": "https://example.com",
   "icon": "https://icon.com"
 }
 EOF
-
+	chmod 0644 -- "$destination"
 }
 
-generate_script() {
-  local dest="$DEV_ENV/env/.local/scripts/$file"
-  fail_if_exists $dest
-  log "Creating new script: $dest"
-  cat >"$dest" <<'EOF'
+write_script() {
+	cat >"$destination" <<'EOF'
 #!/usr/bin/env bash
 
 set -e
@@ -100,24 +106,63 @@ setup-logging "$LOG_FILE" "$LOG_LABEL"
 log "Starting $THIS..."
 
 EOF
-  chmod +x $dest
-  echo $dest
+	chmod 0755 -- "$destination"
 }
 
-############################## MAIN ##############################
-
-if [[ -z "$file" ]]; then
-  log "No file name supplied."
-  exit 1
+if (($# == 1)) && [[ $1 == --help ]]; then
+	usage
+	exit 0
 fi
 
-if [[ $run == "1" ]]; then
-  generate_run
-elif [[ $webapp == "1" ]]; then
-  generate_webapp
-elif [[ $script == "1" ]]; then
-  generate_script
-else
-  log "Must supply either \"run\", \"webapp\", or \"script\" option."
-  exit 1
+(($# > 0)) || fail 'generation type and destination name are required (try --help)'
+if ! is_type "$1"; then
+	fail "unknown generation type: $1"
 fi
+(($# > 1)) || fail "destination name is required for $1"
+(($# == 2)) || fail 'expected exactly one generation type and one destination name; extra arguments supplied'
+if is_type "$2"; then
+	fail 'multiple generation types are not allowed'
+fi
+
+type=$1
+name=$2
+validate_name "$type" "$name"
+
+[[ -n ${DEV_ENV:-} ]] || fail 'env var DEV_ENV needs to be present'
+[[ -d $DEV_ENV ]] || fail "DEV_ENV is not a directory: $DEV_ENV"
+dev_env=$(cd -- "$DEV_ENV" >/dev/null && pwd -P)
+
+case $type in
+	run)
+		root=$dev_env/runs
+		;;
+	webapp)
+		root=$dev_env/env/webapps
+		[[ $name == *.json ]] || name+=.json
+		;;
+	script)
+		root=$dev_env/env/.local/scripts
+		;;
+esac
+
+canonical_root=$(realpath -m -- "$root")
+is_within "$canonical_root" "$dev_env" || fail "$type destination root is outside DEV_ENV: $root"
+
+destination=$root/$name
+canonical_destination=$(realpath -m -- "$destination")
+is_within "$canonical_destination" "$canonical_root" || fail "destination is outside the $type root: $name"
+
+if [[ -e $destination || -L $destination ]]; then
+	fail "destination already exists: $destination"
+fi
+
+# All request validation is complete before any directories or files are made.
+mkdir -p -- "${destination%/*}"
+printf 'Creating new %s: %s\n' "$type" "$destination"
+incomplete_destination=$destination
+case $type in
+	run) write_run ;;
+	webapp) write_webapp ;;
+	script) write_script ;;
+esac
+incomplete_destination=
