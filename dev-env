@@ -7,19 +7,23 @@ set -Eeuo pipefail
 
 DRY_RUN=0
 RELOAD_SHELL=1
+PROFILE=full
+PROFILE_SET=0
 DEV_ENV_ROOT=""
 
 usage() {
 	cat <<'EOF'
-Usage: dev-env [--dry-run] [--no-reload] [--help]
+Usage: dev-env [full|container] [--dry-run] [--no-reload] [--help]
 
+  full         Install the complete environment (the default).
+  container    Install the minimal development-container environment.
   --dry-run    Print the complete installation plan without changing anything.
   --no-reload  Do not replace this process with a login Zsh after installation.
   --help       Show this help.
 
-Directories directly below env/.config are replaced by default. herdr, hypr,
-and nvim are merged; systemd and zsh have explicit preservation policies;
-kanata is not installed automatically.
+For full installations, directories directly below env/.config are replaced by
+default. herdr, hypr, and nvim are merged; systemd and zsh have explicit
+preservation policies; kanata is not installed automatically.
 EOF
 }
 
@@ -37,7 +41,13 @@ parse_args() {
 			usage
 			exit 0
 			;;
-		*) fail "unknown option: $1 (try --help)" ;;
+		--*) fail "unknown option: $1 (try --help)" ;;
+		full | container)
+			((PROFILE_SET == 0)) || fail "multiple profiles specified: $PROFILE and $1"
+			PROFILE=$1
+			PROFILE_SET=1
+			;;
+		*) fail "unknown profile: $1 (try --help)" ;;
 		esac
 		shift
 	done
@@ -180,6 +190,10 @@ install_config_directories() {
 
 install_explicit_mappings() {
 	local index
+
+	# MAPPINGS: FULL
+	# Edit these arrays to change the full profile's explicit installations.
+	# Config directories discovered automatically are handled above.
 	local -a file_sources=(
 		"env/.zshenv"
 		"env/.tmux.conf"
@@ -229,6 +243,42 @@ install_explicit_mappings() {
 	run mkdir -p -- "$HOME/Pictures" "$XDG_DATA_HOME/clipse/tmp_files"
 }
 
+install_container_environment() {
+	local index
+
+	# MAPPINGS: CONTAINER
+	# Edit this explicit manifest to change container installations.
+	local -a config_names=(eza git ripgrep starship yazi)
+	local -a file_sources=(
+		"env/.markdownlint.jsonc"
+		"env/.prettierrc.json"
+		"env/.tmux.conf"
+		"env/.zshenv"
+	)
+	local -a file_destinations=(
+		"$HOME/.markdownlint.jsonc"
+		"$HOME/.prettierrc.json"
+		"$HOME/.tmux.conf"
+		"$HOME/.zshenv"
+	)
+
+	for index in "${!config_names[@]}"; do
+		replace_tree \
+			"$DEV_ENV_ROOT/env/.config/${config_names[index]}" \
+			"$XDG_CONFIG_HOME/${config_names[index]}"
+	done
+	replace_entries "$DEV_ENV_ROOT/env/.config/zsh" "$XDG_CONFIG_HOME/zsh"
+
+	# Initialize exactly the commit recorded by this repository before copying it.
+	run git -C "$DEV_ENV_ROOT" submodule update --init -- env/.config/nvim
+	merge_tree "$DEV_ENV_ROOT/env/.config/nvim" "$XDG_CONFIG_HOME/nvim"
+
+	for index in "${!file_sources[@]}"; do
+		copy_file "$DEV_ENV_ROOT/${file_sources[index]}" "${file_destinations[index]}"
+	done
+	merge_tree "$DEV_ENV_ROOT/env/.local/scripts" "$HOME/.local/scripts"
+}
+
 generate_completions() {
 	local completion_dir="$HOME/.zsh/completions"
 	local wt_completion="$completion_dir/_wt"
@@ -273,6 +323,14 @@ reload_services() {
 	run espanso service restart
 }
 
+install_full_environment() {
+	install_config_directories
+	install_explicit_mappings
+	generate_completions
+	update_email
+	reload_services
+}
+
 reload_login_shell() {
 	((RELOAD_SHELL)) || return 0
 	print_command zsh -l
@@ -298,12 +356,13 @@ main() {
 	initialize_paths
 	log_action "source root: $DEV_ENV_ROOT"
 
-	install_config_directories
-	install_explicit_mappings
-	generate_completions
-	update_email
-	reload_services
-	reload_login_shell
+	case $PROFILE in
+	full)
+		install_full_environment
+		reload_login_shell
+		;;
+	container) install_container_environment ;;
+	esac
 }
 
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
