@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null && pwd -P)
+shopt -s nullglob
+TESTS=("$ROOT"/*-test)
+
+((${#TESTS[@]} > 0)) || {
+	printf 'No tests found in %s\n' "$ROOT" >&2
+	exit 1
+}
+
+for test in "${TESTS[@]}"; do
+	printf '\n==> %s\n' "${test##*/}"
+	"$test"
+done
