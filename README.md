@@ -1,120 +1,191 @@
-# My Dotfiles
+# Dotfiles
 
-This is a repository for my dotfiles. Be warned that these may often change and that the installation documentation may
-not always be correct as things progress. In general the setup process is something that is only done when a new machine
-is purchased or I feel like testing in a virtual machine (which does not happen often). It is helpful to have an
-understanding of what these commands do on your own.
+Personal Arch Linux and Hyprland configuration, package manifests, and setup
+utilities.
 
-In general no pull-requests or changes will be accepted, however you can generate an issue if you find a problem.
+This repository is tailored to my machines and services. It is useful as a
+reference, but it is not intended to be a general-purpose dotfiles installer.
+Review dry-run output before applying it to another system.
 
-It currently will install homebrew and the following homebrew formula.
+## What is managed
 
-Most of the functionality is contained in the [dots](https://github.com/m-housh/dots) project, that is a companion to
-manage the dotfiles, which expects the dotfiles directory to be at `~/.dotfiles`.
+The repository contains configuration for Zsh, Neovim, Hyprland, Waybar,
+Ghostty, Git, tmux, systemd user services, and other command-line and desktop
+tools. It also contains:
 
-```
-fd
-figlet
-gh
-git
-httpie
-jq
-mas
-pure
-node
-ripgrep
-swift-format
-swift-zet
-tmux
-vim
-zsh
-zsh-completions
-```
+- scripts installed under `~/.local/scripts`;
+- package manifests and optional lifecycle hooks under `runs/`;
+- webapp specifications under `env/webapps`;
+- encrypted machine-specific configuration; and
+- Git submodules for Neovim configuration and private mail configuration.
 
-It will also install the following homebrew casks in the `~/Applications` directory.
+## Repository layout
 
-```
-docker
-espanso
-google-chrome
-iterm2
-onyx
-rapid-api
-rectangle
+- `env/` — files installed into the home and XDG directories.
+- `runs/` — package manifests, with optional `before/` and `after/` hooks.
+- `mail/` — private mail configuration submodule.
+- `dev-env` — full and development-container configuration installer.
+- `devcontainer-env` — compatibility wrapper for the container profile.
+- `run` — installs or uninstalls package manifests with `yay`.
+- `webapp` — installs or uninstalls repository webapp specifications.
+- `gen` — generates run manifests, webapp specs, and general scripts.
+- `tests/` — isolated Bash integration tests.
+
+## Initial setup
+
+The expected repository location is the value assigned to `DEV_ENV`. The
+installed Zsh environment defaults it to:
+
+```text
+~/.config/personal/dotfiles
 ```
 
-And the following fonts.
-
-```
-font-inconsolata-nerd-font
-
-```
-
-The following applications will be installed from the macOS app store.
-
-```
-Developer
-Home Assistant
-pwSafe
-Xcode
-```
-
-## Installation
-
-Clone the repository.
+Clone the repository and initialize the available submodules:
 
 ```bash
-git clone https://m-housh/dotfiles.git ~/.dotfiles && \
-  cd ~/.dotfiles
+git clone git@github.com:m-housh/dotfiles.git \
+  "$HOME/.config/personal/dotfiles"
+cd "$HOME/.config/personal/dotfiles"
+git submodule update --init --recursive
+export DEV_ENV=$PWD
 ```
 
-On a fresh system run the following command from the dotfiles root.
+The `mail` submodule is private and requires access to `git.housh.dev`.
 
-```
-make bootstrap
-```
+### Full environment
 
-This start by installing homebrew, then install the required homebrew formulas and casks. Next it will use `gnu-stow` to
-symlink configuration files to the appropriate locations. And finally, it will download applications from the
-`App Store`. When the bootstrap command is done it will open up the `~/Downloads` folder for the few applications that
-get downloaded from the internet, so that you can finish the installation of those applications.
-
-### Minimal Setup
-
-If you would like to just setup minimal stuff, link dotfiles, and install brews. Then you can run the following command.
+First inspect the complete installation plan:
 
 ```bash
-make bootstrap-minimal
+./dev-env full --dry-run --no-reload
 ```
 
-## To set macOS settings
+Apply it without immediately replacing the current process with a login Zsh:
 
 ```bash
-source scripts/setup_defaults
+./dev-env full --no-reload
 ```
 
-## Post Installation
-
-After everything has finished up, you will be able to open `iTerm2` and load the profile which should now be symlinked
-to `~/.config/macOS/iterm/profile.json`
-
-## Make commands
-
-It is also possible to not do the full bootstrapping. If you would only like to install homebrew (without any formula or
-casks) then you can run the following command.
-
-```
-make bootstrap-homebrew
-```
-
-## Other Make Commands
-
-If you would like to setup any specific `zsh` configuration that is only for the local machine then you can run the
-following command.
+Start a new login shell after the command completes:
 
 ```bash
-make zshrc-local
+exec zsh -l
 ```
 
-This will generate and symlink a file that you can use to extend the default `zshrc` configuration. In general, I use
-this to set custom location for homebrew casks to be installed on certain machines.
+The `full` profile installs configuration and scripts, generates completions,
+updates mail configuration, and reloads user services. It intentionally has a
+mix of replacement and merge policies. Run `./dev-env --help` for the current
+policy summary.
+
+This setup expects an Arch/Hyprland workstation and invokes host tools such as
+Podman, systemd, Hyprland, Espanso, and the mail installer. A dry-run does not
+change the filesystem or invoke those host actions.
+
+### Development container
+
+For the smaller container profile, run:
+
+```bash
+./devcontainer-env --dry-run
+./devcontainer-env
+```
+
+The wrapper uses its own repository directory as `DEV_ENV` and forwards options
+to `dev-env container`. The container profile installs a small set of shell and
+development configuration without workstation service actions.
+
+## Package runs
+
+Files immediately under `runs/` are package lists consumed by `yay`. Matching
+executable files under `runs/before/` and `runs/after/` perform optional setup
+or teardown.
+
+Install every package run:
+
+```bash
+./run install
+```
+
+Install only runs whose path matches a filter:
+
+```bash
+./run hyprland
+```
+
+Remove the matching packages and run uninstall hooks:
+
+```bash
+./run uninstall hyprland
+```
+
+Preview either operation with `--dry-run`. Filters use Bash regular-expression
+matching, so one filter may select multiple manifests.
+
+`run` expects `DEV_ENV` and `SCRIPTS` to be set. The installed Zsh environment
+sets both; when running directly from a fresh clone, point `SCRIPTS` at the
+repository copy:
+
+```bash
+DEV_ENV=$PWD SCRIPTS=$PWD/env/.local/scripts ./run --dry-run hyprland
+```
+
+## Webapps
+
+Install every spec under `env/webapps`:
+
+```bash
+./webapp
+```
+
+Filter specs by name, preview changes, or uninstall matching specs:
+
+```bash
+./webapp github
+./webapp --dry-run github
+./webapp --uninstall github
+```
+
+As with package runs, the optional filter is a regular expression. Local icons
+come from `env/.local/share/applications/icons`; remote icons are downloaded by
+the webapp installer.
+
+## Generating files
+
+`gen` requires `DEV_ENV` and accepts exactly one type and destination name:
+
+```bash
+./gen run example
+./gen webapp example
+./gen script example
+```
+
+Run manifests are non-executable package lists. Webapp names receive a `.json`
+extension when omitted. Script names may contain relative subdirectories and
+are generated as executable Bash scripts. Existing destinations and paths that
+escape their managed directory are rejected.
+
+See `./gen --help` for the command summary.
+
+## Tests
+
+Run every integration test locally with:
+
+```bash
+tests/run-all
+```
+
+The tests use temporary fixtures and command stubs rather than modifying the
+host. CI also runs Bash syntax checks and ShellCheck for the primary installers,
+generator, test runner, and all `tests/*-test` scripts.
+
+## Deferred setup scripts
+
+`bootstrap` and `repos` are older, infrequently exercised machine-setup helpers.
+They are not the recommended entry points at present. Full machine setup is
+normally performed in supervised stages using `dev-env`, `run`, and `webapp`.
+The older helpers should be reviewed before use.
+
+## License
+
+See [LICENSE](LICENSE). Contributions are additionally covered by the
+[Developer Certificate of Origin](DOC).
