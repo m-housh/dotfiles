@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null && pwd -P)
+COMMAND=$ROOT/env/.local/scripts/send-screenshot
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf -- "$TEST_ROOT"' EXIT
+pass_count=0
+
+fail() {
+	printf 'not ok - %s\n' "$*" >&2
+	exit 1
+}
+
+prepare_case() {
+	local name=$1
+	CASE_ROOT=$TEST_ROOT/$name
+	mkdir -p -- "$CASE_ROOT/home/Pictures" "$CASE_ROOT/bin"
+	: >"$CASE_ROOT/scp-args"
+	: >"$CASE_ROOT/fzf-input"
+	: >"$CASE_ROOT/fzf-calls"
+
+	cat >"$CASE_ROOT/bin/scp" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\0' "$@" >"$SCP_ARGS"
+exit "${SCP_STATUS:-0}"
+EOF
+	cat >"$CASE_ROOT/bin/fzf" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"$FZF_CALLS"
+: >"$FZF_INPUT"
+while IFS= read -r -d '' item; do
+	printf '%s\0' "$item" >>"$FZF_INPUT"
+done
+[[ ${FZF_CANCEL:-0} == 0 ]] || exit 130
+printf '%s\0' "$FZF_SELECTION"
+EOF
+	chmod +x -- "$CASE_ROOT/bin/scp" "$CASE_ROOT/bin/fzf"
+}
+
+run_command() {
+	local input=$1
+	shift
+	set +e
+	printf '%s' "$input" | env \
+		HOME="$CASE_ROOT/home" \
+		PATH="$CASE_ROOT/bin:/usr/bin:/bin" \
+		SCP_ARGS="$CASE_ROOT/scp-args" \
+		SCP_STATUS="${SCP_STATUS:-0}" \
+		FZF_INPUT="$CASE_ROOT/fzf-input" \
+		FZF_CALLS="$CASE_ROOT/fzf-calls" \
+		FZF_SELECTION="${FZF_SELECTION:-}" \
+		FZF_CANCEL="${FZF_CANCEL:-0}" \
+		"$COMMAND" "$@" >"$CASE_ROOT/stdout" 2>"$CASE_ROOT/stderr"
+	STATUS=$?
+	set -e
+}
+
+assert_success() {
+	[[ $STATUS -eq 0 ]] || fail "command failed with status $STATUS: $(<"$CASE_ROOT/stderr")"
+}
+
+assert_failure() {
+	[[ $STATUS -ne 0 ]] || fail 'command unexpectedly succeeded'
+	[[ ! -s $CASE_ROOT/scp-args ]] || fail 'failed command invoked scp'
+}
+
+assert_scp_args() {
+	local expected_source=$1 expected_destination=$2
+	local -a arguments=()
+	mapfile -d '' -t arguments <"$CASE_ROOT/scp-args"
+	[[ ${#arguments[@]} -eq 2 ]] || fail "scp received ${#arguments[@]} arguments instead of 2"
+	[[ ${arguments[0]} == "$expected_source" ]] || fail 'scp received the wrong source path'
+	[[ ${arguments[1]} == "$expected_destination" ]] || fail 'scp received the wrong destination'
+}
+
+make_screenshots() {
+	OLD_SCREENSHOT=$CASE_ROOT/home/Pictures/z_old_hyprshot.png
+	NEW_SCREENSHOT=$CASE_ROOT/home/Pictures/a_new_hyprshot.png
+	printf old >"$OLD_SCREENSHOT"
+	printf new >"$NEW_SCREENSHOT"
+	touch -d @100 -- "$OLD_SCREENSHOT"
+	touch -d @200 -- "$NEW_SCREENSHOT"
+}
+
+explicit_cases() {
+	prepare_case explicit
+	local source_path="$CASE_ROOT/source with spaces.png"
+	printf image >"$source_path"
+	run_command '' "$source_path" 'host:/path with spaces'
+	assert_success
+	assert_scp_args "$source_path" 'host:/path with spaces'
+	[[ ! -s $CASE_ROOT/fzf-calls ]] || fail 'explicit source invoked fzf'
+
+	: >"$CASE_ROOT/scp-args"
+	run_command $'prompt-host:/target\n' "$source_path"
+	assert_success
+	assert_scp_args "$source_path" 'prompt-host:/target'
+
+	pass_count=$((pass_count + 1))
+	printf 'ok - explicit source preserves arguments and supports a prompted destination\n'
+}
+
+latest_cases() {
+	prepare_case latest
+	make_screenshots
+	run_command '' --latest 'host:/latest'
+	assert_success
+	assert_scp_args "$NEW_SCREENSHOT" 'host:/latest'
+	[[ ! -s $CASE_ROOT/fzf-calls ]] || fail '--latest invoked fzf'
+	grep -Fq -- "$NEW_SCREENSHOT" "$CASE_ROOT/stdout" || fail '--latest did not show the selected source'
+
+	: >"$CASE_ROOT/scp-args"
+	run_command $'host:/prompted\n' --latest
+	assert_success
+	assert_scp_args "$NEW_SCREENSHOT" 'host:/prompted'
+
+	pass_count=$((pass_count + 1))
+	printf 'ok - latest mode uses modification time and supports interactive and non-interactive destinations\n'
+}
+
+select_cases() {
+	prepare_case select
+	make_screenshots
+	FZF_SELECTION=$OLD_SCREENSHOT
+	run_command '' --select 'host:/selected'
+	assert_success
+	assert_scp_args "$OLD_SCREENSHOT" 'host:/selected'
+	local -a choices=()
+	mapfile -d '' -t choices <"$CASE_ROOT/fzf-input"
+	[[ ${#choices[@]} -eq 2 ]] || fail 'fzf did not receive both screenshots'
+	[[ ${choices[0]} == "$NEW_SCREENSHOT" && ${choices[1]} == "$OLD_SCREENSHOT" ]] ||
+		fail 'fzf input was not newest-first'
+	grep -Fq -- '--read0 --print0 --no-sort' "$CASE_ROOT/fzf-calls" || fail 'fzf ordering and path-safe flags are missing'
+
+	: >"$CASE_ROOT/scp-args"
+	FZF_SELECTION=$NEW_SCREENSHOT
+	run_command $'host:/bare\n'
+	assert_success
+	assert_scp_args "$NEW_SCREENSHOT" 'host:/bare'
+
+	pass_count=$((pass_count + 1))
+	printf 'ok - select mode is path-safe, newest-first, and is the bare-command default\n'
+}
+
+failure_cases() {
+	prepare_case failures
+	run_command '' --latest 'host:/target'
+	assert_failure
+	grep -Fq -- 'no screenshots matching' "$CASE_ROOT/stderr" || fail 'no-match error is unclear'
+
+	local missing=$CASE_ROOT/missing.png
+	run_command '' "$missing" 'host:/target'
+	assert_failure
+	grep -Fq -- 'source is not a readable regular file' "$CASE_ROOT/stderr" || fail 'invalid-source error is unclear'
+
+	make_screenshots
+	run_command $'\n' --latest
+	assert_failure
+	grep -Fq -- 'destination must not be empty' "$CASE_ROOT/stderr" || fail 'empty prompted-destination error is unclear'
+
+	run_command '' --latest ''
+	assert_failure
+	grep -Fq -- 'destination must not be empty' "$CASE_ROOT/stderr" || fail 'empty destination argument was treated as omitted'
+
+	FZF_CANCEL=1
+	run_command '' --select 'host:/target'
+	assert_failure
+	grep -Fq -- 'selection cancelled' "$CASE_ROOT/stderr" || fail 'cancelled-selection error is unclear'
+	FZF_CANCEL=0
+
+	run_command '' --select --latest
+	assert_failure
+	grep -Fq -- 'conflicting modes' "$CASE_ROOT/stderr" || fail 'conflicting-mode error is unclear'
+
+	run_command '' --latest one two
+	assert_failure
+	grep -Fq -- 'excess arguments' "$CASE_ROOT/stderr" || fail 'excess-argument error is unclear'
+
+	run_command '' --unknown
+	assert_failure
+	grep -Fq -- 'unsupported option' "$CASE_ROOT/stderr" || fail 'unsupported-option error is unclear'
+
+	pass_count=$((pass_count + 1))
+	printf 'ok - invalid inputs and cancelled selection fail before transfer\n'
+}
+
+scp_status_case() {
+	prepare_case scp-status
+	local source_path=$CASE_ROOT/source.png
+	printf image >"$source_path"
+	SCP_STATUS=42
+	run_command '' "$source_path" 'host:/target'
+	[[ $STATUS -eq 42 ]] || fail "scp status was not propagated (got $STATUS)"
+	assert_scp_args "$source_path" 'host:/target'
+
+	pass_count=$((pass_count + 1))
+	printf 'ok - scp exit status is propagated\n'
+}
+
+explicit_cases
+latest_cases
+select_cases
+failure_cases
+scp_status_case
+printf '1..%d\n' "$pass_count"
