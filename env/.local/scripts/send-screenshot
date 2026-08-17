@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+usage() {
+	cat <<'EOF'
+Usage:
+  send-screenshot
+  send-screenshot --select [DESTINATION]
+  send-screenshot --latest [DESTINATION]
+  send-screenshot SOURCE [DESTINATION]
+
+Select or choose a screenshot and copy it with scp.
+EOF
+}
+
+fail() {
+	printf 'send-screenshot: %s\n' "$*" >&2
+	exit 1
+}
+
+mode=
+positionals=()
+
+for argument in "$@"; do
+	case $argument in
+	-h | --help)
+		(($# == 1)) || fail 'help cannot be combined with other arguments'
+		usage
+		exit 0
+		;;
+	--select | --latest)
+		[[ -z $mode ]] || fail "conflicting modes: $mode and $argument"
+		mode=$argument
+		;;
+	-*)
+		fail "unsupported option: $argument"
+		;;
+	*)
+		positionals+=("$argument")
+		;;
+	esac
+done
+
+# A mode takes only an optional destination. Without a mode, positionals are
+# interpreted as SOURCE and an optional DESTINATION.
+if [[ -n $mode ]]; then
+	((${#positionals[@]} <= 1)) || fail "excess arguments for $mode"
+elif ((${#positionals[@]} > 2)); then
+	fail 'excess positional arguments'
+fi
+
+source=
+destination=
+destination_provided=0
+
+# No mode plus a positional argument is the explicit SOURCE form.
+if [[ -z $mode && ${#positionals[@]} -gt 0 ]]; then
+	source=${positionals[0]}
+	[[ -f $source && -r $source ]] || fail "source is not a readable regular file: $source"
+	if ((${#positionals[@]} == 2)); then
+		destination=${positionals[1]}
+		destination_provided=1
+	fi
+else
+	# A named mode, or no arguments at all, requires screenshot discovery.
+	# The no-argument form defaults to --select.
+	[[ -n $mode ]] || mode=--select
+	if ((${#positionals[@]} == 1)); then
+		destination=${positionals[0]}
+		destination_provided=1
+	fi
+
+	screenshots=()
+	pictures=$HOME/Pictures
+	if [[ -d $pictures ]]; then
+		while IFS= read -r -d '' entry; do
+			screenshots+=("${entry#* }")
+		done < <(
+			find "$pictures" -mindepth 1 -maxdepth 1 -type f -name '*_hyprshot.png' \
+				-printf '%T@ %p\0' | sort -z -nr
+		)
+	fi
+	((${#screenshots[@]} > 0)) || fail "no screenshots matching *_hyprshot.png in $pictures"
+
+	if [[ $mode == --latest ]]; then
+		source=${screenshots[0]}
+	else
+		selection_file=$(mktemp)
+		trap 'rm -f -- "$selection_file"' EXIT
+		if ! printf '%s\0' "${screenshots[@]}" | fzf --read0 --print0 --no-sort >"$selection_file"; then
+			fail 'screenshot selection cancelled'
+		fi
+		if ! IFS= read -r -d '' source <"$selection_file" || [[ -z $source ]]; then
+			fail 'screenshot selection cancelled'
+		fi
+	fi
+fi
+
+# Track presence separately so an explicitly empty destination is rejected
+# instead of being treated as an omitted destination that should be prompted.
+if ((destination_provided == 0)); then
+	printf 'Destination: ' >&2
+	IFS= read -r destination || fail 'could not read destination'
+fi
+[[ -n $destination ]] || fail 'destination must not be empty'
+
+printf 'Sending screenshot: %s\n' "$source"
+scp "$source" "$destination"
