@@ -24,8 +24,6 @@ A list of in-progress and completed todo's.
     system run handles installing packages needed for my yubikey, probably need to automate
     installing the public key into the keyring.
     - [x] Add gpg public key import into `runs/after/system`
-    - [ ] Need to ensure ssh keys are setup before private submodules are loaded / installed,
-    so I need to make sure that Yubikey setup runs early and works for ssh authentication.
     - [ ] Setup a new machine / virtual machine to test, as it's hard to test the scripts once a machine is setup.
     - [ ] Need to add `repos` script when bootstrapping.
 
@@ -53,7 +51,3 @@ A list of in-progress and completed todo's.
 - [ ] Look into install packages with `nvim --headless`, not sure if this possible when using the new package
     manager builtin to neovim as it prompts for user input to install packages.
     - With lazy this was done with `nvim --headless "+Lazy! sync" +qa`
-
-### Mail
-
-- [ ] Remove outlook / office email setup, this has been moved to proton.
