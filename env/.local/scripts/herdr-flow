@@ -95,6 +95,19 @@ agent_name_for_branch() {
   printf '%.23s_%.8s\n' "$safe" "$digest"
 }
 
+wait_for_pane() {
+  local pane_id=$1 attempt
+  # A successful process query confirms the terminal runtime exists. Herdr's
+  # agent start command remains responsible for shell and agent readiness.
+  for ((attempt = 1; attempt <= 50; attempt++)); do
+    if herdr pane process-info --pane "$pane_id" >/dev/null 2>&1; then
+      return 0
+    fi
+    ((attempt == 50)) || sleep 0.1 || return 1
+  done
+  return 1
+}
+
 recovery_failure() {
   local message=$1 path=${2:-unknown} workspace=${3:-not-created} agent=${4:-not-started}
   printf 'herdr-flow: setup failed: %s\n' "$message" >&2
@@ -154,7 +167,7 @@ implement_task() {
     prompt=$(cat <<EOF
 Implement the approved plan below end to end.
 
-Follow all applicable AGENTS.md guidance. Stay within the agreed scope. Keep the ownership boundaries in the plan explicit. Run targeted validation and the repository test suite. Do not commit, push, merge, or clean up the worktree unless the user explicitly asks.
+Follow all applicable AGENTS.md guidance. Stay within the agreed scope. Keep the ownership boundaries in the plan explicit. Run targeted validation and the repository test suite. After validation succeeds, commit the completed task changes with a conventional commit subject. Do not push, merge, or clean up the worktree unless the user explicitly asks.
 
 ## Approved plan
 
@@ -178,7 +191,7 @@ The requested plan path did not exist in the main worktree, so treat it as a new
 
 $worktree_plan_path
 
-First write that plan file. Do not claim the plan was already approved. The user may review and steer while work is in progress. After writing the plan, follow all applicable AGENTS.md guidance, stay within the agreed scope, keep ownership boundaries explicit, run targeted validation and the repository test suite, and continue implementation. Do not commit, push, merge, or clean up the worktree unless the user explicitly asks.
+First write that plan file. Do not claim the plan was already approved. The user may review and steer while work is in progress. After writing the plan, follow all applicable AGENTS.md guidance, stay within the agreed scope, keep ownership boundaries explicit, run targeted validation and the repository test suite, and continue implementation. After validation succeeds, commit the completed task changes with a conventional commit subject. Do not push, merge, or clean up the worktree unless the user explicitly asks.
 EOF
 )
   fi
@@ -190,6 +203,9 @@ EOF
     recovery_failure "could not read workspace ID from Herdr response" "$path" unknown
   pane_id=$(jq -er '.result.root_pane.pane_id | strings | select(length > 0)' <<<"$response" 2>/dev/null) || \
     recovery_failure "could not read root pane ID from Herdr response" "$path" "$workspace_id"
+  if ! wait_for_pane "$pane_id"; then
+    recovery_failure "root pane did not become available: $pane_id" "$path" "$workspace_id"
+  fi
   agent_name=$(agent_name_for_branch "$branch" "$workspace_id")
 
   if ! herdr agent start "$agent_name" --kind pi --pane "$pane_id" >/dev/null; then
