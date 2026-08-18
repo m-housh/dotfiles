@@ -30,6 +30,14 @@ case "$1 $2" in
     jq -n --arg workspace "${STUB_WORKSPACE_ID:-ws:opaque}" \
       '{result:{workspace:{workspace_id:$workspace},tab:{tab_id:"tab:opaque"},root_pane:{pane_id:"pane:opaque"}}}'
     ;;
+  'pane process-info')
+    count=0
+    [[ ! -e $STUB_STATE/pane-readiness-count ]] || count=$(<"$STUB_STATE/pane-readiness-count")
+    count=$((count + 1))
+    printf '%s\n' "$count" >"$STUB_STATE/pane-readiness-count"
+    ((count > ${STUB_PANE_READINESS_FAILURES:-0})) || exit 1
+    printf '{"result":{"process_info":{"pane_id":"%s","shell_pid":123}}}\n' "$4"
+    ;;
   'agent start') printf '{"result":{"agent":{"name":"%s"}}}\n' "$3" ;;
   'agent prompt') printf '%s' "$4" >"$STUB_STATE/prompt"; printf '{"result":{"submitted":true}}\n' ;;
   'workspace focus') printf '{"result":{}}\n' ;;
@@ -42,7 +50,12 @@ case "$1 $2" in
   *) printf '{"result":{}}\n' ;;
 esac
 EOF
-chmod +x "$bin/wt" "$bin/herdr"
+cat >"$bin/sleep" <<'EOF'
+#!/usr/bin/env bash
+# Keep bounded polling tests fast.
+exit 0
+EOF
+chmod +x "$bin/wt" "$bin/herdr" "$bin/sleep"
 
 origin="$TEST_ROOT/origin.git"
 repo="$TEST_ROOT/repo with spaces"
@@ -73,6 +86,8 @@ grep -Fq 'pane: pane:opaque' <<<"$output" || fail 'implement omitted pane ID'
 # shellcheck disable=SC2016 # Match the deliberate literal shell syntax above.
 grep -Fq 'Change `a b`; keep $(touch /tmp/never) literal.' "$state/prompt" || fail 'prompt changed metacharacters'
 grep -Fq 'Second line with "quotes" and * glob.' "$state/prompt" || fail 'prompt omitted plan content'
+grep -Fq 'After validation succeeds, commit the completed task changes with a conventional commit subject.' "$state/prompt" || fail 'existing plan prompt did not require a completed-task commit'
+grep -Fq 'Do not push, merge, or clean up the worktree unless the user explicitly asks.' "$state/prompt" || fail 'existing plan prompt did not preserve manual lifecycle actions'
 [[ -f $plan ]] || fail 'implement changed the source plan'
 [[ ! -e $state/legacy-wt.log ]] || fail 'implement used the shadowing legacy wt'
 grep -Eq 'agent start feat_quoted_[a-f0-9]{8} --kind pi --pane pane:opaque' "$state/herdr.log" || fail 'agent start delegation was incorrect'
@@ -86,10 +101,36 @@ grep -Fq "$missing_target/PLAN.md" "$state/prompt" || fail 'missing relative pro
 grep -Fq 'First write that plan file' "$state/prompt" || fail 'missing relative prompt did not request plan creation'
 grep -Fq 'Do not claim the plan was already approved' "$state/prompt" || fail 'missing relative prompt implied approval'
 grep -Fq 'user may review and steer' "$state/prompt" || fail 'missing relative prompt omitted review guidance'
+grep -Fq 'After validation succeeds, commit the completed task changes with a conventional commit subject.' "$state/prompt" || fail 'missing relative prompt did not require a completed-task commit'
+grep -Fq 'Do not push, merge, or clean up the worktree unless the user explicitly asks.' "$state/prompt" || fail 'missing relative prompt did not preserve manual lifecycle actions'
 [[ ! -e $repo/PLAN.md ]] || fail 'missing relative plan was created in the main worktree'
 [[ ! -e $state/legacy-wt.log ]] || fail 'missing relative plan used the shadowing legacy wt'
 (cd "$repo" && "$REAL_WT" remove -D --force feat/missing)
 pass 'missing relative plan path starts worktree and asks agent to create it'
+
+rm -f "$state/pane-readiness-count"
+: >"$state/herdr.log"
+(cd "$repo" && STUB_PANE_READINESS_FAILURES=2 run_flow implement --plan "$plan" feat/pane-delay >/dev/null)
+[[ $(<"$state/pane-readiness-count") == 3 ]] || fail 'implement did not retry delayed root pane readiness'
+third_probe=$(grep -nF 'pane process-info --pane pane:opaque' "$state/herdr.log" | tail -n 1 | cut -d: -f1)
+agent_start=$(grep -n 'agent start ' "$state/herdr.log" | cut -d: -f1)
+[[ -n $third_probe && -n $agent_start && $third_probe -lt $agent_start ]] || fail 'agent startup preceded pane readiness'
+(cd "$repo" && "$REAL_WT" remove -D --force feat/pane-delay)
+pass 'implement waits for a delayed root pane before starting the agent'
+
+rm -f "$state/pane-readiness-count"
+: >"$state/herdr.log"
+if (cd "$repo" && STUB_PANE_READINESS_FAILURES=99 run_flow implement --plan "$plan" feat/pane-unavailable >"$state/out" 2>"$state/error"); then
+  fail 'permanently unavailable root pane succeeded'
+fi
+unavailable="$repo/.worktrees/feat-pane-unavailable"
+[[ -d $unavailable ]] || fail 'pane readiness failure silently removed durable worktree'
+[[ $(<"$state/pane-readiness-count") == 50 ]] || fail 'pane readiness retries were not bounded'
+! grep -Fq 'agent start ' "$state/herdr.log" || fail 'agent startup was attempted without a ready pane'
+grep -Fq 'root pane did not become available: pane:opaque' "$state/error" || fail 'pane readiness failure was unclear'
+grep -Fq "$unavailable" "$state/error" || fail 'pane readiness failure omitted recovery path'
+(cd "$repo" && "$REAL_WT" remove -D --force feat/pane-unavailable)
+pass 'unavailable root pane reports durable state without starting an agent'
 
 collision_one=$(cd "$repo" && STUB_WORKSPACE_ID=ws:collision-one run_flow implement --plan "$plan" feat/foo.bar)
 collision_two=$(cd "$repo" && STUB_WORKSPACE_ID=ws:collision-two run_flow implement --plan "$plan" feat/foo/bar)
