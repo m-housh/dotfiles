@@ -148,8 +148,9 @@ herdr-flow cleanup --preview feat/example
 herdr-flow cleanup --merged feat/example
 ```
 
-Cleanup refuses dirty, missing, ambiguous, current, and main targets. It first
-fast-forwards local `main` from its configured upstream, then closes the matching
+Cleanup requires both main and the target worktree to be clean, and refuses
+missing, ambiguous, current, and main targets. It first fast-forwards local
+`main` from its configured upstream, then closes the matching
 Herdr workspace, delegates worktree and branch removal to `wt`, prunes stale
 metadata, and verifies removal. `/cleanup feat/example` provides the same preview
 and confirmation. From a linked worktree, `/cleanup` only prints the commands to

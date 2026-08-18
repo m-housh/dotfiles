@@ -76,11 +76,13 @@ worktree_path_for_branch() {
 }
 
 agent_name_for_branch() {
-  local safe
-  safe=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
+  local branch=$1 workspace_id=$2 safe digest
+  safe=$(printf '%s' "$branch" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
   safe=${safe#_}
   [[ $safe == [a-z]* ]] || safe="task_$safe"
-  printf '%.32s\n' "$safe"
+  digest=$(printf '%s' "$workspace_id" | sha256sum)
+  digest=${digest%% *}
+  printf '%.23s_%.8s\n' "$safe" "$digest"
 }
 
 recovery_failure() {
@@ -115,6 +117,7 @@ implement_task() {
 
   require_herdr
   require_command wt
+  require_command sha256sum
   local root existing plan prompt path response workspace_id pane_id agent_name
   root=$(require_main_worktree) || return
   validate_branch "$branch"
@@ -155,7 +158,7 @@ EOF
     recovery_failure "could not read workspace ID from Herdr response" "$path" unknown
   pane_id=$(jq -er '.result.root_pane.pane_id | strings | select(length > 0)' <<<"$response" 2>/dev/null) || \
     recovery_failure "could not read root pane ID from Herdr response" "$path" "$workspace_id"
-  agent_name=$(agent_name_for_branch "$branch")
+  agent_name=$(agent_name_for_branch "$branch" "$workspace_id")
 
   if ! herdr agent start "$agent_name" --kind pi --pane "$pane_id" >/dev/null; then
     recovery_failure "Pi agent startup failed" "$path" "$workspace_id" "$agent_name"
@@ -171,8 +174,10 @@ EOF
 }
 
 cleanup_context() {
-  local branch=$1 root paths path status workspace_json workspace_id
+  local branch=$1 root paths path main_status target_status workspace_json workspace_id
   root=$(require_main_worktree) || return
+  main_status=$(git -C "$root" status --porcelain --untracked-files=normal) || fail "could not inspect main worktree: $root"
+  [[ -z $main_status ]] || fail "main worktree is dirty: $root"
   validate_branch "$branch"
   [[ $branch != main ]] || fail "refusing to clean up main"
   git show-ref --verify --quiet "refs/heads/$branch" || fail "local branch does not exist: $branch"
@@ -181,8 +186,8 @@ cleanup_context() {
   [[ $(wc -l <<<"$paths") -eq 1 ]] || fail "ambiguous worktree target for branch: $branch"
   path=$(canonical_directory "$paths") || fail "could not resolve worktree path: $paths"
   [[ $path != "$root" ]] || fail "refusing to remove the current checkout"
-  status=$(git -C "$path" status --porcelain --untracked-files=normal) || fail "could not inspect target worktree: $path"
-  [[ -z $status ]] || fail "target worktree is dirty: $path"
+  target_status=$(git -C "$path" status --porcelain --untracked-files=normal) || fail "could not inspect target worktree: $path"
+  [[ -z $target_status ]] || fail "target worktree is dirty: $path"
 
   workspace_json=$(herdr worktree list) || fail "could not list Herdr worktrees"
   workspace_id=$(jq -r --arg path "$path" '[.result.worktrees[]? | select(.path == $path) | .open_workspace_id // empty] | unique | if length > 1 then error("ambiguous workspace") else .[0] // empty end' <<<"$workspace_json") || \
