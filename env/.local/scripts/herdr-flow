@@ -12,8 +12,10 @@ Usage:
   herdr-flow help
 
 implement creates a Git worktree with wt, opens a Herdr workspace, starts a
-named Pi agent, submits the complete approved plan, and then focuses it. The
-base defaults to main.
+named Pi agent, and then focuses it. If --plan points to a readable, non-empty
+existing file, that file is sent as the starting plan. If --plan is a missing
+relative path, the agent is asked to create that plan file inside the new
+worktree before implementation. The base defaults to main.
 
 cleanup must run from the main worktree. --preview prints the exact target and
 actions without changing anything. --merged is the required acknowledgement
@@ -118,11 +120,20 @@ implement_task() {
   require_herdr
   require_command wt
   require_command sha256sum
-  local root existing plan prompt path response workspace_id pane_id agent_name
+  local root existing plan prompt path response workspace_id pane_id agent_name plan_mode worktree_plan_path
   root=$(require_main_worktree) || return
   validate_branch "$branch"
   [[ $branch != main ]] || fail "refusing to create a task worktree for main"
-  [[ -f $plan_path && -r $plan_path && -s $plan_path ]] || fail "plan must be a readable, non-empty regular file: $plan_path"
+  if [[ -e $plan_path ]]; then
+    [[ -f $plan_path && -r $plan_path && -s $plan_path ]] || fail "plan must be a readable, non-empty regular file: $plan_path"
+    plan_mode=existing
+    # Read the agreed input before creating any durable state. The source file is never changed.
+    plan=$(<"$plan_path")
+  elif [[ $plan_path == /* ]]; then
+    fail "plan does not exist; absolute plan paths must be readable source files: $plan_path"
+  else
+    plan_mode=create
+  fi
   git rev-parse --verify --quiet "$base^{commit}" >/dev/null || fail "base does not resolve to a commit: $base"
   herdr workspace list >/dev/null || fail "could not reach the current Herdr session"
   existing=$(worktree_path_for_branch "$branch")
@@ -131,9 +142,8 @@ implement_task() {
     fail "a base cannot be specified when branch '$branch' already exists"
   fi
 
-  # Read the agreed input before creating any durable state. The source file is never changed.
-  plan=$(<"$plan_path")
-  prompt=$(cat <<EOF
+  if [[ $plan_mode == existing ]]; then
+    prompt=$(cat <<EOF
 Implement the approved plan below end to end.
 
 Follow all applicable AGENTS.md guidance. Stay within the agreed scope. Keep the ownership boundaries in the plan explicit. Run targeted validation and the repository test suite. Do not commit, push, merge, or clean up the worktree unless the user explicitly asks.
@@ -143,6 +153,7 @@ Follow all applicable AGENTS.md guidance. Stay within the agreed scope. Keep the
 $plan
 EOF
 )
+  fi
 
   if [[ ${#positional[@]} -eq 2 ]]; then
     path=$(wt add "$branch" "$base") || recovery_failure "wt add failed"
@@ -150,6 +161,19 @@ EOF
     path=$(wt add "$branch") || recovery_failure "wt add failed"
   fi
   path=$(canonical_directory "$path")
+  if [[ $plan_mode == create ]]; then
+    worktree_plan_path="$path/$plan_path"
+    prompt=$(cat <<EOF
+Create the task plan file, then implement it end to end.
+
+The requested plan path did not exist in the main worktree, so treat it as a new plan artifact path inside this new worktree:
+
+$worktree_plan_path
+
+First write that plan file. Do not claim the plan was already approved. The user may review and steer while work is in progress. After writing the plan, follow all applicable AGENTS.md guidance, stay within the agreed scope, keep ownership boundaries explicit, run targeted validation and the repository test suite, and continue implementation. Do not commit, push, merge, or clean up the worktree unless the user explicitly asks.
+EOF
+)
+  fi
 
   if ! response=$(herdr workspace create --cwd "$path" --label "$(basename -- "$path")" --no-focus); then
     recovery_failure "Herdr workspace creation failed" "$path"
@@ -243,7 +267,7 @@ commands=('implement:Create a task worktree, workspace, and Pi agent' 'cleanup:C
 if (( CURRENT == 2 )); then _describe 'command' commands; return; fi
 branches=("${(@f)$(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null)}")
 case $words[2] in
-  implement) _arguments '--plan[Approved plan file]:plan file:_files' '1:branch:($branches)' '2:base:($branches)' ;;
+  implement) _arguments '--plan[Existing starting plan, or missing relative plan path to create]:plan path:_files' '1:branch:($branches)' '2:base:($branches)' ;;
   cleanup) _arguments '1:acknowledgement:(--merged --preview)' '2:branch:($branches)' ;;
   completion) _values 'shell' zsh ;;
 esac

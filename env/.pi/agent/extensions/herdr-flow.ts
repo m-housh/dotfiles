@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { AutocompleteItem } from "@earendil-works/pi-tui";
-import { resolve } from "node:path";
+import { isAbsolute, resolve } from "node:path";
 
 function words(args: string): string[] {
 	return args.trim().split(/\s+/).filter(Boolean);
@@ -33,7 +33,7 @@ export default function herdrFlowExtension(pi: ExtensionAPI): void {
 	};
 
 	pi.registerCommand("implement", {
-		description: "Start an approved plan in a new worktree and Herdr workspace",
+		description: "Start a plan path in a new worktree and Herdr workspace",
 		getArgumentCompletions: completeBranch,
 		handler: async (args, ctx) => {
 			if (!ctx.hasUI) {
@@ -47,22 +47,23 @@ export default function herdrFlowExtension(pi: ExtensionAPI): void {
 			}
 			const [branch, suppliedBase] = parsed;
 			const base = suppliedBase ?? "main";
-			const enteredPlan = await ctx.ui.input("Approved plan path", "PLAN.md or another explicit path");
+			const enteredPlan = await ctx.ui.input("Plan path", "Existing file, or missing relative path such as PLAN.md");
 			if (!enteredPlan?.trim()) {
 				ctx.ui.notify("Implementation cancelled", "info");
 				return;
 			}
-			const planPath = resolve(ctx.cwd, enteredPlan.trim());
+			const selectedPlanPath = enteredPlan.trim();
+			const displayedPlanPath = isAbsolute(selectedPlanPath) ? selectedPlanPath : resolve(ctx.cwd, selectedPlanPath);
 			const confirmed = await ctx.ui.confirm(
 				"Start implementation?",
-				`Branch: ${branch}\nBase: ${base}\nPlan: ${planPath}`,
+				`Branch: ${branch}\nBase: ${base}\nPlan: ${selectedPlanPath}\nResolved from current worktree: ${displayedPlanPath}\n\nExisting file: used as the starting plan.\nMissing relative path: created inside the new worktree before implementation.`,
 			);
 			if (!confirmed) {
 				ctx.ui.notify("Implementation cancelled", "info");
 				return;
 			}
 
-			const commandArgs = ["implement", "--plan", planPath, branch];
+			const commandArgs = ["implement", "--plan", selectedPlanPath, branch];
 			if (suppliedBase) commandArgs.push(base);
 			const result = await pi.exec("herdr-flow", commandArgs, { cwd: ctx.cwd, timeout: 300_000 });
 			if (result.code !== 0) {
