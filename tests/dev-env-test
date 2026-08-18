@@ -48,8 +48,7 @@ make_fixture() {
 		"$source/env/.local/share/applications/icons" \
 		"$source/env/.local/scripts/utils/hpa" \
 		"$source/env/.local/scripts/hypr/utils" \
-		"$source/env/pkgbuilds/managed-pkg" \
-		"$source/mail"
+		"$source/env/pkgbuilds/managed-pkg"
 
 	printf 'managed feature\n' >"$source/env/.config/new [feature]/config * file"
 	printf 'new eza\n' >"$source/env/.config/eza/config.yml"
@@ -97,7 +96,7 @@ make_stubs() {
 	local case_root=$1 fake_bin
 	fake_bin=$case_root/bin
 	mkdir -p -- "$fake_bin"
-	for command_name in mailctl systemctl hyprctl espanso zsh; do
+	for command_name in systemctl hyprctl espanso zsh; do
 		cat >"$fake_bin/$command_name" <<'EOF'
 #!/usr/bin/env bash
 printf '%s' "$(basename -- "$0")" >>"$INVOCATIONS"
@@ -273,7 +272,6 @@ integration_case() {
 	assert_file_contains "$home/.pi/agent/git/cache/state" 'git package'
 	assert_file_contains "$home/.pi/agent/npm/cache/state" 'npm package'
 	assert_file_contains "$home/.pi/agent/extensions/herdr-agent-state.ts" 'herdr state'
-	grep -Fq 'mailctl <update>' "$case_root/invocations" || fail 'mailctl update was not invoked'
 	if grep -Fq 'zsh ' "$case_root/invocations"; then
 		fail '--no-reload invoked zsh'
 	fi

@@ -375,21 +375,6 @@ generate_completions() {
 		"$HPA_DOCKER_IMAGE:$HPA_DOCKER_TAG" --generate-completion-script zsh
 }
 
-update_email() {
-	if command -v mailctl >/dev/null 2>&1; then
-		run mailctl update
-		run mailctl config
-	else
-		local installer="$DEV_ENV_ROOT/mail/install"
-		source_exists "$installer"
-		log_action "source $installer"
-		if ((!DRY_RUN)); then
-			# shellcheck disable=SC1090
-			. "$installer"
-		fi
-	fi
-}
-
 reload_services() {
 	run systemctl --user daemon-reload
 	run hyprctl reload
@@ -401,7 +386,6 @@ install_full_environment() {
 	install_config_directories
 	install_explicit_mappings
 	generate_completions
-	update_email
 	reload_services
 }
 

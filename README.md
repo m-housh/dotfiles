@@ -18,13 +18,12 @@ tools. It also contains:
 - package manifests and optional lifecycle hooks under `runs/`;
 - webapp specifications under `env/webapps`;
 - encrypted machine-specific configuration; and
-- Git submodules for Neovim configuration and private mail configuration.
+- a Git submodule for Neovim configuration.
 
 ## Repository layout
 
 - `env/` — files installed into the home and XDG directories.
 - `runs/` — package manifests, with optional `before/` and `after/` hooks.
-- `mail/` — private mail configuration submodule.
 - `dev-env` — full and development-container configuration installer.
 - `devcontainer-env` — compatibility wrapper for the container profile.
 - `run` — installs or uninstalls package manifests with `yay`.
@@ -51,8 +50,6 @@ git submodule update --init --recursive
 export DEV_ENV=$PWD
 ```
 
-The `mail` submodule is private and requires access to `git.housh.dev`.
-
 ### Full environment
 
 First inspect the complete installation plan:
@@ -74,13 +71,12 @@ exec zsh -l
 ```
 
 The `full` profile installs configuration and scripts, generates completions,
-updates mail configuration, and reloads user services. It intentionally has a
-mix of replacement and merge policies. Run `./dev-env --help` for the current
-policy summary.
+and reloads user services. It intentionally has a mix of replacement and merge
+policies. Run `./dev-env --help` for the current policy summary.
 
 This setup expects an Arch/Hyprland workstation and invokes host tools such as
-Podman, systemd, Hyprland, Espanso, and the mail installer. A dry-run does not
-change the filesystem or invoke those host actions.
+Podman, systemd, Hyprland, and Espanso. A dry-run does not change the filesystem
+or invoke those host actions.
 
 ### Development container
 
