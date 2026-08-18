@@ -218,6 +218,7 @@ install_pi_environment() {
 	# Discover and validate every managed source before mutating the runtime.
 	source_real_file_exists "$source_root/AGENTS.md"
 	source_real_file_exists "$source_root/settings.json"
+	source_real_file_exists "$source_root/extensions/herdr-flow.ts"
 	source_directory_exists "$source_root/skills"
 	source_directory_exists "$source_root/themes"
 
@@ -237,6 +238,7 @@ install_pi_environment() {
 	validate_destination "$destination_root"
 
 	copy_file "$source_root/AGENTS.md" "$destination_root/AGENTS.md"
+	copy_file "$source_root/extensions/herdr-flow.ts" "$destination_root/extensions/herdr-flow.ts"
 	replace_entry_sources "$destination_root/skills" "${managed_skills[@]}"
 	replace_entry_sources "$destination_root/themes" "${managed_themes[@]}"
 
@@ -355,11 +357,13 @@ install_container_environment() {
 generate_completions() {
 	local completion_dir="$HOME/.zsh/completions"
 	local wt_completion="$completion_dir/_wt"
+	local herdr_flow_completion="$completion_dir/_herdr-flow"
 	local hpa_completion="$completion_dir/_hpa"
 	local hpa_environment="$HOME/.local/scripts/utils/hpa/hpa.env"
 
 	run mkdir -p -- "$completion_dir"
 	run_capture "$wt_completion" "$HOME/.local/scripts/wt" completion zsh
+	run_capture "$herdr_flow_completion" "$HOME/.local/scripts/herdr-flow" completion zsh
 
 	if ((DRY_RUN)); then
 		log_action "generate HPA Zsh completion -> $hpa_completion"

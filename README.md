@@ -94,15 +94,15 @@ development configuration without workstation service actions.
 ## Pi resources
 
 Both the full and container profiles install the portable Pi resources from
-`env/.pi/agent` into `~/.pi/agent`. Managed global guidance, same-named skills,
-and same-named themes are updated on each installation. Other runtime entries
-are left in place.
+`env/.pi/agent` into `~/.pi/agent`. Managed global guidance, the managed
+`herdr-flow.ts` extension, same-named skills, and same-named themes are updated
+on each installation. Other extensions and runtime entries are left in place.
 
 Managed Pi sources must be portable filesystem entries rather than symlinks.
 Each top-level skill is a real directory with a regular `SKILL.md` and may
-contain only real directories and regular files. Guidance, settings, and themes
-are regular files. All managed Pi sources are validated before runtime entries
-are changed.
+contain only real directories and regular files. Guidance, settings, the managed
+extension, and themes are regular files. All managed Pi sources are validated
+before runtime entries are changed.
 
 The managed `settings.json` is only an initial default: it is copied when no
 runtime settings file exists and selects the `catppuccin-mocha` theme. An
@@ -110,10 +110,51 @@ existing `~/.pi/agent/settings.json` is preserved byte-for-byte. To use the
 managed Catppuccin theme with an existing runtime, select it once through
 Pi's `/settings` interface.
 
-Credentials, models, sessions, trust decisions, package directories,
-extensions (including Herdr state), and other machine-local runtime files are
+Credentials, models, sessions, trust decisions, package directories, Herdr
+state, unrelated extensions, and other machine-local runtime files are
 deliberately excluded from dotfile management. Keep those only in the live
 `~/.pi/agent` directory.
+
+## Herdr task workflow
+
+`wt` is the low-level Git worktree helper. It creates, removes, lists, and
+prunes worktrees and local branches; it does not manage Herdr or Pi. For a
+worktree-only operation, use:
+
+```bash
+wt add feat/example [base]
+wt remove -D --force feat/example
+```
+
+`herdr-flow` owns the planned-task lifecycle. Run implementation handoff from
+inside Herdr and from the repository's main worktree, with an explicit readable
+plan file:
+
+```bash
+herdr-flow implement --plan /path/to/approved-plan.md feat/example [base]
+```
+
+It validates all inputs before mutation, delegates worktree creation to `wt`,
+creates a Herdr workspace, starts a named Pi agent, sends the complete plan, and
+focuses the workspace only after setup succeeds. It does not move, copy, or
+delete the plan file. In Pi, `/implement feat/example [base]` asks for that path
+and shows the resolved inputs before it delegates to the same command.
+
+After the task is merged, return to the main worktree. Preview the exact actions,
+then provide the required merge acknowledgement:
+
+```bash
+herdr-flow cleanup --preview feat/example
+herdr-flow cleanup --merged feat/example
+```
+
+Cleanup requires both main and the target worktree to be clean, and refuses
+missing, ambiguous, current, and main targets. It first fast-forwards local
+`main` from its configured upstream, then closes the matching
+Herdr workspace, delegates worktree and branch removal to `wt`, prunes stale
+metadata, and verifies removal. `/cleanup feat/example` provides the same preview
+and confirmation. From a linked worktree, `/cleanup` only prints the commands to
+run later from main.
 
 ## Package runs
 

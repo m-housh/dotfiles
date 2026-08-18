@@ -7,28 +7,23 @@ readonly worktree_dir_name=".worktrees"
 usage() {
   cat <<'EOF'
 Usage:
-  wt add [-s|--space] <branch> [base]
-                            Create a worktree; base defaults to main
-                            With --space, open it in a new Herdr workspace
-  wt remove [-s|--space] [-d|-D] [-f|--force] <name>
-                            Remove a worktree (branch or checkout name)
-                            With --space, close its Herdr workspace first
-                            With -d or -D, delete the checked-out branch too
-  wt list                  List the .worktrees directory
-  wt prune [options]       Run git worktree prune
-  wt completion bash|zsh   Print shell completion setup
-  wt help                  Show this help
+  wt add <branch> [base]                 Create a worktree; base defaults to main
+  wt remove [-d|-D] [-f|--force] <name> Remove a worktree (branch or checkout name)
+                                         With -d or -D, delete its branch too
+  wt list                               List the .worktrees directory
+  wt prune [options]                    Run git worktree prune
+  wt completion bash|zsh                Print shell completion setup
+  wt help                               Show this help
 
 Examples:
   cd "$(wt add feature/foo)"
   cd "$(wt add feature/foo develop)"
-  wt add --space feature/foo
   wt remove feature/foo
-  wt remove --space -d feature/foo
-  wt list
+  wt remove -D --force feature/foo
 
 A branch named feature/foo is checked out in .worktrees/feature-foo.
 If the branch already exists, it is checked out without creating it.
+stdout from `wt add` contains only the created path.
 EOF
 }
 
@@ -41,106 +36,56 @@ require_repository() {
   git rev-parse --git-dir >/dev/null 2>&1 || fail "not inside a Git repository"
 }
 
-require_herdr() {
-  [[ "${HERDR_ENV:-}" == 1 ]] || fail "--space requires running inside Herdr"
-  command -v herdr >/dev/null 2>&1 || fail "--space requires herdr in PATH"
-}
-
-require_jq() {
-  command -v jq >/dev/null 2>&1 || fail "--space requires jq in PATH"
-}
-
 confirm() {
-  local prompt=$1
-  local reply
-
+  local prompt=$1 reply
   [[ -t 0 ]] || fail "confirmation required; rerun with --force to skip the prompt"
   printf '%s [y/N] ' "$prompt" >&2
   read -r reply
-  [[ "$reply" == y || "$reply" == Y || "$reply" == yes || "$reply" == YES ]] || fail "aborted"
+  [[ $reply == y || $reply == Y || $reply == yes || $reply == YES ]] || fail "aborted"
 }
 
 main_worktree_root() {
-  local line
-
-  line=$(git worktree list --porcelain | awk '/^worktree / { sub(/^worktree /, ""); print; exit }')
-  [[ -n "$line" ]] || fail "could not find the main worktree"
-  printf '%s\n' "$line"
+  local common root
+  common=$(git rev-parse --path-format=absolute --git-common-dir)
+  [[ ${common##*/} == .git ]] || fail "could not identify a non-bare main worktree"
+  root=${common%/.git}
+  [[ -d $root ]] || fail "could not find the main worktree"
+  (cd "$root" >/dev/null && pwd -P)
 }
 
 common_git_dir() {
   local directory
-
   directory=$(git rev-parse --git-common-dir)
   (cd "$directory" >/dev/null && pwd -P)
 }
 
 ensure_worktree_directory() {
-  local root=$1
-  local common_dir=$2
-  local exclude_file="$common_dir/info/exclude"
-
-  mkdir -p "$root/$worktree_dir_name"
-  mkdir -p "$(dirname "$exclude_file")"
+  local root=$1 common_dir=$2 exclude_file="$2/info/exclude"
+  mkdir -p "$root/$worktree_dir_name" "$(dirname "$exclude_file")"
   touch "$exclude_file"
-
-  if ! grep -Fqx "/$worktree_dir_name/" "$exclude_file"; then
-    printf '\n/%s/\n' "$worktree_dir_name" >>"$exclude_file"
-  fi
+  grep -Fqx "/$worktree_dir_name/" "$exclude_file" || printf '\n/%s/\n' "$worktree_dir_name" >>"$exclude_file"
 }
 
 checkout_name() {
-  local branch=$1
-  printf '%s\n' "${branch//\//-}"
+  printf '%s\n' "${1//\//-}"
 }
 
 validate_name() {
-  local name=$1
-  git check-ref-format --branch "$name" >/dev/null 2>&1 || fail "invalid branch or worktree name: $name"
+  git check-ref-format --branch "$1" >/dev/null 2>&1 || fail "invalid branch or worktree name: $1"
 }
 
 add_worktree() {
-  local create_space=false
-  local -a args=()
-
-  while [[ $# -gt 0 ]]; do
-    case $1 in
-      -s|--space)
-        create_space=true
-        ;;
-      --)
-        shift
-        args+=("$@")
-        break
-        ;;
-      -*)
-        fail "unknown add option '$1'"
-        ;;
-      *)
-        args+=("$1")
-        ;;
-    esac
-    shift
-  done
-
-  set -- "${args[@]}"
-  [[ $# -ge 1 && $# -le 2 ]] || fail "usage: wt add [-s|--space] <branch> [base]"
-
-  local branch=$1
-  local base=${2:-main}
-  local root common_dir name path
+  [[ $# -ge 1 && $# -le 2 ]] || fail "usage: wt add <branch> [base]"
+  [[ $1 != -* ]] || fail "unknown add option '$1'"
+  local branch=$1 base=${2:-main} root common_dir name path
 
   validate_name "$branch"
-  if [[ "$create_space" == true ]]; then
-    require_herdr
-  fi
   root=$(main_worktree_root)
   common_dir=$(common_git_dir)
   ensure_worktree_directory "$root" "$common_dir"
-
   name=$(checkout_name "$branch")
   path="$root/$worktree_dir_name/$name"
-  [[ ! -e "$path" ]] || fail "path already exists: $path"
+  [[ ! -e $path ]] || fail "path already exists: $path"
 
   if git show-ref --verify --quiet "refs/heads/$branch"; then
     [[ $# -eq 1 ]] || fail "a base cannot be specified when branch '$branch' already exists"
@@ -148,212 +93,102 @@ add_worktree() {
   else
     git worktree add -b "$branch" "$path" "$base" >&2
   fi
-
-  if [[ "$create_space" == true ]]; then
-    herdr workspace create --cwd "$path" --label "$(basename -- "$path")" --focus >/dev/null
-  fi
-
-  # stdout intentionally contains only the path so command substitution works.
   printf '%s\n' "$path"
-}
-
-herdr_workspace_for_path() {
-  local path=$1
-
-  herdr worktree list \
-    | jq -r --arg path "$path" '.result.worktrees[] | select(.path == $path) | .open_workspace_id // empty'
 }
 
 worktree_branch_for_path() {
   local path=$1
-
   git worktree list --porcelain | awk -v target="$path" '
     function flush() {
-      if (current_path == target) {
-        sub(/^refs\/heads\//, "", branch)
-        print branch
-        found = 1
-        exit
-      }
+      if (current_path == target) { sub(/^refs\/heads\//, "", branch); print branch; found = 1; exit }
     }
-
-    /^worktree / {
-      if (current_path != "") flush()
-      current_path = substr($0, 10)
-      branch = ""
-      next
-    }
-
-    /^branch / {
-      branch = substr($0, 8)
-      next
-    }
-
-    END {
-      if (!found && current_path != "") flush()
-    }
+    /^worktree / { if (current_path != "") flush(); current_path = substr($0, 10); branch = ""; next }
+    /^branch / { branch = substr($0, 8); next }
+    END { if (!found && current_path != "") flush() }
   '
 }
 
 remove_worktree() {
-  local close_space=false
-  local force=false
-  local delete_branch=""
+  local force=false delete_branch=""
   local -a args=()
-
   while [[ $# -gt 0 ]]; do
     case $1 in
-      -s|--space)
-        close_space=true
-        ;;
-      -d|-D)
-        [[ -z "$delete_branch" ]] || fail "use only one of -d or -D"
-        delete_branch=$1
-        ;;
-      -f|--force)
-        force=true
-        ;;
-      --)
-        shift
-        args+=("$@")
-        break
-        ;;
-      -*)
-        fail "unknown remove option '$1'"
-        ;;
-      *)
-        args+=("$1")
-        ;;
+      -d|-D) [[ -z $delete_branch ]] || fail "use only one of -d or -D"; delete_branch=$1 ;;
+      -f|--force) force=true ;;
+      --) shift; args+=("$@"); break ;;
+      -*) fail "unknown remove option '$1'" ;;
+      *) args+=("$1") ;;
     esac
     shift
   done
-
   set -- "${args[@]}"
-  [[ $# -eq 1 ]] || fail "usage: wt remove [-s|--space] [-d|-D] [-f|--force] <name>"
+  [[ $# -eq 1 ]] || fail "usage: wt remove [-d|-D] [-f|--force] <name>"
 
-  local requested=$1
-  local root name path branch workspace_id
-
+  local requested=$1 root name path branch=""
   validate_name "$requested"
-  if [[ "$close_space" == true ]]; then
-    require_herdr
-    require_jq
-  fi
-
   root=$(main_worktree_root)
   name=$(checkout_name "$requested")
   path="$root/$worktree_dir_name/$name"
-
-  if [[ -n "$delete_branch" ]]; then
+  if [[ -n $delete_branch ]]; then
     branch=$(worktree_branch_for_path "$path")
-    [[ -n "$branch" ]] || fail "could not find a checked-out branch for: $path"
+    [[ -n $branch ]] || fail "could not find a checked-out branch for: $path"
   fi
-
-  if [[ "$close_space" == true ]]; then
-    workspace_id=$(herdr_workspace_for_path "$path")
-    if [[ -n "$workspace_id" && "$workspace_id" == "${HERDR_WORKSPACE_ID:-}" ]]; then
-      fail "refusing to close the current Herdr workspace"
-    fi
+  if [[ $force != true && -n $delete_branch ]]; then
+    confirm "Remove worktree '$path', then run 'git branch $delete_branch $branch'?"
   fi
-
-  if [[ "$force" != true && ( "$close_space" == true || -n "$delete_branch" ) ]]; then
-    local summary="Remove worktree '$path'"
-    [[ -z "${workspace_id:-}" ]] || summary+=", close Herdr workspace '$workspace_id'"
-    [[ -z "${branch:-}" ]] || summary+=", run 'git branch $delete_branch $branch'"
-    confirm "$summary?"
-  fi
-
-  if [[ "$close_space" == true && -n "${workspace_id:-}" ]]; then
-    herdr workspace close "$workspace_id" >/dev/null
-  fi
-
   git worktree remove -- "$path"
-
-  if [[ -n "$delete_branch" ]]; then
-    git branch "$delete_branch" "$branch"
-  fi
+  [[ -z $delete_branch ]] || git branch "$delete_branch" "$branch"
 }
 
 list_worktrees() {
   [[ $# -eq 0 ]] || fail "usage: wt list"
-
-  local root common_dir directory
+  local root common_dir
   root=$(main_worktree_root)
   common_dir=$(common_git_dir)
   ensure_worktree_directory "$root" "$common_dir"
-  directory="$root/$worktree_dir_name"
-
-  ls -lah -- "$directory"
+  ls -lah -- "$root/$worktree_dir_name"
 }
 
 complete_remove() {
   local root directory line path
   root=$(main_worktree_root)
   directory="$root/$worktree_dir_name"
-
   while IFS= read -r line; do
-    [[ "$line" == worktree\ * ]] || continue
+    [[ $line == worktree\ * ]] || continue
     path=${line#worktree }
-    if [[ "$path" == "$directory/"* ]]; then
-      printf '%s\n' "${path#"$directory/"}"
-    fi
+    [[ $path == "$directory/"* ]] && printf '%s\n' "${path#"$directory/"}"
   done < <(git worktree list --porcelain)
 }
 
 print_completion() {
   [[ $# -eq 1 ]] || fail "usage: wt completion bash|zsh"
-
   case $1 in
-    bash)
-      cat <<'EOF'
+    bash) cat <<'EOF'
 _wt_completion() {
-  local current=${COMP_WORDS[COMP_CWORD]}
-  local action=${COMP_WORDS[1]:-}
-
+  local current=${COMP_WORDS[COMP_CWORD]} action=${COMP_WORDS[1]:-}
   if (( COMP_CWORD == 1 )); then
     COMPREPLY=($(compgen -W 'add remove list prune completion help' -- "$current"))
-  elif [[ "$action" == add && $COMP_CWORD -eq 2 ]]; then
-    COMPREPLY=($(compgen -W '-s --space' -- "$current"))
-  elif [[ "$action" == remove && $COMP_CWORD -eq 2 ]]; then
-    COMPREPLY=($(compgen -W '-s --space -d -D -f --force '"$(wt _complete-remove 2>/dev/null)" -- "$current"))
-  elif [[ "$action" == completion && $COMP_CWORD -eq 2 ]]; then
+  elif [[ $action == remove && $COMP_CWORD -eq 2 ]]; then
+    COMPREPLY=($(compgen -W '-d -D -f --force '"$(wt _complete-remove 2>/dev/null)" -- "$current"))
+  elif [[ $action == completion && $COMP_CWORD -eq 2 ]]; then
     COMPREPLY=($(compgen -W 'bash zsh' -- "$current"))
   fi
 }
 complete -F _wt_completion wt
 EOF
       ;;
-    zsh)
-      cat <<'EOF'
+    zsh) cat <<'EOF'
 #compdef wt
-
 local -a commands worktrees
-commands=(
-  'add:Create a worktree'
-  'remove:Remove a worktree'
-  'list:List the .worktrees directory'
-  'prune:Prune stale worktree metadata'
-  'completion:Print shell completion setup'
-  'help:Show help'
-)
-
-if (( CURRENT == 2 )); then
-  _describe 'command' commands
-  return
-fi
-
+commands=('add:Create a worktree' 'remove:Remove a worktree' 'list:List worktrees' 'prune:Prune stale metadata' 'completion:Print completion' 'help:Show help')
+if (( CURRENT == 2 )); then _describe 'command' commands; return; fi
 case $words[2] in
-  add)
-    _values 'add option' '-s[Open in a new Herdr workspace]' '--space[Open in a new Herdr workspace]'
-    ;;
   remove)
-    _values 'remove option' '-s[Close Herdr workspace]' '--space[Close Herdr workspace]' '-d[Delete branch if merged]' '-D[Force delete branch]' '-f[Skip confirmation]' '--force[Skip confirmation]'
+    _values 'remove option' '-d[Delete branch if merged]' '-D[Force-delete branch]' '-f[Skip confirmation]' '--force[Skip confirmation]'
     worktrees=("${(@f)$(wt _complete-remove 2>/dev/null)}")
     _describe 'worktree' worktrees
     ;;
-  completion)
-    _values 'shell' bash zsh
-    ;;
+  completion) _values 'shell' bash zsh ;;
 esac
 EOF
       ;;
@@ -364,37 +199,15 @@ EOF
 main() {
   local command=${1:-help}
   [[ $# -eq 0 ]] || shift
-
   case $command in
-    add)
-      require_repository
-      add_worktree "$@"
-      ;;
-    remove|rm)
-      require_repository
-      remove_worktree "$@"
-      ;;
-    list|ls)
-      require_repository
-      list_worktrees "$@"
-      ;;
-    prune)
-      require_repository
-      git worktree prune "$@"
-      ;;
-    completion)
-      print_completion "$@"
-      ;;
-    _complete-remove)
-      require_repository
-      complete_remove
-      ;;
-    help|-h|--help)
-      usage
-      ;;
-    *)
-      fail "unknown command '$command' (run 'wt help')"
-      ;;
+    add) require_repository; add_worktree "$@" ;;
+    remove|rm) require_repository; remove_worktree "$@" ;;
+    list|ls) require_repository; list_worktrees "$@" ;;
+    prune) require_repository; git worktree prune "$@" ;;
+    completion) print_completion "$@" ;;
+    _complete-remove) require_repository; complete_remove ;;
+    help|-h|--help) usage ;;
+    *) fail "unknown command '$command' (run 'wt help')" ;;
   esac
 }
 

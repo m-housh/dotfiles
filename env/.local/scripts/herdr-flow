@@ -1,0 +1,265 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  herdr-flow implement --plan <path> <branch> [base]
+  herdr-flow cleanup --merged <branch>
+  herdr-flow cleanup --preview <branch>
+  herdr-flow completion zsh
+  herdr-flow help
+
+implement creates a Git worktree with wt, opens a Herdr workspace, starts a
+named Pi agent, submits the complete approved plan, and then focuses it. The
+base defaults to main.
+
+cleanup must run from the main worktree. --preview prints the exact target and
+actions without changing anything. --merged is the required acknowledgement
+that the task was merged; cleanup then fast-forwards main, closes the matching
+Herdr workspace, removes the worktree and branch through wt, prunes, and
+verifies the result.
+EOF
+}
+
+fail() {
+  printf 'herdr-flow: %s\n' "$*" >&2
+  exit 1
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || fail "required command not found in PATH: $1"
+}
+
+require_herdr() {
+  [[ ${HERDR_ENV:-} == 1 ]] || fail "must run inside Herdr (HERDR_ENV=1)"
+  require_command herdr
+  require_command jq
+}
+
+canonical_directory() {
+  (cd -- "$1" >/dev/null && pwd -P)
+}
+
+main_worktree_root() {
+  local common root
+  common=$(git rev-parse --path-format=absolute --git-common-dir)
+  [[ ${common##*/} == .git ]] || fail "could not identify a non-bare main worktree"
+  root=${common%/.git}
+  [[ -d $root ]] || fail "could not find the main worktree"
+  canonical_directory "$root"
+}
+
+require_main_worktree() {
+  require_command git
+  git rev-parse --git-dir >/dev/null 2>&1 || fail "not inside a Git repository"
+  local current root branch
+  current=$(canonical_directory "$(git rev-parse --show-toplevel)")
+  root=$(main_worktree_root)
+  [[ $current == "$root" ]] || fail "must run from the main worktree: $root"
+  branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)
+  [[ $branch == main ]] || fail "main worktree must have branch 'main' checked out (current: ${branch:-detached})"
+  printf '%s\n' "$root"
+}
+
+validate_branch() {
+  git check-ref-format --branch "$1" >/dev/null 2>&1 || fail "invalid branch: $1"
+}
+
+worktree_path_for_branch() {
+  local branch=$1
+  git worktree list --porcelain | awk -v wanted="refs/heads/$branch" '
+    /^worktree / { path = substr($0, 10); next }
+    /^branch / && substr($0, 8) == wanted { print path }
+  '
+}
+
+agent_name_for_branch() {
+  local branch=$1 workspace_id=$2 safe digest
+  safe=$(printf '%s' "$branch" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
+  safe=${safe#_}
+  [[ $safe == [a-z]* ]] || safe="task_$safe"
+  digest=$(printf '%s' "$workspace_id" | sha256sum)
+  digest=${digest%% *}
+  printf '%.23s_%.8s\n' "$safe" "$digest"
+}
+
+recovery_failure() {
+  local message=$1 path=${2:-unknown} workspace=${3:-not-created} agent=${4:-not-started}
+  printf 'herdr-flow: setup failed: %s\n' "$message" >&2
+  printf 'herdr-flow: durable state may remain; no automatic cleanup was attempted\n' >&2
+  printf '  worktree: %s\n  workspace: %s\n  agent: %s\n' "$path" "$workspace" "$agent" >&2
+  printf 'Inspect with: git worktree list; herdr workspace list; herdr agent list\n' >&2
+  exit 1
+}
+
+implement_task() {
+  local plan_path="" branch="" base="main"
+  local -a positional=()
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+      --plan)
+        [[ $# -ge 2 ]] || fail "--plan requires a path"
+        plan_path=$2
+        shift
+        ;;
+      --) shift; positional+=("$@"); break ;;
+      -*) fail "unknown implement option '$1'" ;;
+      *) positional+=("$1") ;;
+    esac
+    shift
+  done
+  [[ -n $plan_path && ${#positional[@]} -ge 1 && ${#positional[@]} -le 2 ]] || \
+    fail "usage: herdr-flow implement --plan <path> <branch> [base]"
+  branch=${positional[0]}
+  base=${positional[1]:-main}
+
+  require_herdr
+  require_command wt
+  require_command sha256sum
+  local root existing plan prompt path response workspace_id pane_id agent_name
+  root=$(require_main_worktree) || return
+  validate_branch "$branch"
+  [[ $branch != main ]] || fail "refusing to create a task worktree for main"
+  [[ -f $plan_path && -r $plan_path && -s $plan_path ]] || fail "plan must be a readable, non-empty regular file: $plan_path"
+  git rev-parse --verify --quiet "$base^{commit}" >/dev/null || fail "base does not resolve to a commit: $base"
+  herdr workspace list >/dev/null || fail "could not reach the current Herdr session"
+  existing=$(worktree_path_for_branch "$branch")
+  [[ -z $existing ]] || fail "branch is already checked out at: $existing"
+  if git show-ref --verify --quiet "refs/heads/$branch" && [[ ${#positional[@]} -eq 2 ]]; then
+    fail "a base cannot be specified when branch '$branch' already exists"
+  fi
+
+  # Read the agreed input before creating any durable state. The source file is never changed.
+  plan=$(<"$plan_path")
+  prompt=$(cat <<EOF
+Implement the approved plan below end to end.
+
+Follow all applicable AGENTS.md guidance. Stay within the agreed scope. Keep the ownership boundaries in the plan explicit. Run targeted validation and the repository test suite. Do not commit, push, merge, or clean up the worktree unless the user explicitly asks.
+
+## Approved plan
+
+$plan
+EOF
+)
+
+  if [[ ${#positional[@]} -eq 2 ]]; then
+    path=$(wt add "$branch" "$base") || recovery_failure "wt add failed"
+  else
+    path=$(wt add "$branch") || recovery_failure "wt add failed"
+  fi
+  path=$(canonical_directory "$path")
+
+  if ! response=$(herdr workspace create --cwd "$path" --label "$(basename -- "$path")" --no-focus); then
+    recovery_failure "Herdr workspace creation failed" "$path"
+  fi
+  workspace_id=$(jq -er '.result.workspace.workspace_id | strings | select(length > 0)' <<<"$response" 2>/dev/null) || \
+    recovery_failure "could not read workspace ID from Herdr response" "$path" unknown
+  pane_id=$(jq -er '.result.root_pane.pane_id | strings | select(length > 0)' <<<"$response" 2>/dev/null) || \
+    recovery_failure "could not read root pane ID from Herdr response" "$path" "$workspace_id"
+  agent_name=$(agent_name_for_branch "$branch" "$workspace_id")
+
+  if ! herdr agent start "$agent_name" --kind pi --pane "$pane_id" >/dev/null; then
+    recovery_failure "Pi agent startup failed" "$path" "$workspace_id" "$agent_name"
+  fi
+  if ! herdr agent prompt "$agent_name" "$prompt" >/dev/null; then
+    recovery_failure "initial prompt submission failed" "$path" "$workspace_id" "$agent_name"
+  fi
+  if ! herdr workspace focus "$workspace_id" >/dev/null; then
+    recovery_failure "workspace focus failed" "$path" "$workspace_id" "$agent_name"
+  fi
+
+  printf 'worktree: %s\nworkspace: %s\npane: %s\nagent: %s\n' "$path" "$workspace_id" "$pane_id" "$agent_name"
+}
+
+cleanup_context() {
+  local branch=$1 root paths path main_status target_status workspace_json workspace_id
+  root=$(require_main_worktree) || return
+  main_status=$(git -C "$root" status --porcelain --untracked-files=normal) || fail "could not inspect main worktree: $root"
+  [[ -z $main_status ]] || fail "main worktree is dirty: $root"
+  validate_branch "$branch"
+  [[ $branch != main ]] || fail "refusing to clean up main"
+  git show-ref --verify --quiet "refs/heads/$branch" || fail "local branch does not exist: $branch"
+  paths=$(worktree_path_for_branch "$branch") || return
+  [[ -n $paths ]] || fail "no worktree checks out branch: $branch"
+  [[ $(wc -l <<<"$paths") -eq 1 ]] || fail "ambiguous worktree target for branch: $branch"
+  path=$(canonical_directory "$paths") || fail "could not resolve worktree path: $paths"
+  [[ $path != "$root" ]] || fail "refusing to remove the current checkout"
+  target_status=$(git -C "$path" status --porcelain --untracked-files=normal) || fail "could not inspect target worktree: $path"
+  [[ -z $target_status ]] || fail "target worktree is dirty: $path"
+
+  workspace_json=$(herdr worktree list) || fail "could not list Herdr worktrees"
+  workspace_id=$(jq -r --arg path "$path" '[.result.worktrees[]? | select(.path == $path) | .open_workspace_id // empty] | unique | if length > 1 then error("ambiguous workspace") else .[0] // empty end' <<<"$workspace_json") || \
+    fail "could not resolve a unique Herdr workspace for: $path"
+  [[ -z $workspace_id || $workspace_id != "${HERDR_WORKSPACE_ID:-}" ]] || \
+    fail "refusing to close the current Herdr workspace: $workspace_id"
+  jq -n --arg root "$root" --arg path "$path" --arg workspace "$workspace_id" \
+    '{root: $root, path: $path, workspace: $workspace}'
+}
+
+cleanup_task() {
+  [[ $# -eq 2 ]] || fail "cleanup requires --merged or --preview and exactly one branch"
+  local mode=$1 branch=$2
+  [[ $mode == --merged || $mode == --preview ]] || fail "cleanup requires --merged or --preview"
+  require_herdr
+  require_command wt
+
+  local context root path workspace_id upstream
+  context=$(cleanup_context "$branch") || exit $?
+  root=$(jq -r '.root' <<<"$context")
+  path=$(jq -r '.path' <<<"$context")
+  workspace_id=$(jq -r '.workspace' <<<"$context")
+  upstream=$(git -C "$root" rev-parse --abbrev-ref --symbolic-full-name 'main@{upstream}' 2>/dev/null) || \
+    fail "main has no configured upstream"
+
+  printf 'branch: %s\nworktree: %s\nworkspace: %s\n' "$branch" "$path" "${workspace_id:-none}"
+  printf 'actions:\n  git pull --ff-only (%s from %s)\n' "$root" "$upstream"
+  [[ -z $workspace_id ]] || printf '  herdr workspace close %s\n' "$workspace_id"
+  printf '  wt remove -D --force %s\n  wt prune\n' "$branch"
+  [[ $mode == --preview ]] && return 0
+
+  git -C "$root" pull --ff-only || fail "could not fast-forward main from $upstream; no cleanup performed"
+  if [[ -n $workspace_id ]]; then
+    herdr workspace close "$workspace_id" >/dev/null || fail "failed to close Herdr workspace: $workspace_id"
+  fi
+  wt remove -D --force "$branch" || fail "failed to remove worktree through wt: $path"
+  wt prune || fail "failed to prune worktree metadata"
+
+  [[ -z $(worktree_path_for_branch "$branch") ]] || fail "verification failed: worktree still exists for $branch"
+  ! git show-ref --verify --quiet "refs/heads/$branch" || fail "verification failed: local branch still exists: $branch"
+  if [[ -n $workspace_id ]]; then
+    ! herdr workspace get "$workspace_id" >/dev/null 2>&1 || fail "verification failed: Herdr workspace still exists: $workspace_id"
+  fi
+  printf 'cleanup complete: %s\n' "$branch"
+}
+
+print_completion() {
+  [[ $# -eq 1 && $1 == zsh ]] || fail "usage: herdr-flow completion zsh"
+  cat <<'EOF'
+#compdef herdr-flow
+local -a commands branches
+commands=('implement:Create a task worktree, workspace, and Pi agent' 'cleanup:Clean up a merged task' 'completion:Print Zsh completion' 'help:Show help')
+if (( CURRENT == 2 )); then _describe 'command' commands; return; fi
+branches=("${(@f)$(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null)}")
+case $words[2] in
+  implement) _arguments '--plan[Approved plan file]:plan file:_files' '1:branch:($branches)' '2:base:($branches)' ;;
+  cleanup) _arguments '1:acknowledgement:(--merged --preview)' '2:branch:($branches)' ;;
+  completion) _values 'shell' zsh ;;
+esac
+EOF
+}
+
+main() {
+  local command=${1:-help}
+  [[ $# -eq 0 ]] || shift
+  case $command in
+    implement) implement_task "$@" ;;
+    cleanup) cleanup_task "$@" ;;
+    completion) print_completion "$@" ;;
+    help|-h|--help) usage ;;
+    *) fail "unknown command '$command' (run 'herdr-flow help')" ;;
+  esac
+}
+
+main "$@"

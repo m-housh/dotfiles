@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null && pwd -P)
+FLOW="$ROOT/env/.local/scripts/herdr-flow"
+REAL_WT="$ROOT/env/.local/scripts/wt"
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf -- "$TEST_ROOT"' EXIT
+passes=0
+fail() { printf 'not ok - %s\n' "$*" >&2; exit 1; }
+pass() { passes=$((passes + 1)); printf 'ok - %s\n' "$1"; }
+
+bin="$TEST_ROOT/bin"
+state="$TEST_ROOT/state"
+mkdir -p "$bin" "$state"
+cat >"$bin/wt" <<EOF
+#!/usr/bin/env bash
+printf '%q ' "\$@" >>"\$STUB_STATE/wt.log"
+printf '\n' >>"\$STUB_STATE/wt.log"
+exec "$REAL_WT" "\$@"
+EOF
+cat >"$bin/herdr" <<'EOF'
+#!/usr/bin/env bash
+printf '%q ' "$@" >>"$STUB_STATE/herdr.log"
+printf '\n' >>"$STUB_STATE/herdr.log"
+case "$1 $2" in
+  'workspace create')
+    [[ ${STUB_FAIL_CREATE:-0} != 1 ]] || exit 1
+    jq -n --arg workspace "${STUB_WORKSPACE_ID:-ws:opaque}" \
+      '{result:{workspace:{workspace_id:$workspace},tab:{tab_id:"tab:opaque"},root_pane:{pane_id:"pane:opaque"}}}'
+    ;;
+  'agent start') printf '{"result":{"agent":{"name":"%s"}}}\n' "$3" ;;
+  'agent prompt') printf '%s' "$4" >"$STUB_STATE/prompt"; printf '{"result":{"submitted":true}}\n' ;;
+  'workspace focus') printf '{"result":{}}\n' ;;
+  'worktree list')
+    jq -n --arg path "${HERDR_TARGET_PATH:-}" --arg ws "${HERDR_TARGET_WORKSPACE:-}" \
+      '{result:{worktrees:(if $path == "" then [] else [{path:$path,open_workspace_id:(if $ws == "" then null else $ws end)}] end)}}'
+    ;;
+  'workspace close') touch "$STUB_STATE/workspace-closed"; printf '{"result":{}}\n' ;;
+  'workspace get') [[ ! -e $STUB_STATE/workspace-closed ]] ;;
+  *) printf '{"result":{}}\n' ;;
+esac
+EOF
+chmod +x "$bin/wt" "$bin/herdr"
+
+origin="$TEST_ROOT/origin.git"
+repo="$TEST_ROOT/repo with spaces"
+git init -q --bare "$origin"
+git clone -q "$origin" "$repo"
+git -C "$repo" switch -qc main
+git -C "$repo" config user.name Test
+git -C "$repo" config user.email test@example.invalid
+git -C "$repo" config commit.gpgSign false
+printf 'initial\n' >"$repo/file"
+git -C "$repo" add file
+git -C "$repo" commit -qm initial
+git -C "$repo" push -qu origin main
+git -C "$repo" branch --set-upstream-to=origin/main main >/dev/null
+
+run_flow() {
+	env HERDR_ENV=1 STUB_STATE="$state" PATH="$bin:/usr/bin:/bin" "$FLOW" "$@"
+}
+
+plan="$TEST_ROOT/approved plan \$ [x].md"
+# shellcheck disable=SC2016 # Deliberate literal shell syntax tests argument safety.
+printf '%s\n' 'Change `a b`; keep $(touch /tmp/never) literal.' 'Second line with "quotes" and * glob.' >"$plan"
+output=$(cd "$repo" && run_flow implement --plan "$plan" feat/quoted)
+target="$repo/.worktrees/feat-quoted"
+[[ -d $target ]] || fail 'implement did not create delegated worktree'
+grep -Fq 'workspace: ws:opaque' <<<"$output" || fail 'implement omitted workspace ID'
+grep -Fq 'pane: pane:opaque' <<<"$output" || fail 'implement omitted pane ID'
+# shellcheck disable=SC2016 # Match the deliberate literal shell syntax above.
+grep -Fq 'Change `a b`; keep $(touch /tmp/never) literal.' "$state/prompt" || fail 'prompt changed metacharacters'
+grep -Fq 'Second line with "quotes" and * glob.' "$state/prompt" || fail 'prompt omitted plan content'
+[[ -f $plan ]] || fail 'implement changed the source plan'
+grep -Fq 'add feat/quoted' "$state/wt.log" || fail 'implement did not delegate add to wt'
+grep -Eq 'agent start feat_quoted_[a-f0-9]{8} --kind pi --pane pane:opaque' "$state/herdr.log" || fail 'agent start delegation was incorrect'
+pass 'implement delegates safely and submits the complete plan'
+
+collision_one=$(cd "$repo" && STUB_WORKSPACE_ID=ws:collision-one run_flow implement --plan "$plan" feat/foo.bar)
+collision_two=$(cd "$repo" && STUB_WORKSPACE_ID=ws:collision-two run_flow implement --plan "$plan" feat/foo/bar)
+agent_one=$(awk '/^agent: / { print $2 }' <<<"$collision_one")
+agent_two=$(awk '/^agent: / { print $2 }' <<<"$collision_two")
+[[ -n $agent_one && -n $agent_two && $agent_one != "$agent_two" ]] || fail 'normalized branches received colliding agent names'
+[[ ${#agent_one} -le 32 && ${#agent_two} -le 32 ]] || fail 'agent name exceeded Herdr limit'
+[[ $agent_one == feat_foo_bar_* && $agent_two == feat_foo_bar_* ]] || fail 'agent name did not retain a useful branch prefix'
+(cd "$repo" && "$REAL_WT" remove -D --force feat/foo.bar)
+(cd "$repo" && "$REAL_WT" remove -D --force feat/foo/bar)
+pass 'agent names use workspace-derived unique suffixes'
+
+before=$(wc -l <"$state/wt.log")
+if (cd "$repo" && run_flow implement --plan "$TEST_ROOT/missing" feat/missing >"$state/out" 2>"$state/error"); then
+	fail 'missing plan preflight succeeded'
+fi
+[[ $(wc -l <"$state/wt.log") -eq $before ]] || fail 'preflight failure mutated through wt'
+grep -Fq 'readable, non-empty' "$state/error" || fail 'missing plan error was unclear'
+if (cd "$repo" && run_flow implement --plan "$plan" 'bad branch' >"$state/out" 2>"$state/error"); then
+	fail 'invalid branch preflight succeeded'
+fi
+[[ $(wc -l <"$state/wt.log") -eq $before ]] || fail 'invalid branch mutated through wt'
+pass 'implement preflight failures happen before mutation'
+
+if (cd "$repo" && env HERDR_ENV=1 STUB_FAIL_CREATE=1 STUB_STATE="$state" PATH="$bin:/usr/bin:/bin" "$FLOW" implement --plan "$plan" feat/partial >"$state/out" 2>"$state/error"); then
+	fail 'partial setup failure succeeded'
+fi
+partial="$repo/.worktrees/feat-partial"
+[[ -d $partial ]] || fail 'partial failure silently removed durable worktree'
+grep -Fq 'no automatic cleanup was attempted' "$state/error" || fail 'partial failure omitted recovery policy'
+grep -Fq "$partial" "$state/error" || fail 'partial failure omitted worktree path'
+(cd "$repo" && "$REAL_WT" remove -D --force feat/partial)
+pass 'partial failure reports durable state without hidden cleanup'
+
+if (cd "$target" && run_flow cleanup --preview feat/quoted >"$state/out" 2>"$state/error"); then
+	fail 'linked-worktree cleanup preview succeeded'
+fi
+grep -Fq 'must run from the main worktree' "$state/error" || fail 'main-only error was unclear'
+printf 'dirty main\n' >"$repo/main-untracked"
+if (cd "$repo" && HERDR_TARGET_PATH="$target" HERDR_TARGET_WORKSPACE=ws:opaque run_flow cleanup --preview feat/quoted >"$state/out" 2>"$state/error"); then
+	fail 'dirty main cleanup preview succeeded'
+fi
+grep -Fq 'main worktree is dirty' "$state/error" || fail 'dirty main error was unclear'
+rm "$repo/main-untracked"
+printf 'dirty\n' >"$target/untracked"
+if (cd "$repo" && HERDR_TARGET_PATH="$target" HERDR_TARGET_WORKSPACE=ws:opaque run_flow cleanup --preview feat/quoted >"$state/out" 2>"$state/error"); then
+	fail 'dirty cleanup preview succeeded'
+fi
+grep -Fq 'target worktree is dirty' "$state/error" || fail 'dirty target error was unclear'
+rm "$target/untracked"
+if (cd "$repo" && HERDR_WORKSPACE_ID=ws:opaque HERDR_TARGET_PATH="$target" HERDR_TARGET_WORKSPACE=ws:opaque run_flow cleanup --preview feat/quoted >"$state/out" 2>"$state/error"); then
+	fail 'current-workspace cleanup preview succeeded'
+fi
+grep -Fq 'refusing to close the current Herdr workspace' "$state/error" || fail 'current workspace error was unclear'
+pass 'cleanup is main-only and refuses dirty main, target, or current workspace'
+
+preview=$(cd "$repo" && HERDR_WORKSPACE_ID='' HERDR_TARGET_PATH="$target" HERDR_TARGET_WORKSPACE=ws:opaque run_flow cleanup --preview feat/quoted)
+grep -Fq 'herdr workspace close ws:opaque' <<<"$preview" || fail 'preview omitted workspace action'
+grep -Fq 'wt remove -D --force feat/quoted' <<<"$preview" || fail 'preview omitted wt action'
+[[ ! -e $state/workspace-closed ]] || fail 'preview closed workspace'
+if (cd "$repo" && run_flow cleanup feat/quoted >"$state/out" 2>"$state/error"); then
+	fail 'cleanup without merge acknowledgement succeeded'
+fi
+grep -Fq 'requires --merged or --preview' "$state/error" || fail 'acknowledgement error was unclear'
+pass 'cleanup preview is exact and merge acknowledgement is required'
+
+mkdir -p "$TEST_ROOT/fail-bin"
+cat >"$TEST_ROOT/fail-bin/git" <<'EOF'
+#!/usr/bin/env bash
+if [[ $* == *' pull --ff-only'* ]]; then exit 1; fi
+exec /usr/bin/git "$@"
+EOF
+chmod +x "$TEST_ROOT/fail-bin/git"
+if (cd "$repo" && env HERDR_ENV=1 STUB_STATE="$state" HERDR_TARGET_PATH="$target" HERDR_TARGET_WORKSPACE=ws:opaque PATH="$TEST_ROOT/fail-bin:$bin:/usr/bin:/bin" "$FLOW" cleanup --merged feat/quoted >"$state/out" 2>"$state/error"); then
+	fail 'upstream fast-forward failure succeeded'
+fi
+[[ -d $target ]] || fail 'pull failure removed target'
+[[ ! -e $state/workspace-closed ]] || fail 'pull failure closed workspace'
+grep -Fq 'could not fast-forward main' "$state/error" || fail 'pull failure error was unclear'
+pass 'upstream fast-forward failure precedes cleanup'
+
+cleanup=$(cd "$repo" && HERDR_TARGET_PATH="$target" HERDR_TARGET_WORKSPACE=ws:opaque run_flow cleanup --merged feat/quoted)
+[[ ! -e $target ]] || fail 'cleanup left worktree'
+! git -C "$repo" show-ref --verify --quiet refs/heads/feat/quoted || fail 'cleanup left branch'
+[[ -e $state/workspace-closed ]] || fail 'cleanup did not close workspace'
+grep -Fq 'cleanup complete: feat/quoted' <<<"$cleanup" || fail 'cleanup omitted completion result'
+grep -Fq 'remove -D --force feat/quoted' "$state/wt.log" || fail 'cleanup did not delegate removal to wt'
+pass 'cleanup closes workspace, delegates removal, prunes, and verifies'
+
+"$FLOW" help >"$state/help"
+grep -Fq 'implement --plan <path>' "$state/help" || fail 'help omitted implement interface'
+"$FLOW" completion zsh >"$state/completion"
+grep -Fq '#compdef herdr-flow' "$state/completion" || fail 'completion output was invalid'
+pass 'help and Zsh completion are available'
+
+printf '1..%d\n' "$passes"
