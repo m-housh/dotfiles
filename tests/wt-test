@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null && pwd -P)
+WT="$ROOT/env/.local/scripts/wt"
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf -- "$TEST_ROOT"' EXIT
+passes=0
+fail() { printf 'not ok - %s\n' "$*" >&2; exit 1; }
+pass() { passes=$((passes + 1)); printf 'ok - %s\n' "$1"; }
+
+repo="$TEST_ROOT/repo with spaces"
+mkdir -p "$repo"
+git -C "$repo" init -q -b main
+git -C "$repo" config user.name Test
+git -C "$repo" config user.email test@example.invalid
+git -C "$repo" config commit.gpgSign false
+printf 'initial\n' >"$repo/file"
+git -C "$repo" add file
+git -C "$repo" commit -qm initial
+
+path=$(cd "$repo" && "$WT" add feat/topic 2>"$TEST_ROOT/add-error")
+[[ $path == "$repo/.worktrees/feat-topic" ]] || fail "unexpected mapped path: $path"
+[[ $(git -C "$path" branch --show-current) == feat/topic ]] || fail 'new branch was not checked out'
+[[ $(wc -l < <(printf '%s\n' "$path")) -eq 1 ]] || fail 'add stdout was not one path'
+pass 'add creates and maps a branch path'
+
+(cd "$repo" && "$WT" remove -D --force feat/topic)
+[[ ! -e $path ]] || fail 'remove left worktree path'
+! git -C "$repo" show-ref --verify --quiet refs/heads/feat/topic || fail 'remove left branch'
+pass 'remove force-deletes the checked-out branch'
+
+git -C "$repo" branch feat/existing
+existing=$(cd "$repo" && "$WT" add feat/existing)
+[[ $(git -C "$existing" branch --show-current) == feat/existing ]] || fail 'existing branch was not checked out'
+(cd "$repo" && "$WT" remove --force feat/existing)
+git -C "$repo" show-ref --verify --quiet refs/heads/feat/existing || fail 'plain remove deleted branch'
+pass 'existing branch checkout and plain removal'
+
+if (cd "$repo" && "$WT" add --space feat/nope >"$TEST_ROOT/out" 2>"$TEST_ROOT/error"); then
+	fail 'removed --space add option succeeded'
+fi
+grep -Fq "unknown add option '--space'" "$TEST_ROOT/error" || fail 'removed add option error was unclear'
+if (cd "$repo" && "$WT" remove --space feat/existing >"$TEST_ROOT/out" 2>"$TEST_ROOT/error"); then
+	fail 'removed --space remove option succeeded'
+fi
+grep -Fq "unknown remove option '--space'" "$TEST_ROOT/error" || fail 'removed remove option error was unclear'
+pass 'removed Herdr option is rejected'
+
+if (cd "$repo" && "$WT" add 'bad name' >"$TEST_ROOT/out" 2>"$TEST_ROOT/error"); then
+	fail 'invalid branch succeeded'
+fi
+grep -Fq 'invalid branch or worktree name' "$TEST_ROOT/error" || fail 'invalid branch error was unclear'
+"$WT" help >"$TEST_ROOT/help"
+! grep -Fq -- '--space' "$TEST_ROOT/help" || fail 'help still mentions --space'
+"$WT" completion zsh >"$TEST_ROOT/completion"
+! grep -Fq -- '--space' "$TEST_ROOT/completion" || fail 'completion still mentions --space'
+grep -Fq -- '-D[Force-delete branch]' "$TEST_ROOT/completion" || fail 'completion omitted remove options'
+pass 'input, help, and completion reflect worktree-only ownership'
+
+(cd "$repo" && "$WT" prune)
+printf '1..%d\n' "$passes"

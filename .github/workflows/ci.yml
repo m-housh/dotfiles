@@ -21,6 +21,8 @@ env:
     runs/before/*
     runs/after/*
     runs/utils/run-handler
+    env/.local/scripts/wt
+    env/.local/scripts/herdr-flow
     env/.local/scripts/hypr/logging
     env/.local/scripts/hypr/webapp
     env/.local/scripts/hypr/uninstall-desktop-app

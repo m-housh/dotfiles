@@ -85,7 +85,11 @@ make_fixture() {
 #!/usr/bin/env bash
 printf 'wt completion\n'
 EOF
-	chmod +x -- "$source/env/.local/scripts/wt"
+	cat >"$source/env/.local/scripts/herdr-flow" <<'EOF'
+#!/usr/bin/env bash
+printf 'herdr-flow completion\n'
+EOF
+	chmod +x -- "$source/env/.local/scripts/wt" "$source/env/.local/scripts/herdr-flow"
 	cat >"$source/env/.local/scripts/utils/hpa/hpa.env" <<'EOF'
 HPA_DOCKER_IMAGE=test-image
 HPA_DOCKER_TAG=test-tag
@@ -217,6 +221,8 @@ integration_case() {
 	printf 'git package\n' >"$home/.pi/agent/git/cache/state"
 	printf 'npm package\n' >"$home/.pi/agent/npm/cache/state"
 	printf 'herdr state\n' >"$home/.pi/agent/extensions/herdr-agent-state.ts"
+	printf 'local extension\n' >"$home/.pi/agent/extensions/local-only.ts"
+	printf 'stale managed extension\n' >"$home/.pi/agent/extensions/herdr-flow.ts"
 	printf 'stale skill\n' >"$home/.pi/agent/skills/code-review/stale"
 	printf 'stale discovered skill\n' >"$home/.pi/agent/skills/discovered [new]/stale"
 	printf 'local skill\n' >"$home/.pi/agent/skills/local-only/SKILL.md"
@@ -252,8 +258,11 @@ integration_case() {
 	assert_file_contains "$home/.local/scripts/dev-env" 'Usage: dev-env'
 	assert_exists "$data/applications/icons/app.icon"
 	assert_file_contains "$home/.zsh/completions/_wt" 'wt completion'
+	assert_file_contains "$home/.zsh/completions/_herdr-flow" 'herdr-flow completion'
 	assert_file_contains "$home/.zsh/completions/_hpa" 'hpa completion'
-	assert_file_contains "$home/.pi/agent/AGENTS.md" 'wt add --space <branch> [base]'
+	assert_file_contains "$home/.pi/agent/AGENTS.md" 'herdr-flow implement --plan'
+	assert_file_contains "$home/.pi/agent/extensions/herdr-flow.ts" 'registerCommand("implement"'
+	assert_file_contains "$home/.pi/agent/extensions/local-only.ts" 'local extension'
 	assert_file_contains "$home/.pi/agent/skills/code-review/SKILL.md" 'name: code-review'
 	assert_file_contains "$home/.pi/agent/skills/simplify-refactor/references/checklist.md" 'Boundary check'
 	assert_file_contains "$home/.pi/agent/skills/discovered [new]/SKILL.md" 'discovered-without-manifest'
@@ -272,6 +281,7 @@ integration_case() {
 	assert_file_contains "$home/.pi/agent/git/cache/state" 'git package'
 	assert_file_contains "$home/.pi/agent/npm/cache/state" 'npm package'
 	assert_file_contains "$home/.pi/agent/extensions/herdr-agent-state.ts" 'herdr state'
+	assert_file_contains "$home/.pi/agent/extensions/local-only.ts" 'local extension'
 	if grep -Fq 'zsh ' "$case_root/invocations"; then
 		fail '--no-reload invoked zsh'
 	fi
@@ -285,6 +295,8 @@ integration_case() {
 	assert_exists "$home/.pi/agent/skills/local-only/SKILL.md"
 	assert_exists "$home/.pi/agent/themes/local.json"
 	assert_exists "$home/.pi/agent/extensions/herdr-agent-state.ts"
+	assert_exists "$home/.pi/agent/extensions/local-only.ts"
+	assert_file_contains "$home/.pi/agent/extensions/herdr-flow.ts" 'registerCommand("cleanup"'
 	pass_count=$((pass_count + 1))
 	printf 'ok - automatic, replacement, merge, exact-file, path, and idempotency behavior\n'
 }
@@ -391,7 +403,8 @@ container_case() {
 	assert_exists "$home/.local/scripts/hypr/utils/stale"
 	assert_exists "$home/.local/scripts/local-only"
 	assert_absent "$home/.local/scripts/dev-env"
-	assert_file_contains "$home/.pi/agent/AGENTS.md" 'wt add --space <branch> [base]'
+	assert_file_contains "$home/.pi/agent/AGENTS.md" 'herdr-flow implement --plan'
+	assert_file_contains "$home/.pi/agent/extensions/herdr-flow.ts" 'registerCommand("implement"'
 	assert_file_contains "$home/.pi/agent/skills/test-plan/SKILL.md" 'name: test-plan'
 	assert_file_contains "$home/.pi/agent/skills/simplify-refactor/references/checklist.md" 'Boundary check'
 	assert_file_contains "$home/.pi/agent/themes/catppuccin-mocha.json" 'catppuccin-mocha'
