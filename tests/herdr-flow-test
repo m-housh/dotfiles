@@ -75,7 +75,20 @@ grep -Fq 'Second line with "quotes" and * glob.' "$state/prompt" || fail 'prompt
 [[ -f $plan ]] || fail 'implement changed the source plan'
 grep -Fq 'add feat/quoted' "$state/wt.log" || fail 'implement did not delegate add to wt'
 grep -Eq 'agent start feat_quoted_[a-f0-9]{8} --kind pi --pane pane:opaque' "$state/herdr.log" || fail 'agent start delegation was incorrect'
-pass 'implement delegates safely and submits the complete plan'
+pass 'existing plan delegates safely and submits the complete plan'
+
+missing_output=$(cd "$repo" && run_flow implement --plan PLAN.md feat/missing)
+missing_target="$repo/.worktrees/feat-missing"
+[[ -d $missing_target ]] || fail 'missing relative plan did not create delegated worktree'
+grep -Fq 'workspace: ws:opaque' <<<"$missing_output" || fail 'missing relative plan omitted workspace ID'
+grep -Fq "$missing_target/PLAN.md" "$state/prompt" || fail 'missing relative prompt omitted worktree plan path'
+grep -Fq 'First write that plan file' "$state/prompt" || fail 'missing relative prompt did not request plan creation'
+grep -Fq 'Do not claim the plan was already approved' "$state/prompt" || fail 'missing relative prompt implied approval'
+grep -Fq 'user may review and steer' "$state/prompt" || fail 'missing relative prompt omitted review guidance'
+[[ ! -e $repo/PLAN.md ]] || fail 'missing relative plan was created in the main worktree'
+grep -Fq 'add feat/missing' "$state/wt.log" || fail 'missing relative plan did not delegate add to wt'
+(cd "$repo" && "$REAL_WT" remove -D --force feat/missing)
+pass 'missing relative plan path starts worktree and asks agent to create it'
 
 collision_one=$(cd "$repo" && STUB_WORKSPACE_ID=ws:collision-one run_flow implement --plan "$plan" feat/foo.bar)
 collision_two=$(cd "$repo" && STUB_WORKSPACE_ID=ws:collision-two run_flow implement --plan "$plan" feat/foo/bar)
@@ -89,11 +102,17 @@ agent_two=$(awk '/^agent: / { print $2 }' <<<"$collision_two")
 pass 'agent names use workspace-derived unique suffixes'
 
 before=$(wc -l <"$state/wt.log")
-if (cd "$repo" && run_flow implement --plan "$TEST_ROOT/missing" feat/missing >"$state/out" 2>"$state/error"); then
-	fail 'missing plan preflight succeeded'
+if (cd "$repo" && run_flow implement --plan "$TEST_ROOT/missing" feat/absolute-missing >"$state/out" 2>"$state/error"); then
+	fail 'missing absolute plan preflight succeeded'
 fi
-[[ $(wc -l <"$state/wt.log") -eq $before ]] || fail 'preflight failure mutated through wt'
-grep -Fq 'readable, non-empty' "$state/error" || fail 'missing plan error was unclear'
+[[ $(wc -l <"$state/wt.log") -eq $before ]] || fail 'missing absolute failure mutated through wt'
+grep -Fq 'absolute plan paths must be readable source files' "$state/error" || fail 'missing absolute plan error was unclear'
+: >"$TEST_ROOT/empty-plan.md"
+if (cd "$repo" && run_flow implement --plan "$TEST_ROOT/empty-plan.md" feat/empty-plan >"$state/out" 2>"$state/error"); then
+	fail 'empty plan preflight succeeded'
+fi
+[[ $(wc -l <"$state/wt.log") -eq $before ]] || fail 'empty plan failure mutated through wt'
+grep -Fq 'readable, non-empty' "$state/error" || fail 'empty plan error was unclear'
 if (cd "$repo" && run_flow implement --plan "$plan" 'bad branch' >"$state/out" 2>"$state/error"); then
 	fail 'invalid branch preflight succeeded'
 fi
@@ -169,6 +188,9 @@ pass 'cleanup closes workspace, delegates removal, prunes, and verifies'
 grep -Fq 'implement --plan <path>' "$state/help" || fail 'help omitted implement interface'
 "$FLOW" completion zsh >"$state/completion"
 grep -Fq '#compdef herdr-flow' "$state/completion" || fail 'completion output was invalid'
-pass 'help and Zsh completion are available'
+grep -Fq 'missing relative plan path to create' "$state/completion" || fail 'completion omitted plan path creation wording'
+grep -Fq 'missing relative path' "$ROOT/env/.pi/agent/extensions/herdr-flow.ts" || fail 'extension omitted clearer plan wording'
+grep -Fq '"--plan", selectedPlanPath' "$ROOT/env/.pi/agent/extensions/herdr-flow.ts" || fail 'extension did not pass the selected plan path'
+pass 'help, Zsh completion, and UI wording are available'
 
 printf '1..%d\n' "$passes"
