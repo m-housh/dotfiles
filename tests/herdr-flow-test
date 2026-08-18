@@ -13,11 +13,12 @@ pass() { passes=$((passes + 1)); printf 'ok - %s\n' "$1"; }
 bin="$TEST_ROOT/bin"
 state="$TEST_ROOT/state"
 mkdir -p "$bin" "$state"
-cat >"$bin/wt" <<EOF
+cat >"$bin/wt" <<'EOF'
 #!/usr/bin/env bash
-printf '%q ' "\$@" >>"\$STUB_STATE/wt.log"
-printf '\n' >>"\$STUB_STATE/wt.log"
-exec "$REAL_WT" "\$@"
+printf '%q ' "$@" >>"$STUB_STATE/legacy-wt.log"
+printf '\n' >>"$STUB_STATE/legacy-wt.log"
+printf 'legacy wt does not support these arguments\n' >&2
+exit 64
 EOF
 cat >"$bin/herdr" <<'EOF'
 #!/usr/bin/env bash
@@ -73,9 +74,9 @@ grep -Fq 'pane: pane:opaque' <<<"$output" || fail 'implement omitted pane ID'
 grep -Fq 'Change `a b`; keep $(touch /tmp/never) literal.' "$state/prompt" || fail 'prompt changed metacharacters'
 grep -Fq 'Second line with "quotes" and * glob.' "$state/prompt" || fail 'prompt omitted plan content'
 [[ -f $plan ]] || fail 'implement changed the source plan'
-grep -Fq 'add feat/quoted' "$state/wt.log" || fail 'implement did not delegate add to wt'
+[[ ! -e $state/legacy-wt.log ]] || fail 'implement used the shadowing legacy wt'
 grep -Eq 'agent start feat_quoted_[a-f0-9]{8} --kind pi --pane pane:opaque' "$state/herdr.log" || fail 'agent start delegation was incorrect'
-pass 'existing plan delegates safely and submits the complete plan'
+pass 'existing plan uses managed wt and submits the complete plan despite PATH shadowing'
 
 missing_output=$(cd "$repo" && run_flow implement --plan PLAN.md feat/missing)
 missing_target="$repo/.worktrees/feat-missing"
@@ -86,7 +87,7 @@ grep -Fq 'First write that plan file' "$state/prompt" || fail 'missing relative 
 grep -Fq 'Do not claim the plan was already approved' "$state/prompt" || fail 'missing relative prompt implied approval'
 grep -Fq 'user may review and steer' "$state/prompt" || fail 'missing relative prompt omitted review guidance'
 [[ ! -e $repo/PLAN.md ]] || fail 'missing relative plan was created in the main worktree'
-grep -Fq 'add feat/missing' "$state/wt.log" || fail 'missing relative plan did not delegate add to wt'
+[[ ! -e $state/legacy-wt.log ]] || fail 'missing relative plan used the shadowing legacy wt'
 (cd "$repo" && "$REAL_WT" remove -D --force feat/missing)
 pass 'missing relative plan path starts worktree and asks agent to create it'
 
@@ -101,22 +102,22 @@ agent_two=$(awk '/^agent: / { print $2 }' <<<"$collision_two")
 (cd "$repo" && "$REAL_WT" remove -D --force feat/foo/bar)
 pass 'agent names use workspace-derived unique suffixes'
 
-before=$(wc -l <"$state/wt.log")
+before=$(git -C "$repo" worktree list --porcelain | grep -c '^worktree ')
 if (cd "$repo" && run_flow implement --plan "$TEST_ROOT/missing" feat/absolute-missing >"$state/out" 2>"$state/error"); then
 	fail 'missing absolute plan preflight succeeded'
 fi
-[[ $(wc -l <"$state/wt.log") -eq $before ]] || fail 'missing absolute failure mutated through wt'
+[[ $(git -C "$repo" worktree list --porcelain | grep -c '^worktree ') -eq $before ]] || fail 'missing absolute failure mutated through wt'
 grep -Fq 'absolute plan paths must be readable source files' "$state/error" || fail 'missing absolute plan error was unclear'
 : >"$TEST_ROOT/empty-plan.md"
 if (cd "$repo" && run_flow implement --plan "$TEST_ROOT/empty-plan.md" feat/empty-plan >"$state/out" 2>"$state/error"); then
 	fail 'empty plan preflight succeeded'
 fi
-[[ $(wc -l <"$state/wt.log") -eq $before ]] || fail 'empty plan failure mutated through wt'
+[[ $(git -C "$repo" worktree list --porcelain | grep -c '^worktree ') -eq $before ]] || fail 'empty plan failure mutated through wt'
 grep -Fq 'readable, non-empty' "$state/error" || fail 'empty plan error was unclear'
 if (cd "$repo" && run_flow implement --plan "$plan" 'bad branch' >"$state/out" 2>"$state/error"); then
 	fail 'invalid branch preflight succeeded'
 fi
-[[ $(wc -l <"$state/wt.log") -eq $before ]] || fail 'invalid branch mutated through wt'
+[[ $(git -C "$repo" worktree list --porcelain | grep -c '^worktree ') -eq $before ]] || fail 'invalid branch mutated through wt'
 pass 'implement preflight failures happen before mutation'
 
 if (cd "$repo" && env HERDR_ENV=1 STUB_FAIL_CREATE=1 STUB_STATE="$state" PATH="$bin:/usr/bin:/bin" "$FLOW" implement --plan "$plan" feat/partial >"$state/out" 2>"$state/error"); then
@@ -153,7 +154,8 @@ pass 'cleanup is main-only and refuses dirty main, target, or current workspace'
 
 preview=$(cd "$repo" && HERDR_WORKSPACE_ID='' HERDR_TARGET_PATH="$target" HERDR_TARGET_WORKSPACE=ws:opaque run_flow cleanup --preview feat/quoted)
 grep -Fq 'herdr workspace close ws:opaque' <<<"$preview" || fail 'preview omitted workspace action'
-grep -Fq 'wt remove -D --force feat/quoted' <<<"$preview" || fail 'preview omitted wt action'
+grep -Fq "$REAL_WT remove -D --force feat/quoted" <<<"$preview" || fail 'preview did not show the managed wt removal command'
+grep -Fq "$REAL_WT prune" <<<"$preview" || fail 'preview did not show the managed wt prune command'
 [[ ! -e $state/workspace-closed ]] || fail 'preview closed workspace'
 if (cd "$repo" && run_flow cleanup feat/quoted >"$state/out" 2>"$state/error"); then
 	fail 'cleanup without merge acknowledgement succeeded'
@@ -176,13 +178,36 @@ fi
 grep -Fq 'could not fast-forward main' "$state/error" || fail 'pull failure error was unclear'
 pass 'upstream fast-forward failure precedes cleanup'
 
+printf 'squash-diverged\n' >"$target/feature-file"
+git -C "$target" add feature-file
+git -C "$target" commit -qm 'feature commit absent from main'
+mkdir -p "$TEST_ROOT/remove-fail-bin"
+cat >"$TEST_ROOT/remove-fail-bin/git" <<'EOF'
+#!/usr/bin/env bash
+if [[ $* == 'worktree remove '* ]]; then exit 1; fi
+exec /usr/bin/git "$@"
+EOF
+chmod +x "$TEST_ROOT/remove-fail-bin/git"
+if (cd "$repo" && env HERDR_ENV=1 STUB_STATE="$state" HERDR_TARGET_PATH="$target" HERDR_TARGET_WORKSPACE=ws:opaque PATH="$TEST_ROOT/remove-fail-bin:$bin:/usr/bin:/bin" "$FLOW" cleanup --merged feat/quoted >"$state/out" 2>"$state/error"); then
+	fail 'managed wt removal failure succeeded'
+fi
+[[ -d $target ]] || fail 'removal failure lost the target worktree'
+git -C "$repo" show-ref --verify --quiet refs/heads/feat/quoted || fail 'removal failure lost the local branch'
+[[ -e $state/workspace-closed ]] || fail 'removal failure did not record the closed workspace'
+grep -Fq 'durable state after the failure' "$state/error" || fail 'removal failure omitted durable-state heading'
+grep -Fq "worktree: present at $target" "$state/error" || fail 'removal failure omitted remaining worktree'
+grep -Fq 'branch: present (feat/quoted)' "$state/error" || fail 'removal failure omitted remaining branch'
+grep -Fq 'workspace: closed (ws:opaque)' "$state/error" || fail 'removal failure omitted closed workspace'
+rm -f "$state/workspace-closed"
+pass 'removal failure reports all durable state and does not claim success'
+
 cleanup=$(cd "$repo" && HERDR_TARGET_PATH="$target" HERDR_TARGET_WORKSPACE=ws:opaque run_flow cleanup --merged feat/quoted)
 [[ ! -e $target ]] || fail 'cleanup left worktree'
-! git -C "$repo" show-ref --verify --quiet refs/heads/feat/quoted || fail 'cleanup left branch'
+! git -C "$repo" show-ref --verify --quiet refs/heads/feat/quoted || fail 'cleanup left squash-diverged branch'
 [[ -e $state/workspace-closed ]] || fail 'cleanup did not close workspace'
+[[ ! -e $state/legacy-wt.log ]] || fail 'cleanup used the shadowing legacy wt'
 grep -Fq 'cleanup complete: feat/quoted' <<<"$cleanup" || fail 'cleanup omitted completion result'
-grep -Fq 'remove -D --force feat/quoted' "$state/wt.log" || fail 'cleanup did not delegate removal to wt'
-pass 'cleanup closes workspace, delegates removal, prunes, and verifies'
+pass 'cleanup uses managed wt to force-delete a squash-diverged branch and verifies removal'
 
 "$FLOW" help >"$state/help"
 grep -Fq 'implement --plan <path>' "$state/help" || fail 'help omitted implement interface'

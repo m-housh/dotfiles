@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+script_directory=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null && pwd -P)
+readonly script_directory
+readonly wt_command="$script_directory/wt"
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -32,6 +36,10 @@ fail() {
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "required command not found in PATH: $1"
+}
+
+require_managed_wt() {
+  [[ -f $wt_command && -x $wt_command ]] || fail "managed wt is not executable: $wt_command"
 }
 
 require_herdr() {
@@ -118,7 +126,7 @@ implement_task() {
   base=${positional[1]:-main}
 
   require_herdr
-  require_command wt
+  require_managed_wt
   require_command sha256sum
   local root existing plan prompt path response workspace_id pane_id agent_name plan_mode worktree_plan_path
   root=$(require_main_worktree) || return
@@ -156,9 +164,9 @@ EOF
   fi
 
   if [[ ${#positional[@]} -eq 2 ]]; then
-    path=$(wt add "$branch" "$base") || recovery_failure "wt add failed"
+    path=$("$wt_command" add "$branch" "$base") || recovery_failure "managed wt add failed"
   else
-    path=$(wt add "$branch") || recovery_failure "wt add failed"
+    path=$("$wt_command" add "$branch") || recovery_failure "managed wt add failed"
   fi
   path=$(canonical_directory "$path")
   if [[ $plan_mode == create ]]; then
@@ -222,12 +230,35 @@ cleanup_context() {
     '{root: $root, path: $path, workspace: $workspace}'
 }
 
+cleanup_mutation_failure() {
+  local message=$1 branch=$2 path=$3 workspace_id=$4
+  printf 'herdr-flow: cleanup stopped: %s\n' "$message" >&2
+  printf 'herdr-flow: durable state after the failure:\n' >&2
+  if [[ -d $path ]]; then
+    printf '  worktree: present at %s\n' "$path" >&2
+  else
+    printf '  worktree: removed from %s\n' "$path" >&2
+  fi
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    printf '  branch: present (%s)\n' "$branch" >&2
+  else
+    printf '  branch: removed (%s)\n' "$branch" >&2
+  fi
+  if [[ -n $workspace_id ]]; then
+    printf '  workspace: closed (%s)\n' "$workspace_id" >&2
+  else
+    printf '  workspace: none\n' >&2
+  fi
+  printf 'Inspect with: git worktree list; git branch --list; herdr workspace list\n' >&2
+  exit 1
+}
+
 cleanup_task() {
   [[ $# -eq 2 ]] || fail "cleanup requires --merged or --preview and exactly one branch"
   local mode=$1 branch=$2
   [[ $mode == --merged || $mode == --preview ]] || fail "cleanup requires --merged or --preview"
   require_herdr
-  require_command wt
+  require_managed_wt
 
   local context root path workspace_id upstream
   context=$(cleanup_context "$branch") || exit $?
@@ -240,15 +271,21 @@ cleanup_task() {
   printf 'branch: %s\nworktree: %s\nworkspace: %s\n' "$branch" "$path" "${workspace_id:-none}"
   printf 'actions:\n  git pull --ff-only (%s from %s)\n' "$root" "$upstream"
   [[ -z $workspace_id ]] || printf '  herdr workspace close %s\n' "$workspace_id"
-  printf '  wt remove -D --force %s\n  wt prune\n' "$branch"
+  printf '  '
+  printf '%q ' "$wt_command" remove -D --force "$branch"
+  printf '\n  '
+  printf '%q ' "$wt_command" prune
+  printf '\n'
   [[ $mode == --preview ]] && return 0
 
   git -C "$root" pull --ff-only || fail "could not fast-forward main from $upstream; no cleanup performed"
   if [[ -n $workspace_id ]]; then
     herdr workspace close "$workspace_id" >/dev/null || fail "failed to close Herdr workspace: $workspace_id"
   fi
-  wt remove -D --force "$branch" || fail "failed to remove worktree through wt: $path"
-  wt prune || fail "failed to prune worktree metadata"
+  "$wt_command" remove -D --force "$branch" || \
+    cleanup_mutation_failure "managed wt could not remove the worktree and branch" "$branch" "$path" "$workspace_id"
+  "$wt_command" prune || \
+    cleanup_mutation_failure "managed wt could not prune worktree metadata" "$branch" "$path" "$workspace_id"
 
   [[ -z $(worktree_path_for_branch "$branch") ]] || fail "verification failed: worktree still exists for $branch"
   ! git show-ref --verify --quiet "refs/heads/$branch" || fail "verification failed: local branch still exists: $branch"
