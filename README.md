@@ -134,9 +134,11 @@ plan file:
 herdr-flow implement --plan /path/to/approved-plan.md feat/example [base]
 ```
 
-It validates all inputs before mutation, delegates worktree creation to `wt`,
-creates a Herdr workspace, starts a named Pi agent, sends the complete plan, and
-focuses the workspace only after setup succeeds. It does not move, copy, or
+It validates all inputs before mutation, delegates worktree creation to the
+managed `wt` installed beside `herdr-flow`, creates a Herdr workspace, starts a
+named Pi agent, sends the complete plan, and focuses the workspace only after
+setup succeeds. Resolving the sibling command directly prevents an older `wt`
+earlier in `PATH` from changing task behavior. It does not move, copy, or
 delete the plan file. In Pi, `/implement feat/example [base]` asks for that path
 and shows the resolved inputs before it delegates to the same command.
 
@@ -151,8 +153,12 @@ herdr-flow cleanup --merged feat/example
 Cleanup requires both main and the target worktree to be clean, and refuses
 missing, ambiguous, current, and main targets. It first fast-forwards local
 `main` from its configured upstream, then closes the matching
-Herdr workspace, delegates worktree and branch removal to `wt`, prunes stale
-metadata, and verifies removal. `/cleanup feat/example` provides the same preview
+Herdr workspace, delegates worktree and branch removal to the sibling managed
+`wt`, prunes stale metadata, and verifies removal. If mutation fails after the
+workspace closes, the error lists the durable workspace, worktree, and branch
+state left behind. Full and container installation also remove exact known
+historical managed copies at `~/.local/bin/wt`; unrecognized files at that path
+are preserved. `/cleanup feat/example` provides the same preview
 and confirmation. From a linked worktree, `/cleanup` only prints the commands to
 run later from main.
 

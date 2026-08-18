@@ -124,6 +124,16 @@ printf ' <%s>' "$@" >>"$INVOCATIONS"
 printf '\n' >>"$INVOCATIONS"
 EOF
 	chmod +x -- "$fake_bin/git"
+	cat >"$fake_bin/sha256sum" <<'EOF'
+#!/usr/bin/env bash
+file=${@: -1}
+if grep -Fq 'known historical managed wt fixture' "$file" 2>/dev/null; then
+	printf 'abca656e8179e5fcf1f28bbcab69f4a3e5cf9680108e274461ceb4167c676673  %s\n' "$file"
+else
+	exec /usr/bin/sha256sum "$@"
+fi
+EOF
+	chmod +x -- "$fake_bin/sha256sum"
 }
 
 prepare_case() {
@@ -185,6 +195,8 @@ integration_case() {
 		"$config/zsh/functions" \
 		"$config/zsh/plugins" \
 		"$home/.local/scripts/hypr/utils" \
+		"$home/.local/bin" \
+		"$home/.local/other" \
 		"$home/pkgbuilds/managed-pkg" \
 		"$home/.pi/agent/skills/code-review" \
 		"$home/.pi/agent/skills/discovered [new]" \
@@ -209,6 +221,8 @@ integration_case() {
 	printf 'personal\n' >"$config/zsh/personal.env"
 	printf 'stale nested\n' >"$home/.local/scripts/hypr/utils/stale"
 	printf 'local script\n' >"$home/.local/scripts/local-only"
+	printf 'known historical managed wt fixture\n' >"$home/.local/bin/wt"
+	printf 'known historical managed wt fixture\n' >"$home/.local/other/wt"
 	printf 'stale pkg\n' >"$home/pkgbuilds/managed-pkg/stale"
 	printf 'old guidance\n' >"$home/.pi/agent/AGENTS.md"
 	printf '{\n  "theme": "local",\n  "provider": "machine"\n}\n' >"$home/.pi/agent/settings.json"
@@ -253,6 +267,8 @@ integration_case() {
 	assert_exists "$config/zsh/personal.env"
 	assert_absent "$home/.local/scripts/hypr/utils/stale"
 	assert_exists "$home/.local/scripts/local-only"
+	assert_absent "$home/.local/bin/wt"
+	assert_exists "$home/.local/other/wt"
 	assert_absent "$home/pkgbuilds/managed-pkg/stale"
 	assert_file_contains "$home/.tmux.conf" tmux
 	assert_file_contains "$home/.local/scripts/dev-env" 'Usage: dev-env'
@@ -522,6 +538,20 @@ broken_nested_pi_source_case() {
 	printf 'ok - broken nested Pi skill link is rejected before runtime mutation\n'
 }
 
+legacy_wt_preservation_case() {
+	local case_root home
+	case_root=$(prepare_case legacy-wt-preservation)
+	home="$case_root/home [test]"
+	mkdir -p -- "$home/.local/bin"
+	printf 'user-owned wt\n' >"$home/.local/bin/wt"
+
+	run_installer "$case_root" container >"$case_root/output"
+	assert_file_contains "$home/.local/bin/wt" 'user-owned wt'
+	grep -Fq 'preserve unrecognized legacy wt path' "$case_root/output" || fail 'unrecognized legacy wt preservation was not reported'
+	pass_count=$((pass_count + 1))
+	printf 'ok - legacy wt migration preserves unrecognized files\n'
+}
+
 missing_source_case() {
 	local case_root home
 	case_root=$(prepare_case missing-source)
@@ -547,5 +577,6 @@ wrapper_case
 missing_pi_source_case
 symlinked_pi_resource_case
 broken_nested_pi_source_case
+legacy_wt_preservation_case
 missing_source_case
 printf '1..%d\n' "$pass_count"

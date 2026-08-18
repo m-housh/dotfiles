@@ -318,6 +318,28 @@ install_explicit_mappings() {
 	run mkdir -p -- "$HOME/Pictures" "$XDG_DATA_HOME/clipse/tmp_files"
 }
 
+migrate_legacy_wt() {
+	local legacy_wt="$HOME/.local/bin/wt" checksum
+	[[ -e $legacy_wt || -L $legacy_wt ]] || return 0
+
+	if [[ ! -f $legacy_wt || -L $legacy_wt ]]; then
+		log_action "preserve unrecognized legacy wt path: $legacy_wt"
+		return 0
+	fi
+	checksum=$(sha256sum -- "$legacy_wt")
+	checksum=${checksum%% *}
+	case $checksum in
+	b01a1d6738b691b88b1a65d90629b3c9ee418bcb4eda71750ba6eca019bfb5a1 | \
+	abca656e8179e5fcf1f28bbcab69f4a3e5cf9680108e274461ceb4167c676673 | \
+	d41e89e6b3763038d7ba76bc769874990fa7bae466bbca6b95e71a29fd15965b | \
+	a66353816dcfddec6db4ceb3fd911e205a1a1deaaa4b3c1158db0dc7e74e2173)
+		validate_destination "$legacy_wt"
+		run rm -f -- "$legacy_wt"
+		;;
+	*) log_action "preserve unrecognized legacy wt path: $legacy_wt" ;;
+	esac
+}
+
 install_container_environment() {
 	local index
 
@@ -389,6 +411,7 @@ install_full_environment() {
 	install_pi_environment
 	install_config_directories
 	install_explicit_mappings
+	migrate_legacy_wt
 	generate_completions
 	reload_services
 }
@@ -426,6 +449,7 @@ main() {
 	container)
 		install_pi_environment
 		install_container_environment
+		migrate_legacy_wt
 		;;
 	esac
 }
