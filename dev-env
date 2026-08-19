@@ -213,15 +213,19 @@ install_pi_environment() {
 	local source_root="$DEV_ENV_ROOT/env/.pi/agent"
 	local destination_root="$HOME/.pi/agent"
 	local source
-	local -a managed_skills=() managed_themes=()
+	local -a managed_prompts=() managed_skills=() managed_themes=()
 
 	# Discover and validate every managed source before mutating the runtime.
 	source_real_file_exists "$source_root/AGENTS.md"
 	source_real_file_exists "$source_root/settings.json"
 	source_real_file_exists "$source_root/extensions/herdr-flow.ts"
+	source_directory_exists "$source_root/prompts"
 	source_directory_exists "$source_root/skills"
 	source_directory_exists "$source_root/themes"
 
+	while IFS= read -r -d '' source; do
+		managed_prompts+=("$source")
+	done < <(find "$source_root/prompts" -mindepth 1 -maxdepth 1 -print0)
 	while IFS= read -r -d '' source; do
 		managed_skills+=("$source")
 	done < <(find "$source_root/skills" -mindepth 1 -maxdepth 1 -print0)
@@ -229,6 +233,9 @@ install_pi_environment() {
 		managed_themes+=("$source")
 	done < <(find "$source_root/themes" -mindepth 1 -maxdepth 1 -print0)
 
+	for source in "${managed_prompts[@]}"; do
+		source_real_file_exists "$source"
+	done
 	for source in "${managed_skills[@]}"; do
 		validate_pi_skill_source "$source"
 	done
@@ -239,6 +246,7 @@ install_pi_environment() {
 
 	copy_file "$source_root/AGENTS.md" "$destination_root/AGENTS.md"
 	copy_file "$source_root/extensions/herdr-flow.ts" "$destination_root/extensions/herdr-flow.ts"
+	replace_entry_sources "$destination_root/prompts" "${managed_prompts[@]}"
 	replace_entry_sources "$destination_root/skills" "${managed_skills[@]}"
 	replace_entry_sources "$destination_root/themes" "${managed_themes[@]}"
 

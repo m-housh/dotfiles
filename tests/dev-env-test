@@ -161,8 +161,9 @@ run_installer() {
 prepare_preserved_pi_runtime() {
 	local case_root=$1 home
 	home="$case_root/home [test]"
-	mkdir -p -- "$home/.pi/agent/skills/discovered [new]" "$home/.pi/agent/themes"
+	mkdir -p -- "$home/.pi/agent/prompts" "$home/.pi/agent/skills/discovered [new]" "$home/.pi/agent/themes"
 	printf 'keep guidance\n' >"$home/.pi/agent/AGENTS.md"
+	printf 'keep prompt\n' >"$home/.pi/agent/prompts/plan.md"
 	printf 'keep discovered skill\n' >"$home/.pi/agent/skills/discovered [new]/SKILL.md"
 	printf 'keep theme\n' >"$home/.pi/agent/themes/discovered new.json"
 	printf '{\n  "theme": "keep-settings"\n}\n' >"$home/.pi/agent/settings.json"
@@ -173,6 +174,7 @@ assert_preserved_pi_runtime() {
 	local case_root=$1 home
 	home="$case_root/home [test]"
 	assert_file_contains "$home/.pi/agent/AGENTS.md" 'keep guidance'
+	assert_file_contains "$home/.pi/agent/prompts/plan.md" 'keep prompt'
 	assert_file_contains "$home/.pi/agent/skills/discovered [new]/SKILL.md" 'keep discovered skill'
 	assert_file_contains "$home/.pi/agent/themes/discovered new.json" 'keep theme'
 	cmp -s -- "$case_root/expected-settings" "$home/.pi/agent/settings.json" || fail 'existing Pi settings changed after preflight failure'
@@ -205,7 +207,8 @@ integration_case() {
 		"$home/.pi/agent/sessions/session-1" \
 		"$home/.pi/agent/git/cache" \
 		"$home/.pi/agent/npm/cache" \
-		"$home/.pi/agent/extensions"
+		"$home/.pi/agent/extensions" \
+		"$home/.pi/agent/prompts"
 	printf 'stale\n' >"$config/new [feature]/stale"
 	printf 'session\n' >"$config/herdr/sessions/live"
 	printf 'lock\n' >"$config/herdr/.plugins.lock"
@@ -237,6 +240,8 @@ integration_case() {
 	printf 'herdr state\n' >"$home/.pi/agent/extensions/herdr-agent-state.ts"
 	printf 'local extension\n' >"$home/.pi/agent/extensions/local-only.ts"
 	printf 'stale managed extension\n' >"$home/.pi/agent/extensions/herdr-flow.ts"
+	printf 'stale prompt\n' >"$home/.pi/agent/prompts/plan.md"
+	printf 'local prompt\n' >"$home/.pi/agent/prompts/local.md"
 	printf 'stale skill\n' >"$home/.pi/agent/skills/code-review/stale"
 	printf 'stale discovered skill\n' >"$home/.pi/agent/skills/discovered [new]/stale"
 	printf 'local skill\n' >"$home/.pi/agent/skills/local-only/SKILL.md"
@@ -279,6 +284,8 @@ integration_case() {
 	assert_file_contains "$home/.pi/agent/AGENTS.md" 'herdr-flow implement --plan'
 	assert_file_contains "$home/.pi/agent/extensions/herdr-flow.ts" 'registerCommand("implement"'
 	assert_file_contains "$home/.pi/agent/extensions/local-only.ts" 'local extension'
+	assert_file_contains "$home/.pi/agent/prompts/plan.md" 'Plan this work without making changes'
+	assert_file_contains "$home/.pi/agent/prompts/local.md" 'local prompt'
 	assert_file_contains "$home/.pi/agent/skills/code-review/SKILL.md" 'name: code-review'
 	assert_file_contains "$home/.pi/agent/skills/simplify-refactor/references/checklist.md" 'Boundary check'
 	assert_file_contains "$home/.pi/agent/skills/discovered [new]/SKILL.md" 'discovered-without-manifest'
@@ -308,6 +315,7 @@ integration_case() {
 	assert_exists "$config/hypr/local.conf"
 	assert_exists "$config/zsh/history"
 	cmp -s -- "$case_root/expected-settings" "$home/.pi/agent/settings.json" || fail 'second install changed Pi settings'
+	assert_exists "$home/.pi/agent/prompts/local.md"
 	assert_exists "$home/.pi/agent/skills/local-only/SKILL.md"
 	assert_exists "$home/.pi/agent/themes/local.json"
 	assert_exists "$home/.pi/agent/extensions/herdr-agent-state.ts"
@@ -326,6 +334,7 @@ dry_run_case() {
 	assert_absent "$case_root/home [test]/.pi"
 	assert_absent "$case_root/xdg config/new [feature]"
 	grep -Fq '[dry-run]' "$case_root/plan" || fail 'dry-run did not print a plan'
+	grep -Fq '.pi/agent/prompts/plan.md' "$case_root/plan" || fail 'dry-run omitted managed Pi prompt'
 	grep -Fq '.pi/agent/skills/discovered\ \[new\]' "$case_root/plan" || fail 'dry-run omitted discovered Pi skill'
 	grep -Fq '.pi/agent/themes/discovered\ new.json' "$case_root/plan" || fail 'dry-run omitted discovered Pi theme'
 	grep -Fq 'zsh -l' "$case_root/plan" || fail 'dry-run omitted planned shell reload'
@@ -421,6 +430,7 @@ container_case() {
 	assert_absent "$home/.local/scripts/dev-env"
 	assert_file_contains "$home/.pi/agent/AGENTS.md" 'herdr-flow implement --plan'
 	assert_file_contains "$home/.pi/agent/extensions/herdr-flow.ts" 'registerCommand("implement"'
+	assert_file_contains "$home/.pi/agent/prompts/plan.md" 'Plan this work without making changes'
 	assert_file_contains "$home/.pi/agent/skills/test-plan/SKILL.md" 'name: test-plan'
 	assert_file_contains "$home/.pi/agent/skills/simplify-refactor/references/checklist.md" 'Boundary check'
 	assert_file_contains "$home/.pi/agent/themes/catppuccin-mocha.json" 'catppuccin-mocha'
