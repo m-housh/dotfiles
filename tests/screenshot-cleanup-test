@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null && pwd -P)
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf -- "$TEST_ROOT"' EXIT
+
+fail() {
+	printf 'not ok - %s\n' "$*" >&2
+	exit 1
+}
+
+fixture_home="$TEST_ROOT/home [test]"
+pictures="$fixture_home/Pictures"
+mkdir -p -- "$fixture_home" "$TEST_ROOT/bin"
+# Freeze the script clock to test the exact boundary without timing races.
+cat > "$TEST_ROOT/bin/date" <<'STUB'
+#!/usr/bin/env bash
+[[ $# -eq 1 && $1 == +%s%N ]] || exit 1
+printf '1800000000123456789\n'
+STUB
+chmod +x "$TEST_ROOT/bin/date"
+run_cleanup() {
+	env HOME="$fixture_home" PATH="$TEST_ROOT/bin:/usr/bin:/bin" "$ROOT/env/.local/scripts/cleanup-screenshots"
+}
+run_cleanup
+[[ ! -e $pictures ]] || fail 'missing Pictures directory was created'
+printf 'ok - missing directory is a no-op\n'
+
+mkdir -p -- "$pictures/nested" "$pictures/directory-hyprshot.png"
+old_names=('old-hyprshot.png' 'spaces [*] hyprshot.png' $'newline\nhyprshot.png' '-hyprshot.png')
+for name in "${old_names[@]}"; do
+	touch -d '@1797407999' -- "$pictures/$name"
+done
+# 1800000000.123456789 minus exactly 30 * 86400 seconds.
+touch -d '@1797408000.123456788' -- "$pictures/before-hyprshot.png"
+touch -d '@1797408000.123456789' -- "$pictures/boundary-hyprshot.png"
+touch -d '@1797408000.123456790' -- "$pictures/after-hyprshot.png"
+touch -d '@1800000000' -- "$pictures/recent-hyprshot.png"
+touch -d '@1800000100' -- "$pictures/future-hyprshot.png"
+for name in photo.png screenshot-hyprshot.png.bak nested/old-hyprshot.png; do
+	touch -d '@1700000000' -- "$pictures/$name"
+done
+touch -d '@1700000000' -- "$TEST_ROOT/external"
+ln -s -- "$TEST_ROOT/external" "$pictures/link-hyprshot.png"
+ln -s -- "$TEST_ROOT/missing" "$pictures/broken-hyprshot.png"
+run_cleanup
+for name in "${old_names[@]}" before-hyprshot.png; do
+	[[ ! -e $pictures/$name ]] || fail "old screenshot retained: $name"
+done
+for name in boundary-hyprshot.png after-hyprshot.png recent-hyprshot.png future-hyprshot.png photo.png screenshot-hyprshot.png.bak nested/old-hyprshot.png directory-hyprshot.png; do
+	[[ -e $pictures/$name ]] || fail "protected entry deleted: $name"
+done
+[[ -L $pictures/link-hyprshot.png && -L $pictures/broken-hyprshot.png && -f $TEST_ROOT/external ]] || fail 'symlink or target deleted'
+run_cleanup
+printf 'ok - exact retention boundary, filename matching, non-recursion, symlinks, and repeat runs\n'
+printf '1..2\n'

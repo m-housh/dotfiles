@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+pictures="${HOME:?HOME must be set}/Pictures"
+[[ -d $pictures ]] || exit 0
+
+# GNU find compares nanosecond timestamps. Subtract one nanosecond so that
+# files exactly 30 days old are retained, too.
+cutoff_ns=$(($(date +%s%N) - 30 * 24 * 60 * 60 * 1000000000 - 1))
+printf -v cutoff '%s.%09d' "$((cutoff_ns / 1000000000))" "$((cutoff_ns % 1000000000))"
+
+find "$pictures" -maxdepth 1 -type f -name '*hyprshot.png' \
+	! -newermt "@$cutoff" -delete

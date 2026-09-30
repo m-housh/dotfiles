@@ -78,6 +78,19 @@ This setup expects an Arch/Hyprland workstation and invokes host tools such as
 Podman, systemd, Hyprland, and Espanso. A dry-run does not change the filesystem
 or invoke those host actions.
 
+### Screenshot cleanup
+
+The full `dev-env` installation enables `screenshot-cleanup.timer`, a daily
+systemd user timer. It permanently deletes regular files directly in `~/Pictures`
+whose names end in `hyprshot.png` and whose modification times are more than
+30 days old. Other images, subdirectories, and file symlinks are left alone.
+A missing `~/Pictures` is harmless. Missed runs are caught up when the user
+systemd manager next starts; the container profile does not install the timer.
+
+Check the schedule with `systemctl --user list-timers screenshot-cleanup.timer`.
+To disable cleanup, run `systemctl --user disable --now screenshot-cleanup.timer`.
+Running the full installer again re-enables it.
+
 ### Development container
 
 For the smaller container profile, run:
