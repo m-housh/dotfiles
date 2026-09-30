@@ -163,6 +163,8 @@ hl.device({
 -- WORKSPACES
 ----------------
 local scripts = "~/.local/scripts/hypr"
+-- The helper owns the terminal choice and terminal-specific options.
+local terminal = "uwsm app -- " .. scripts .. "/terminal"
 local pwa = scripts .. "/webapp launch"
 local housecallPro = "https://pro.housecallpro.com/app/calendar_new"
 local housecallProLaunch = pwa .. " \"" .. housecallPro .. "\""
@@ -171,13 +173,25 @@ local housecallProLaunch = pwa .. " \"" .. housecallPro .. "\""
 -- so it is intentionally omitted here. Revisit this after upgrading if Hyprland adds it.
 hl.workspace_rule({ workspace = "special:pass",     on_created_empty = pwa .. " \"https://pass.proton.me\"" })
 hl.workspace_rule({ workspace = "special:dispatch", on_created_empty = housecallProLaunch .. " && " .. housecallProLaunch })
-hl.workspace_rule({ workspace = "special:music",    on_created_empty = "ghostty --class=com.ghostty.music -e jellyfin-tui" })
+hl.workspace_rule({ workspace = "special:music",    on_created_empty = terminal .. " --class com.dotfiles.music -e jellyfin-tui" })
 hl.workspace_rule({ workspace = "special:calendar", on_created_empty = "uwsm app -- gnome-calendar" })
 hl.workspace_rule({ workspace = "special:localsend", on_created_empty = "uwsm app -- localsend" })
 
 hl.window_rule({
   match = { class = ".*localsend.*" },
   workspace = "special:localsend",
+})
+
+-- These classes describe the window's role, independently of the terminal.
+hl.window_rule({
+  match = { class = "^com[.]dotfiles[.](float|clipse|utils-launcher|windowctl|monitorctl|workspacectl|install-webapp|weather)$" },
+  float = true,
+  center = true,
+  size = { "monitor_w * 0.8", "monitor_h * 0.8" },
+})
+hl.window_rule({
+  match = { class = "^com[.]dotfiles[.]music$" },
+  workspace = "special:music",
 })
 
 ----------------
@@ -189,14 +203,13 @@ local workspaceMod = "CTRL + ALT"
 local MEH = "ALT + SHIFT + CTRL"
 local HYPER = "ALT + SHIFT + SUPER + CTRL"
 
-local terminal = "uwsm app -- kitty"
 local browser = "uwsm app -- brave"
 local fileManager = terminal .. " -e yazi"
 local fileBrowser = "uwsm app -- nautilus"
 local menu = "hyprlauncher"
 local tmuxSessionator = "~/.local/scripts/tmux-sessionator"
-local clipboardHistory = "com.ghostty.clipse " .. terminal .. " --class=com.ghostty.clipse -e clipse"
-local utilsLauncher = "com.ghostty.utils-launcher " .. scripts .. "/utils-launcher --launch"
+local clipboardHistory = "com.dotfiles.clipse " .. terminal .. " --class com.dotfiles.clipse -e clipse"
+local utilsLauncher = "com.dotfiles.utils-launcher " .. scripts .. "/utils-launcher --launch"
 
 local function bind(mods, key, desc, dispatcher, opts)
   opts = opts or {}
@@ -215,7 +228,7 @@ end
 -- Apps / Hyprland controls
 bind(mainMod,       "SPACE",  "Application launcher",                    exec(menu))
 bind(mainMod,       "RETURN", "New terminal",                            exec(terminal))
-bind(mainMod .. " + SHIFT", "RETURN", "New floating terminal",           exec(terminal .. " --class=com.ghostty.float"))
+bind(mainMod .. " + SHIFT", "RETURN", "New floating terminal",           exec(terminal .. " --class com.dotfiles.float"))
 bind(mainMod,       "A",      "[A]i - launch / focus",                   exec(pwa .. " --or-focus \"https://ollama.housh.dev\""))
 bind(mainMod .. " + SHIFT", "A", "[A]i - new window",                   exec(pwa .. " \"https://ollama.housh.dev\""))
 bind(mainMod,       "B",      "New [b]rowser",                           exec(browser))
@@ -309,7 +322,7 @@ for i = 1, 10 do
 end
 
 -- MEH controls
-bind(MEH, "L", "[L]ogs picker / viewer", exec(terminal .. " --class=com.ghostty.float -e " .. scripts .. "/utils/logs/logs-picker"))
+bind(MEH, "L", "[L]ogs picker / viewer", exec(terminal .. " --class com.dotfiles.float -e " .. scripts .. "/utils/logs/logs-picker"))
 
 -- Multimedia keys
 bind("", "XF86AudioRaiseVolume",   "Raise volume",       exec("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })

@@ -5,8 +5,8 @@ set -o nounset
 set -o pipefail
 
 THIS_FILE=${BASH_SOURCE[0]}
-THIS=$(basename $THIS_FILE)
-LOG_LABEL=$(basename $THIS_FILE)
+THIS=$(basename "$THIS_FILE")
+LOG_LABEL=$(basename "$THIS_FILE")
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
@@ -35,7 +35,7 @@ Run "$THIS <command> --help" for more information on a command.
 EOF
 }
 
-window_class="com.ghostty.$THIS"
+window_class="com.dotfiles.$THIS"
 window_padding_x="10"
 
 log() {
@@ -66,8 +66,8 @@ launch() {
 
   log "Launching terminal."
 
-  ghostty --class="$window_class" --window-padding-x="$window_padding_x" \
-    --keybind="ctrl+c=quit" \
+  "$SCRIPTS/hypr/terminal" --class "$window_class" --padding-x "$window_padding_x" \
+    --close-key ctrl+c \
     -e "${BASH_SOURCE[0]}" "$@"
 }
 
@@ -100,7 +100,7 @@ while [[ $# -gt 0 ]]; do
     exit $?
   elif [[ $1 == "launch" ]]; then
     shift
-    if [[ -z $1 ]]; then
+    if [[ $# -eq 0 ]]; then
       launch picker
     else
       launch "$@"

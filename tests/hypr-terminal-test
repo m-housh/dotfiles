@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null && pwd -P)
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf -- "$TEST_ROOT"' EXIT
+export HOME="$TEST_ROOT/home"
+export SCRIPTS="$TEST_ROOT/scripts with spaces"
+export LOG_DIR="$TEST_ROOT/logs"
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export INVOCATIONS="$TEST_ROOT/arguments"
+export PATH="$TEST_ROOT/bin:$PATH"
+unset HYPR_TERMINAL THIS LOG_FILE LOG_LABEL LOG_INVOCATION_ID
+mkdir -p "$TEST_ROOT/bin" "$HOME" "$SCRIPTS"
+cp -R "$ROOT/env/.local/scripts/hypr" "$SCRIPTS/hypr"
+cp "$ROOT/env/.local/scripts/weather" "$SCRIPTS/weather"
+
+cat >"$TEST_ROOT/bin/kitty" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\0' "${0##*/}" "$@" >"$INVOCATIONS"
+EOF
+cp "$TEST_ROOT/bin/kitty" "$TEST_ROOT/bin/ghostty"
+chmod +x "$TEST_ROOT/bin/kitty" "$TEST_ROOT/bin/ghostty"
+
+fail() { printf 'not ok - %s\n' "$*" >&2; exit 1; }
+assert_args() {
+  local expected
+  local -a actual
+  mapfile -d '' -t actual <"$INVOCATIONS"
+  [[ ${#actual[@]} -eq $# ]] || fail "argument count: ${actual[*]}"
+  for expected in "$@"; do
+    [[ ${actual[0]} == "$expected" ]] || fail "expected <$expected>, got <${actual[0]}>"
+    actual=("${actual[@]:1}")
+  done
+}
+assert_arg() {
+  local arg
+  while IFS= read -r -d '' arg; do
+    [[ $arg != "$1" ]] || return 0
+  done <"$INVOCATIONS"
+  fail "missing argument: $1"
+}
+
+"$SCRIPTS/hypr/terminal"
+assert_args kitty
+# Shell-looking arguments must reach the terminal unchanged.
+# shellcheck disable=SC2016
+"$SCRIPTS/hypr/terminal" --class com.dotfiles.float --padding-x 10 --close-key ctrl+c \
+  -e '/program with spaces' '$(touch should-not-exist)' '' '--flag'
+# shellcheck disable=SC2016
+assert_args kitty --class=com.dotfiles.float -o 'window_padding_width=0 10' \
+  -o 'map ctrl+c close_os_window' -e '/program with spaces' '$(touch should-not-exist)' '' '--flag'
+printf 'ok - Kitty default, options, and literal arguments\n'
+
+HYPR_TERMINAL=ghostty "$SCRIPTS/hypr/terminal" --class com.dotfiles.weather \
+  --padding-x 2 --close-key q --scroll-keys -- weather --interactive
+assert_args ghostty --class=com.dotfiles.weather --window-padding-x=2 --keybind=q=quit \
+  --keybind=j=scroll_page_fractional:0.5 --keybind=k=scroll_page_fractional:-0.5 \
+  -e weather --interactive
+printf 'ok - Ghostty override translates common options\n'
+
+for option in --class --padding-x --close-key -e -- --unknown; do
+  rm -f "$INVOCATIONS"
+  if "$SCRIPTS/hypr/terminal" "$option" >"$TEST_ROOT/error" 2>&1; then
+    fail "accepted invalid invocation: $option"
+  fi
+  [[ ! -e $INVOCATIONS ]] || fail 'invalid arguments launched a terminal'
+done
+if HYPR_TERMINAL=unsupported "$SCRIPTS/hypr/terminal" >"$TEST_ROOT/error" 2>&1; then
+  fail 'accepted unsupported terminal'
+fi
+printf 'ok - invalid options fail before launch\n'
+
+"$SCRIPTS/hypr/windowctl" launch
+assert_arg --class=com.dotfiles.windowctl
+assert_arg picker
+"$SCRIPTS/hypr/windowctl" launch action --active
+assert_args kitty --class=com.dotfiles.windowctl -o 'window_padding_width=0 10' \
+  -o 'map ctrl+c close_os_window' -e "$SCRIPTS/hypr/windowctl" action --active
+"$SCRIPTS/hypr/monitorctl" launch
+assert_arg --class=com.dotfiles.monitorctl
+assert_arg picker
+"$SCRIPTS/hypr/workspacectl" launch switch --to 'name:with spaces'
+assert_args kitty --class=com.dotfiles.workspacectl -o 'window_padding_width=0 10' \
+  -o 'map ctrl+c close_os_window' -e "$SCRIPTS/hypr/workspacectl" switch --to 'name:with spaces'
+"$SCRIPTS/hypr/workspacectl" launch
+assert_arg picker
+printf 'ok - window, monitor, and workspace launchers preserve commands\n'
+
+env -u XDG_CONFIG_HOME "$SCRIPTS/hypr/utils-launcher" --launch
+assert_arg --class=com.dotfiles.utils-launcher
+assert_arg "$HOME/.config/utils-launcher/config.json"
+"$SCRIPTS/hypr/utils/webapp/install" --launch
+assert_arg --class=com.dotfiles.install-webapp
+assert_arg --interactive
+"$SCRIPTS/weather" --launch 'New York'
+assert_args kitty --class=com.dotfiles.weather -o 'window_padding_width=0 10' \
+  -o 'map j remote_control scroll-window 0.5p' -o 'map k remote_control scroll-window 0.5p-' \
+  -o 'map q close_os_window' -e "$SCRIPTS/weather" --interactive 'New York'
+printf 'ok - utilities and weather use Kitty with their own classes\n'

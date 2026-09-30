@@ -253,6 +253,19 @@ See `./gen --help` for the command summary.
 
 ## Hyprland shortcuts
 
+Hyprland terminal commands and utility launchers use
+`env/.local/scripts/hypr/terminal`. Its shared `terminal` variable defaults to
+Kitty. Change that default to switch terminals everywhere, or set
+`HYPR_TERMINAL=kitty` or `HYPR_TERMINAL=ghostty` in the launch environment for an
+override. Other terminals need an option mapping in the helper.
+
+The Lua config's `local terminal` command calls this helper through UWSM.
+Window classes use `com.dotfiles.<role>` so the floating rules, music workspace,
+and launch/focus/close checks do not depend on the terminal name. Utility windows
+open centered at 80% of the monitor size; music opens on `special:music`.
+After applying the config and scripts, reopen existing utility and music windows
+so they receive the new classes.
+
 `Cmd` means Super. Workspace navigation uses `Ctrl-Alt`; `Cmd-number` remains
 an alias so either modifier can select a numbered workspace.
 

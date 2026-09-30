@@ -6,11 +6,11 @@ set -o pipefail
 
 FZF_DEFAULT_OPTS=${FZF_DEFAULT_OPTS:-""}
 THIS_FILE=${BASH_SOURCE[0]}
-LOG_LABEL=$(basename $THIS_FILE)
+LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-$LOG_LABEL.log}
 SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
-XDG_CONFIG_HOME=${XDG_CONFIG_HOME}
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-}
 
 usage() {
   cat <<EOF
@@ -29,7 +29,7 @@ OPTIONS:
 EOF
 }
 
-window_class="com.ghostty.$THIS"
+window_class="com.dotfiles.$THIS"
 window_padding_x="2"
 
 config_file=""
@@ -53,9 +53,9 @@ log() {
 }
 
 launch() {
-  ghostty --class=$window_class --window-padding-x=$window_padding_x \
-    --keybind="ctrl+c=quit" \
-    -e ${BASH_SOURCE[0]} --config $config_file
+  "$SCRIPTS/hypr/terminal" --class "$window_class" --padding-x "$window_padding_x" \
+    --close-key ctrl+c \
+    -e "${BASH_SOURCE[0]}" --config "$config_file"
 }
 
 footer() {

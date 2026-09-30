@@ -24,6 +24,7 @@ env:
     env/.local/scripts/wt
     env/.local/scripts/herdr-flow
     env/.local/scripts/hypr/logging
+    env/.local/scripts/hypr/terminal
     env/.local/scripts/hypr/webapp
     env/.local/scripts/hypr/uninstall-desktop-app
     env/.local/scripts/hypr/utils/webapp/*

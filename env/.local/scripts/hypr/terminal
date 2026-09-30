@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+# Shared default for Hyprland keybindings and utility launchers.
+terminal=${HYPR_TERMINAL:-kitty}
+
+usage() {
+  cat <<'EOF'
+Usage: terminal [--class NAME] [--padding-x N] [--close-key KEY]
+                [--scroll-keys] [-e | -- COMMAND [ARGS...]]
+
+Launch Kitty by default. HYPR_TERMINAL may select kitty or ghostty.
+--scroll-keys maps j/k to scroll down/up by half a page.
+EOF
+}
+
+fail() {
+  printf 'terminal: %s\n' "$*" >&2
+  exit 1
+}
+
+case $terminal in
+  kitty|ghostty) ;;
+  *) fail "Unsupported HYPR_TERMINAL: $terminal. Expected kitty or ghostty." ;;
+esac
+
+args=()
+while (($#)); do
+  case $1 in
+    --class|--padding-x|--close-key)
+      (($# >= 2)) && [[ -n $2 ]] || fail "$1 requires a value"
+      case $1 in
+        --class) args+=("--class=$2") ;;
+        --padding-x)
+          [[ $2 =~ ^[0-9]+([.][0-9]+)?$ ]] || fail 'Padding must be a non-negative number'
+          if [[ $terminal == kitty ]]; then
+            args+=(-o "window_padding_width=0 $2")
+          else
+            args+=("--window-padding-x=$2")
+          fi
+          ;;
+        --close-key)
+          if [[ $terminal == kitty ]]; then
+            args+=(-o "map $2 close_os_window")
+          else
+            args+=("--keybind=$2=quit")
+          fi
+          ;;
+      esac
+      shift 2
+      ;;
+    --scroll-keys)
+      if [[ $terminal == kitty ]]; then
+        args+=(-o 'map j remote_control scroll-window 0.5p'
+               -o 'map k remote_control scroll-window 0.5p-')
+      else
+        args+=(--keybind=j=scroll_page_fractional:0.5
+               --keybind=k=scroll_page_fractional:-0.5)
+      fi
+      shift
+      ;;
+    -e|--)
+      shift
+      (($#)) || fail 'Expected a command after -e or --'
+      args+=(-e "$@")
+      break
+      ;;
+    -h|--help) usage; exit 0 ;;
+    *) fail "Unknown option: $1" ;;
+  esac
+done
+
+exec "$terminal" "${args[@]}"
