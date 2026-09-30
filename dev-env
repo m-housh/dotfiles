@@ -411,6 +411,7 @@ generate_completions() {
 
 reload_services() {
 	run systemctl --user daemon-reload
+	run systemctl --user enable --now screenshot-cleanup.timer
 	run hyprctl reload
 	run espanso service restart
 }

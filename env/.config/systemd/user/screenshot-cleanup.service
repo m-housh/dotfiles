@@ -1,0 +1,6 @@
+[Unit]
+Description=Remove screenshots older than 30 days
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/scripts/cleanup-screenshots

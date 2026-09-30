@@ -60,6 +60,8 @@ make_fixture() {
 	printf 'new hypr config\n' >"$source/env/.config/hypr/hyprland.lua"
 	printf 'new nvim\n' >"$source/env/.config/nvim/init.lua"
 	printf 'template\n' >"$source/env/.config/kanata/template.kbd"
+	cp -a -- "$ROOT/env/.local/scripts/cleanup-screenshots" "$source/env/.local/scripts/"
+	cp -a -- "$ROOT/env/.config/systemd/user/"screenshot-cleanup.{service,timer} "$source/env/.config/systemd/user/"
 	printf 'managed unit\n' >"$source/env/.config/systemd/user/managed.service"
 	printf 'new function\n' >"$source/env/.config/zsh/functions/managed"
 	printf 'new zshrc\n' >"$source/env/.config/zsh/.zshrc"
@@ -264,6 +266,12 @@ integration_case() {
 	assert_exists "$config/systemd/user/local.service"
 	assert_exists "$config/systemd/user/enabled.target.wants/local.service"
 	assert_exists "$config/systemd/user/managed.service"
+	assert_exists "$config/systemd/user/screenshot-cleanup.service"
+	assert_exists "$config/systemd/user/screenshot-cleanup.timer"
+	[[ -x $home/.local/scripts/cleanup-screenshots ]] || fail 'cleanup script is not executable'
+	local actual_systemctl
+	actual_systemctl=$(grep '^systemctl ' "$case_root/invocations")
+	[[ $actual_systemctl == $'systemctl <--user> <daemon-reload>\nsystemctl <--user> <enable> <--now> <screenshot-cleanup.timer>' ]] || fail 'timer activation must follow daemon reload'
 	assert_absent "$config/zsh/functions/stale"
 	assert_exists "$config/zsh/functions/managed"
 	assert_exists "$config/zsh/history"
@@ -311,6 +319,7 @@ integration_case() {
 
 	# A second installation must succeed and retain the same preservation policy.
 	run_installer "$case_root" full --no-reload >"$case_root/output-second"
+	[[ $(grep -Fc 'systemctl <--user> <enable> <--now> <screenshot-cleanup.timer>' "$case_root/invocations") -eq 2 ]] || fail 'repeat install did not enable timer'
 	assert_exists "$config/herdr/sessions/live"
 	assert_exists "$config/hypr/local.conf"
 	assert_exists "$config/zsh/history"
@@ -337,6 +346,7 @@ dry_run_case() {
 	grep -Fq '.pi/agent/prompts/plan.md' "$case_root/plan" || fail 'dry-run omitted managed Pi prompt'
 	grep -Fq '.pi/agent/skills/discovered\ \[new\]' "$case_root/plan" || fail 'dry-run omitted discovered Pi skill'
 	grep -Fq '.pi/agent/themes/discovered\ new.json' "$case_root/plan" || fail 'dry-run omitted discovered Pi theme'
+	assert_file_contains "$case_root/plan" 'systemctl --user enable --now screenshot-cleanup.timer'
 	grep -Fq 'zsh -l' "$case_root/plan" || fail 'dry-run omitted planned shell reload'
 	pass_count=$((pass_count + 1))
 	printf 'ok - dry-run has no side effects\n'
