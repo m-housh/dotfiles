@@ -208,7 +208,7 @@ local fileManager = terminal .. " -e yazi"
 local fileBrowser = "uwsm app -- nautilus"
 local menu = "hyprlauncher"
 local tmuxSessionator = "~/.local/scripts/tmux-sessionator"
-local clipboardHistory = "com.dotfiles.clipse " .. terminal .. " --class com.dotfiles.clipse -e clipse"
+local clipboardHistory = "com.dotfiles.clipse " .. terminal .. " --class com.dotfiles.clipse --no-confirm-close -e clipse"
 local utilsLauncher = "com.dotfiles.utils-launcher " .. scripts .. "/utils-launcher --launch"
 
 local function bind(mods, key, desc, dispatcher, opts)

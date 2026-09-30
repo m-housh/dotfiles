@@ -259,6 +259,10 @@ Kitty. Change that default to switch terminals everywhere, or set
 `HYPR_TERMINAL=kitty` or `HYPR_TERMINAL=ghostty` in the launch environment for an
 override. Other terminals need an option mapping in the helper.
 
+The clipboard history shortcut, `Super-V`, uses the helper's `--no-confirm-close`
+option so pressing it again closes the clipboard window without a confirmation
+prompt. This option applies only to that window in both Kitty and Ghostty.
+
 The Lua config's `local terminal` command calls this helper through UWSM.
 Window classes use `com.dotfiles.<role>` so the floating rules, music workspace,
 and launch/focus/close checks do not depend on the terminal name. Utility windows

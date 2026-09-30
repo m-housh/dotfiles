@@ -61,6 +61,12 @@ assert_args ghostty --class=com.dotfiles.weather --window-padding-x=2 --keybind=
   -e weather --interactive
 printf 'ok - Ghostty override translates common options\n'
 
+"$SCRIPTS/hypr/terminal" --class com.dotfiles.clipse --no-confirm-close -e clipse
+assert_args kitty --class=com.dotfiles.clipse -o confirm_os_window_close=0 -e clipse
+HYPR_TERMINAL=ghostty "$SCRIPTS/hypr/terminal" --class com.dotfiles.clipse --no-confirm-close -e clipse
+assert_args ghostty --class=com.dotfiles.clipse --confirm-close-surface=false -e clipse
+printf 'ok - clipboard windows can disable close confirmation in either terminal\n'
+
 for option in --class --padding-x --close-key -e -- --unknown; do
   rm -f "$INVOCATIONS"
   if "$SCRIPTS/hypr/terminal" "$option" >"$TEST_ROOT/error" 2>&1; then
