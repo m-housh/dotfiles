@@ -251,6 +251,28 @@ escape their managed directory are rejected.
 
 See `./gen --help` for the command summary.
 
+## Hyprland shortcuts
+
+`Cmd` means Super. Workspace navigation uses `Ctrl-Alt`; `Cmd-number` remains
+an alias so either modifier can select a numbered workspace.
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl-Alt-1…0` or `Cmd-1…0` | Go to workspace 1…10 |
+| `Ctrl-Alt-H/L` | Go backward/forward by workspace number |
+| `Ctrl-Alt-Tab` | Return to the previously active workspace |
+| `Ctrl-Alt-scroll` | Cycle existing workspaces |
+| `Cmd-H/J/K/L` | Focus the window left/down/up/right |
+| `Cmd-Shift-L` | Show/hide LocalSend's dedicated special workspace |
+
+LocalSend launches when its workspace is first opened empty and keeps running
+when the workspace is hidden. Its window rule assigns new LocalSend windows to
+that workspace, including launches from the application menu. Restart LocalSend
+once after applying this configuration if it was already open.
+
+When a special workspace is focused, `Ctrl-Alt-Tab` hides it and returns to the
+workspace underneath.
+
 ## Tests
 
 Run every integration test locally with:

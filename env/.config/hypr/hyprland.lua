@@ -173,12 +173,19 @@ hl.workspace_rule({ workspace = "special:pass",     on_created_empty = pwa .. " 
 hl.workspace_rule({ workspace = "special:dispatch", on_created_empty = housecallProLaunch .. " && " .. housecallProLaunch })
 hl.workspace_rule({ workspace = "special:music",    on_created_empty = "ghostty --class=com.ghostty.music -e jellyfin-tui" })
 hl.workspace_rule({ workspace = "special:calendar", on_created_empty = "uwsm app -- gnome-calendar" })
+hl.workspace_rule({ workspace = "special:localsend", on_created_empty = "uwsm app -- localsend" })
+
+hl.window_rule({
+  match = { class = ".*localsend.*" },
+  workspace = "special:localsend",
+})
 
 ----------------
 -- KEYBINDINGS
 ----------------
 local mainMod = "SUPER"
 local windowMod = "ALT"
+local workspaceMod = "CTRL + ALT"
 local MEH = "ALT + SHIFT + CTRL"
 local HYPER = "ALT + SHIFT + SUPER + CTRL"
 
@@ -209,7 +216,6 @@ end
 bind(mainMod,       "SPACE",  "Application launcher",                    exec(menu))
 bind(mainMod,       "RETURN", "New terminal",                            exec(terminal))
 bind(mainMod .. " + SHIFT", "RETURN", "New floating terminal",           exec(terminal .. " --class=com.ghostty.float"))
-bind(mainMod,       "TAB",    "Focus previous workspace",                exec(scripts .. "/workspacectl switch --to previous"))
 bind(mainMod,       "A",      "[A]i - launch / focus",                   exec(pwa .. " --or-focus \"https://ollama.housh.dev\""))
 bind(mainMod .. " + SHIFT", "A", "[A]i - new window",                   exec(pwa .. " \"https://ollama.housh.dev\""))
 bind(mainMod,       "B",      "New [b]rowser",                           exec(browser))
@@ -225,12 +231,11 @@ bind(mainMod .. " + SHIFT", "F", "[F]ile manager - application",         exec(fi
 bind(mainMod,       "G",      "[G]itea",                                 exec(pwa .. " --or-focus \"https://git.housh.dev\""))
 bind(mainMod .. " + SHIFT", "G", "[G]ithub",                            exec(pwa .. " --or-focus \"https://github.com\""))
 bind(mainMod,       "H",      "Focus window - left",                     hl.dsp.focus({ direction = "left" }))
-bind(mainMod .. " + SHIFT", "H", "Workspace - back",                    hl.dsp.focus({ workspace = "-1" }))
 bind(mainMod,       "I",      "Localsend",                               exec(scripts .. "/launch --or-close localsend uwsm app -- localsend"))
 bind(mainMod,       "J",      "Focus window - down",                     hl.dsp.focus({ direction = "down" }))
 bind(mainMod,       "K",      "Focus window - up",                       hl.dsp.focus({ direction = "up" }))
 bind(mainMod,       "L",      "Focus window - right",                    hl.dsp.focus({ direction = "right" }))
-bind(mainMod .. " + SHIFT", "L", "Workspace - forward",                 hl.dsp.focus({ workspace = "+1" }))
+bind(mainMod .. " + SHIFT", "L", "[L]ocalSend - special workspace",      hl.dsp.workspace.toggle_special("localsend"))
 bind(mainMod,       "M",      "[M]usic - jellyfin-tui",                  hl.dsp.workspace.toggle_special("music"))
 bind(mainMod .. " + SHIFT", "M", "[M]enu bar - toggle visible",         exec(scripts .. "/waybarctl --toggle"))
 bind(mainMod,       "O",      "Purchase [o]rders",                       exec(pwa .. " --special dispatch \"https://po.housh.dev\""))
@@ -245,11 +250,6 @@ bind(mainMod,       "V",      "Clipboard history",                       exec(sc
 bind(mainMod,       "W",      "Close current window",                    hl.dsp.window.close())
 bind(mainMod .. " + SHIFT", "W", "Close all windows in active workspace", exec(scripts .. "/windowctl close --active-workspace"))
 
-for i = 1, 10 do
-  local key = tostring(i % 10)
-  bind(mainMod, key, "Switch to workspace [" .. i .. "]", exec(scripts .. "/workspacectl switch --to " .. i))
-end
-
 bind(mainMod .. " + SHIFT", "1", "Switch all workspaces to monitor [1]", exec(scripts .. "/mv-all-workspaces-to-monitor 1"))
 bind(mainMod .. " + SHIFT", "0", "Switch all workspaces to monitor [0]", exec(scripts .. "/mv-all-workspaces-to-monitor 0"))
 
@@ -257,11 +257,24 @@ bind(mainMod .. " + SHIFT", "3", "Screenshot a monitor",   exec("hyprshot --mode
 bind(mainMod .. " + SHIFT", "4", "Screenshot a selection", exec("hyprshot --mode region --output-folder ~/Pictures"))
 bind(mainMod .. " + SHIFT", "5", "Screenshot a window",    exec("hyprshot --mode window --output-folder ~/Pictures"))
 
-bind(mainMod, "mouse_down", "Next existing workspace", hl.dsp.focus({ workspace = "e+1" }))
-bind(mainMod, "mouse_up",   "Previous existing workspace", hl.dsp.focus({ workspace = "e-1" }))
 bind(mainMod, "mouse:272",  "Move window with mouse", hl.dsp.window.drag(), { mouse = true })
 bind(mainMod, "mouse:273",  "Resize window with mouse", hl.dsp.window.resize(), { mouse = true })
 bind(mainMod .. " + SHIFT", "mouse_down", "Resize window with mouse", hl.dsp.window.resize(), { mouse = true })
+
+-- Workspace navigation
+bind(workspaceMod, "H", "Workspace - back", hl.dsp.focus({ workspace = "-1" }))
+bind(workspaceMod, "L", "Workspace - forward", hl.dsp.focus({ workspace = "+1" }))
+bind(workspaceMod, "TAB", "Focus previous workspace", exec(scripts .. "/workspacectl switch --to previous"))
+bind(workspaceMod, "mouse_down", "Next existing workspace", hl.dsp.focus({ workspace = "e+1" }))
+bind(workspaceMod, "mouse_up", "Previous existing workspace", hl.dsp.focus({ workspace = "e-1" }))
+
+for i = 1, 10 do
+  local key = tostring(i % 10)
+  local switch = exec(scripts .. "/workspacectl switch --to " .. i)
+  bind(workspaceMod, key, "Switch to workspace [" .. i .. "]", switch)
+  -- Keep the familiar numbered shortcuts while trying workspaceMod.
+  bind(mainMod, key, "Switch to workspace [" .. i .. "]", switch)
+end
 
 -- Window controls
 bind("CTRL",       "F",     "Toggle [f]ullscreen",                hl.dsp.window.fullscreen())
