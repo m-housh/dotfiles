@@ -256,6 +256,7 @@ bind(mainMod,       "P",      "[P]assword manager",                      hl.dsp.
 bind(mainMod .. " + SHIFT", "P", "[P]hotos",                            exec(pwa .. " --or-focus \"https://photos.housh.dev\""))
 bind(mainMod .. " + SHIFT", "R", "[R]estart menu bar",                  exec(scripts .. "/waybarctl --restart"))
 bind(mainMod,       "S",      "Toggle [s]pecial workspace",              hl.dsp.workspace.toggle_special("magic"))
+bind(mainMod,       "T",      "[T]3 Code - launch / focus",               exec(pwa .. " --or-focus \"https://app.t3.codes\""))
 bind(mainMod,       "Y",      "[Y]ouTube",                               exec(pwa .. " --or-focus \"https://youtube.com\""))
 bind(mainMod,       "U",      "[U]nifi",                                 exec(pwa .. " \"https://unifi.ui.com\""))
 bind(mainMod .. " + SHIFT", "U", "[U]tility launcher",                  exec(scripts .. "/launch --or-close " .. utilsLauncher))
