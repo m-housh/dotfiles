@@ -10,11 +10,11 @@ LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 PARENT_COMMAND=${THIS// launch/}
-if [[ -z PARENT_COMMAND ]]; then
+if [[ -z $PARENT_COMMAND ]]; then
   PARENT_COMMAND="workspacectl"
 fi
 
-default_class_name="com.ghostty.$PARENT_COMMAND"
+default_class_name="com.dotfiles.$PARENT_COMMAND"
 default_window_padding_x="10"
 
 usage() {
@@ -36,9 +36,9 @@ log() {
 }
 
 launch() {
-  ghostty --class="$default_class_name" \
-    --window-padding-x="$default_window_padding_x" \
-    --keybind="ctrl+c=quit" \
+  "$SCRIPTS/hypr/terminal" --class "$default_class_name" \
+    --padding-x "$default_window_padding_x" \
+    --close-key ctrl+c \
     -e "$SCRIPTS/hypr/workspacectl" "$@"
 }
 
@@ -50,16 +50,16 @@ launch() {
 source "$SCRIPTS/hypr/logging"
 setup-logging "$LOG_FILE" "$LOG_LABEL"
 
-args="$@"
+launch_args=("$@")
 
-if [[ $args == "-h" ]] || [[ $args == "--help" ]]; then
+if [[ ${launch_args[0]:-} == "-h" ]] || [[ ${launch_args[0]:-} == "--help" ]]; then
   usage && exit 0
-elif [[ $args =~ ^launch ]]; then
-  log --error "Invalid command, can not launch the command: '$args'."
+elif [[ ${launch_args[0]:-} =~ ^launch ]]; then
+  log --error "Invalid command, can not launch the command: '${launch_args[*]}'."
   exit 1
-elif [[ -z $args ]]; then
-  args="picker"
+elif [[ ${#launch_args[@]} -eq 0 ]]; then
+  launch_args=(picker)
 fi
 
-log "Launching with args: $args"
-launch "${args[@]}" && exit $?
+log "Launching with args: ${launch_args[*]}"
+launch "${launch_args[@]}" && exit $?

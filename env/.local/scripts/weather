@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+SCRIPTS=${SCRIPTS:-$HOME/.local/scripts}
+
 usage() {
   cat <<EOF
 
@@ -11,8 +13,8 @@ USAGE:
 OPTIONS:
   
   -i | --interactve:          Prompts user to quit or refresh, which keeps the terminal alive until user quits.
-  -l | --launch:              Launches the interactive option in a new ghostty terminal.
-  --window-class <name>:      Optional window class used only with launch command [default: com.ghostty.weather]
+  -l | --launch:              Launches the interactive option in a configured terminal.
+  --window-class <name>:      Optional window class used only with launch command [default: com.dotfiles.weather]
   --window-padding-x <n>:     Optional window padding used only with launch command [default: 10]
   -h | --help:                Show usage.
 
@@ -23,7 +25,7 @@ location="Cincinnati"
 interactive_flag="0"
 launch_flag="0"
 should_continue="0"
-window_class="com.ghostty.weather"
+window_class="com.dotfiles.weather"
 window_padding_x="10"
 
 while [[ $# -gt 0 ]]; do
@@ -60,10 +62,10 @@ if [[ -z $location ]]; then
   usage && exit 1
 elif [[ $launch_flag == "1" ]]; then
   # Launch a new window and call this script with --interactive flag set, so the window stays open until the user quits.
-  ghostty --class=$window_class --window-padding-x=$window_padding_x \
-    --keybind="j=scroll_page_fractional:0.5" --keybind="k=scroll_page_fractional:-0.5" \
-    --keybind="q=quit" \
-    -e ${BASH_SOURCE[0]} --interactive
+  "$SCRIPTS/hypr/terminal" --class "$window_class" --padding-x "$window_padding_x" \
+    --scroll-keys \
+    --close-key q \
+    -e "${BASH_SOURCE[0]}" --interactive "$location"
 
 elif [[ $interactive_flag == "1" ]]; then
   # Interactive mode starts a loop until the user quits.  It prompts them to quit or refresh the weather results.

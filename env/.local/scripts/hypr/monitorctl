@@ -10,7 +10,7 @@ LOG_LABEL=$(basename "$THIS_FILE")
 THIS=${THIS:-$LOG_LABEL}
 LOG_FILE=${LOG_FILE:-"$LOG_LABEL.log"}
 
-window_class="com.ghostty.$THIS"
+window_class="com.dotfiles.$THIS"
 window_padding_x="10"
 
 usage() {
@@ -67,9 +67,9 @@ launch() {
 
   log "Launching terminal..."
 
-  ghostty --class=$window_class --window-padding-x=$window_padding_x \
-    --keybind="ctrl+c=quit" \
-    -e $THIS_FILE "$@"
+  "$SCRIPTS/hypr/terminal" --class "$window_class" --padding-x "$window_padding_x" \
+    --close-key ctrl+c \
+    -e "$THIS_FILE" "$@"
 }
 
 ################################################################################

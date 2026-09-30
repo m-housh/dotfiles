@@ -223,7 +223,7 @@ while [[ $# -gt 0 ]]; do
   elif [[ $1 == "-a" ]] || [[ $1 == "--active" ]]; then
 
     class=$(hyprctl activewindow -j | jq -r '.class')
-    if [[ $class == "com.ghostty.windowctl" ]]; then
+    if [[ $class == "com.dotfiles.windowctl" ]]; then
       # Select the previously focused window if we were launched in a new terminal window.
       address=$(hyprctl clients -j | jq -r '.[] | select(.focusHistoryID == 1) | .address')
     else
