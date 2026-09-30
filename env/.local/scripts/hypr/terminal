@@ -8,10 +8,11 @@ terminal=${HYPR_TERMINAL:-kitty}
 usage() {
   cat <<'EOF'
 Usage: terminal [--class NAME] [--padding-x N] [--close-key KEY]
-                [--scroll-keys] [-e | -- COMMAND [ARGS...]]
+                [--scroll-keys] [--no-confirm-close] [-e | -- COMMAND [ARGS...]]
 
 Launch Kitty by default. HYPR_TERMINAL may select kitty or ghostty.
 --scroll-keys maps j/k to scroll down/up by half a page.
+--no-confirm-close disables the close prompt for this terminal window.
 EOF
 }
 
@@ -51,6 +52,14 @@ while (($#)); do
           ;;
       esac
       shift 2
+      ;;
+    --no-confirm-close)
+      if [[ $terminal == kitty ]]; then
+        args+=(-o confirm_os_window_close=0)
+      else
+        args+=(--confirm-close-surface=false)
+      fi
+      shift
       ;;
     --scroll-keys)
       if [[ $terminal == kitty ]]; then
