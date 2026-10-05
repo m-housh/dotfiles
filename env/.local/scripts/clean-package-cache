@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "==> Cache usage before cleanup"
+du -sh "${HOME}/.cache/yay" 2>/dev/null || true
+du -sh /var/cache/pacman/pkg 2>/dev/null || true
+
+echo
+echo "==> Cleaning yay cache"
+yay -Sc
+
+echo
+echo "==> Trimming pacman cache to 2 versions"
+sudo paccache -rk2
+
+echo
+echo "==> Cache usage after cleanup"
+du -sh "${HOME}/.cache/yay" 2>/dev/null || true
+du -sh /var/cache/pacman/pkg 2>/dev/null || true
