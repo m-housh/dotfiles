@@ -48,6 +48,7 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("pidof swaync | uwsm app -- swaync")
   hl.exec_cmd("pidof waybar | uwsm app -- waybar")
   hl.exec_cmd("uwsm app -- clipse -listen")
+  hl.exec_cmd("uwsm app -- blueberry-tray")
 end)
 
 ----------------
