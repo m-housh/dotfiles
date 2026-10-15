@@ -290,6 +290,31 @@ once after applying this configuration if it was already open.
 When a special workspace is focused, `Ctrl-Alt-Tab` hides it and returns to the
 workspace underneath.
 
+## YubiKey recovery on the Asahi Mac mini
+
+If the YubiKey 5C Nano disappears from USB after sleep on `michael-macmini`, run:
+
+```bash
+yubikey-reset
+ykman list
+pcsc_scan -r
+```
+
+Before installing the updated scripts, run
+`./env/.local/scripts/yubikey-reset` from this repository instead.
+The command checks the machine and USB-C port mapping, skips the reset if a
+`1050:0407` YubiKey is already visible, and requests sudo to rebind only the
+`tps6598x` controller at `0-003f`. Everything on that USB-C port briefly
+disconnects. Keep this port dedicated to the YubiKey when using the command.
+The reset leaves the YubiKey's credentials unchanged and waits up to ten seconds
+for USB detection; the commands above separately check application access.
+
+This single-controller recovery was verified after resume on October 12, 2026.
+It does not need an xHCI or `dwc3-apple` reset first. It is a manual workaround;
+no automatic resume hook is installed. If the key is visible on USB but its
+applications cannot reach it, investigate that separately rather than resetting
+the port.
+
 ## Tests
 
 Run every integration test locally with:

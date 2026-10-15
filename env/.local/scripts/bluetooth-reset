@@ -10,7 +10,7 @@ DEVICE="${BLUETOOTH_PCI_DEVICE:-}"
 
 if [[ -z "$DEVICE" ]]; then
   DEVICE="$({
-    for path in /sys/bus/pci/drivers/${DRIVER}/*:*; do
+    for path in /sys/bus/pci/drivers/"${DRIVER}"/*:*; do
       [[ -e "$path" ]] || continue
       basename "$path"
       break
@@ -39,5 +39,9 @@ sleep 3
 
 echo "Starting bluetooth.service..."
 sudo systemctl start bluetooth
+
+echo "Restarting blueberry-tray..."
+pkill -u "$(id -u)" -x blueberry-tray || true
+nohup blueberry-tray >/dev/null 2>&1 &
 
 echo "Bluetooth reset complete."

@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Verified on michael-macmini: rebind the USB-C port controller alone after
+# suspend. Do not reset xhci or dwc3 first; they cannot recover this on their own.
+if [[ ${1:-} == --help && $# -eq 1 ]]; then
+  echo 'Usage: yubikey-reset'
+  echo 'Recover the YubiKey on michael-macmini USB-C port 0 after sleep.'
+  echo 'Briefly disconnects everything on that port; requests sudo as needed.'
+  exit 0
+fi
+if (( $# )); then
+  echo 'Usage: yubikey-reset [--help]' >&2
+  exit 2
+fi
+
+fail() { echo "$*" >&2; exit 1; }
+for command in uname readlink lsusb sudo tee sleep; do
+  command -v "$command" >/dev/null || fail "Missing required command: $command"
+done
+
+[[ $(uname -n) == michael-macmini ]] || fail 'This recovery is specific to michael-macmini.'
+driver=/sys/bus/i2c/drivers/tps6598x
+device=0-003f
+[[ $(readlink -e "/sys/bus/i2c/devices/$device/driver") == "$driver" ]] ||
+  fail 'Expected USB-C port controller is not bound to tps6598x.'
+[[ $(readlink -e /sys/class/typec/port0) == /sys/devices/platform/soc/39b040000.i2c/i2c-0/0-003f/typec/port0 ]] ||
+  fail 'USB-C port mapping has changed; inspect it before resetting.'
+
+yubikey_present() {
+  local devices
+  devices=$(lsusb) || fail 'Unable to inspect USB devices.'
+  [[ $devices == *' ID 1050:0407 '* ]]
+}
+
+if yubikey_present; then
+  echo 'YubiKey already visible on USB; no reset needed.'
+  exit 0
+fi
+
+sudo -v
+needs_rebind=0
+rebind() {
+  printf '%s' "$device" | sudo -n tee "$driver/bind" >/dev/null
+}
+# Invoked by the EXIT trap, including signal and error exits.
+# shellcheck disable=SC2329
+cleanup() {
+  if (( needs_rebind )); then
+    echo 'Attempting to reattach the USB-C controller after an interrupted or failed reset.' >&2
+    rebind || echo "Rebind failed. Reboot or reattach $device to $driver manually." >&2
+  fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+echo "Resetting USB-C port 0 ($device); devices on this port will briefly disconnect..."
+printf '%s' "$device" | sudo -n tee "$driver/unbind" >/dev/null
+needs_rebind=1
+sleep 2
+rebind
+needs_rebind=0
+
+for (( attempt=0; attempt<10; attempt++ )); do
+  sleep 1
+  if yubikey_present; then
+    echo 'YubiKey detected on USB again. Check applications with: ykman list; pcsc_scan -r'
+    exit 0
+  fi
+done
+fail 'Controller rebound, but YubiKey did not appear within 10 seconds. Inspect the kernel log before trying further resets.'

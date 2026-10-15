@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf -- "$TEST_ROOT"' EXIT
+export TEST_ROOT
+mkdir "$TEST_ROOT/bin"
+cat > "$TEST_ROOT/bin/stub" <<'STUB'
+#!/usr/bin/env bash
+set -euo pipefail
+case ${0##*/} in
+  uname)
+    [[ $# == 1 && $1 == -n ]] || exit 1
+    echo "${TEST_HOST:-michael-macmini}" ;;
+  readlink)
+    case $2 in
+      /sys/bus/i2c/devices/0-003f/driver) echo /sys/bus/i2c/drivers/tps6598x ;;
+      /sys/class/typec/port0) echo "${TEST_PORT:-/sys/devices/platform/soc/39b040000.i2c/i2c-0/0-003f/typec/port0}" ;;
+      *) exit 1 ;;
+    esac ;;
+  lsusb)
+    [[ ${TEST_SCAN_FAIL:-0} == 0 ]] || exit 2
+    if [[ ${TEST_PRESENT:-0} == 1 || -f $TEST_ROOT/detected ]]; then
+      echo 'Bus 003 Device 002: ID 1050:0407 Yubico.com YubiKey'
+    fi ;;
+  sudo)
+    # Never invoke real sudo or tee: all writes are simulated here.
+    [[ $1 != -v ]] || exit 0
+    [[ $# == 3 && $1 == -n && $2 == tee ]] || exit 1
+    value=$(cat)
+    [[ $value == 0-003f ]] || exit 1
+    case $3 in
+      /sys/bus/i2c/drivers/tps6598x/unbind) echo unbind >> "$TEST_ROOT/log" ;;
+      /sys/bus/i2c/drivers/tps6598x/bind)
+        echo bind >> "$TEST_ROOT/log"
+        [[ ${TEST_BIND_FAIL:-0} == 0 ]] || exit 1
+        if [[ ${TEST_MISSING:-0} == 0 ]]; then touch "$TEST_ROOT/detected"; fi ;;
+      *) exit 1 ;;
+    esac ;;
+  sleep) [[ ${TEST_SLEEP_FAIL:-0} == 0 ]] ;;
+  tee) echo 'Unexpected direct tee invocation' >&2; exit 1 ;;
+  *) exit 1 ;;
+esac
+STUB
+chmod +x "$TEST_ROOT/bin/stub"
+for name in uname readlink lsusb sudo sleep tee; do
+  ln -s stub "$TEST_ROOT/bin/$name"
+done
+export PATH="$TEST_ROOT/bin:$PATH"
+script="$ROOT/env/.local/scripts/yubikey-reset"
+fail() { echo "not ok - $*" >&2; exit 1; }
+reset_fixture() {
+  rm -f "$TEST_ROOT/detected"
+  : > "$TEST_ROOT/log"
+}
+expect_failure() {
+  if env "$@" "$script" > "$TEST_ROOT/output" 2>&1; then
+    fail "unexpected success: $*"
+  fi
+}
+
+reset_fixture
+TEST_PRESENT=1 "$script" > "$TEST_ROOT/output"
+[[ ! -s $TEST_ROOT/log ]] || fail 'visible key was reset'
+expect_failure TEST_HOST=another-machine
+expect_failure TEST_PORT=/unexpected/port
+expect_failure TEST_SCAN_FAIL=1
+[[ ! -s $TEST_ROOT/log ]] || fail 'failed preflight changed hardware'
+echo 'ok - visible key and failed preflight never reset the port'
+
+"$script" > "$TEST_ROOT/output"
+[[ $(cat "$TEST_ROOT/log") == $'unbind\nbind' ]] || fail 'incorrect recovery sequence'
+echo 'ok - missing key recovers using only the USB-C controller'
+
+reset_fixture
+expect_failure TEST_MISSING=1
+[[ $(cat "$TEST_ROOT/log") == $'unbind\nbind' ]] || fail 'missing key triggered additional resets'
+echo 'ok - missing key after rebind is reported as failure'
+
+reset_fixture
+expect_failure TEST_SLEEP_FAIL=1
+[[ $(cat "$TEST_ROOT/log") == $'unbind\nbind' ]] || fail 'failed delay left controller detached'
+reset_fixture
+expect_failure TEST_BIND_FAIL=1
+[[ $(cat "$TEST_ROOT/log") == $'unbind\nbind\nbind' ]] || fail 'failed bind did not attempt recovery'
+echo 'ok - failures after unbind attempt to reattach the controller'
+echo '1..4'
